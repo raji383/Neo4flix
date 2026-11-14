@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: optional:file:${ENV_FILE:../../.env}[.properties]
+server:
+  port: ${API_GATEWAY_PORT}
+jwt:
+  secret: ${JWT_SECRET:changeme123}
+  expiration: ${JWT_EXPIRATION:3600000}
