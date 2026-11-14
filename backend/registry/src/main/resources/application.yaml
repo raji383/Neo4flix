@@ -1,3 +1,7 @@
 spring:
+  config:
+    import: optional:file:${ENV_FILE:../../.env}[.properties]
   application:
     name: registry
+server:
+  port: ${REGISTRY_PORT}
