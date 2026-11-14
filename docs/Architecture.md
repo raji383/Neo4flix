@@ -36,6 +36,7 @@ compatible with one another.
 | --- | --- |
 | `spring-boot-starter-actuator` | Health, metrics, and operational management endpoints. |
 | `spring-cloud-starter-netflix-eureka-client` | Registers a service with Eureka and lets it discover other registered services. |
+| `spring-boot-starter-security` | Provides endpoint protection and the foundation for JWT authentication and authorisation. |
 | `spring-boot-devtools` | Optional runtime development conveniences, such as restart support; not required in production. |
 | `lombok` | Optional compile-time generation of boilerplate Java code. |
 | `spring-boot-maven-plugin` | Packages and runs each application as a Spring Boot application. |
@@ -50,6 +51,7 @@ concerns such as authentication, CORS, rate limiting, and request logging.
 | Dependency | Why it is used here |
 | --- | --- |
 | `spring-cloud-starter-gateway-server-webflux` | Provides the reactive Spring Cloud Gateway runtime and route/filter support. |
+| `spring-boot-starter-security` | Protects the public edge of the system. |
 | `spring-cloud-starter-netflix-eureka-client` | Resolves routes through service discovery instead of fixed service addresses. |
 | `spring-boot-starter-actuator` | Exposes gateway health and operational data. |
 | `reactor-test` (test) | Tests reactive gateway flows. |
@@ -67,6 +69,9 @@ as follows, favourites, or viewing activity.
 | `spring-boot-starter-webmvc` | Builds synchronous REST APIs with Spring MVC. |
 | `spring-boot-starter-data-neo4j` | Maps Java domain objects to Neo4j nodes and relationships and provides repository support. |
 | `spring-boot-starter-security` | Secures HTTP endpoints and provides authentication/authorisation infrastructure. |
+| `jjwt-api` | Provides the Java API used to create and parse JWTs. |
+| `jjwt-impl` (runtime) | Supplies JJWT's runtime implementation. |
+| `jjwt-jackson` (runtime) | Serialises JWT headers and claims with Jackson. |
 | `spring-boot-starter-validation` | Validates request data using Jakarta Bean Validation annotations. |
 | Actuator and Eureka client | Provides monitoring and service discovery. |
 | `spring-boot-starter-*-test` (test) | Test support for Actuator, Neo4j, Security, Validation, and Spring MVC. |
@@ -82,6 +87,7 @@ titles.
 | --- | --- |
 | `spring-boot-starter-webmvc` | Exposes movie catalogue REST endpoints. |
 | `spring-boot-starter-data-neo4j` | Persists and queries movie graph data in Neo4j. |
+| `spring-boot-starter-security` | Protects movie APIs from unauthenticated access. |
 | `spring-boot-starter-validation` | Validates catalogue create and update requests. |
 | Actuator and Eureka client | Provides monitoring and service discovery. |
 | `spring-boot-starter-*-test` (test) | Test support for Actuator, Neo4j, Validation, and MVC. |
@@ -96,6 +102,7 @@ movies. Its graph data model can represent relationships such as `USER` rated
 | --- | --- |
 | `spring-boot-starter-webmvc` | Exposes REST endpoints for creating and reading ratings. |
 | `spring-boot-starter-data-neo4j` | Stores rating nodes/relationships and queries graph data. |
+| `spring-boot-starter-security` | Ensures only authenticated users can access rating APIs. |
 | `spring-boot-starter-validation` | Validates rating input, for example a required score range. |
 | Actuator and Eureka client | Provides monitoring and service discovery. |
 | `spring-boot-starter-*-test` (test) | Test support for Actuator, Neo4j, Validation, and MVC. |
@@ -112,6 +119,7 @@ data.
 | --- | --- |
 | `spring-boot-starter-webmvc` | Exposes recommendation REST endpoints. |
 | `spring-boot-starter-data-neo4j` | Reads and queries connected graph data for recommendation logic. |
+| `spring-boot-starter-security` | Protects personalised recommendation APIs. |
 | `spring-boot-starter-validation` | Validates recommendation request parameters. |
 | Actuator and Eureka client | Provides monitoring and service discovery. |
 | `spring-boot-starter-*-test` (test) | Test support for Actuator, Neo4j, Validation, and MVC. |
@@ -124,13 +132,13 @@ hard-coded host names or ports.
 
 | Dependency | Why it is used here |
 | --- | --- |
-| `spring-cloud-starter-netflix-eureka-client` | Supplies Eureka client capabilities currently declared by the module. |
+| `spring-cloud-starter-netflix-eureka-server` | Runs the Eureka server that accepts registrations and serves discovery data. |
 | `spring-boot-starter-actuator` | Exposes health and management endpoints. |
 | `spring-boot-starter-actuator-test` (test) | Tests Actuator-related behaviour. |
 
-> **Implementation note:** this module currently declares the Eureka *client*
-> starter. To operate as the actual Eureka registry server, it will need the
-> Eureka Server dependency, `@EnableEurekaServer`, and server configuration.
+The application is annotated with `@EnableEurekaServer`. It still needs its
+Eureka server configuration (including its port and standalone/server settings)
+before other services can register with it.
 
 ## Dependency direction
 
