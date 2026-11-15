@@ -3,7 +3,6 @@ package com.neo4flix.user_service.service;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 import javax.crypto.SecretKey;
@@ -46,21 +45,18 @@ public class AuthService {
     }
 
     public UserResponse login(LoginRequest request) {
-        List<User> matchingUsers = userRepository.findAllByUsername(request.getUsername()).stream()
-                .filter(user -> passwordEncoder.matches(request.getPassword(), user.getPasswordHash()))
-                .toList();
-        if (matchingUsers.isEmpty()) {
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> ApiException.unauthorized("Invalid username or password"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw ApiException.unauthorized("Invalid username or password");
         }
-        if (matchingUsers.size() > 1) {
-            throw ApiException.conflict("Multiple accounts match this username and password");
-        }
-        return createUserResponse(matchingUsers.get(0));
+        return createUserResponse(user);
     }
 
     // Helper methods
     private void ensureUserIsAvailable(RegisterRequest request) {
-      
+
         if (userRepository.existsByUsername(request.getUsername())) {
             throw ApiException.conflict("Username already exists");
         }

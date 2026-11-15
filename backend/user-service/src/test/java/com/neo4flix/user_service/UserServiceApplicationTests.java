@@ -1,6 +1,6 @@
 package com.neo4flix.user_service;
 
-import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -101,7 +101,7 @@ class UserServiceApplicationTests {
 		user.setUsername("azraji");
 		user.setEmail("azraji@example.com");
 		user.setPasswordHash(passwordEncoder.encode("123456"));
-		when(userRepository.findAllByUsername("azraji")).thenReturn(List.of(user));
+		when(userRepository.findByUsername("azraji")).thenReturn(Optional.of(user));
 
 		mockMvc.perform(post("/api/auth/login")
 					.contentType(MediaType.APPLICATION_JSON)
@@ -115,7 +115,7 @@ class UserServiceApplicationTests {
 
 	@Test
 	void loginRejectsUnknownUsername() throws Exception {
-		when(userRepository.findAllByUsername("azraji")).thenReturn(List.of());
+		when(userRepository.findByUsername("azraji")).thenReturn(Optional.empty());
 
 		mockMvc.perform(post("/api/auth/login")
 					.contentType(MediaType.APPLICATION_JSON)
@@ -127,28 +127,21 @@ class UserServiceApplicationTests {
 	}
 
 	@Test
-	void loginAuthenticatesAgainstDuplicateUsernameRecordsByPassword() throws Exception {
-		User firstUser = new User();
-		firstUser.setId("first-user-id");
-		firstUser.setUsername("azraji");
-		firstUser.setEmail("first@example.com");
-		firstUser.setPasswordHash(passwordEncoder.encode("other-password"));
-
-		User matchingUser = new User();
-		matchingUser.setId("matching-user-id");
-		matchingUser.setUsername("azraji");
-		matchingUser.setEmail("azraji@example.com");
-		matchingUser.setPasswordHash(passwordEncoder.encode("123456"));
-		when(userRepository.findAllByUsername("azraji")).thenReturn(List.of(firstUser, matchingUser));
+	void loginRejectsIncorrectPassword() throws Exception {
+		User user = new User();
+		user.setId("user-id");
+		user.setUsername("azraji");
+		user.setEmail("azraji@example.com");
+		user.setPasswordHash(passwordEncoder.encode("different-password"));
+		when(userRepository.findByUsername("azraji")).thenReturn(Optional.of(user));
 
 		mockMvc.perform(post("/api/auth/login")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content("""
 							{"username":"azraji","password":"123456"}
 							"""))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value("matching-user-id"))
-				.andExpect(jsonPath("$.jwtToken").isNotEmpty());
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.details").value("Invalid username or password"));
 	}
 
 }
