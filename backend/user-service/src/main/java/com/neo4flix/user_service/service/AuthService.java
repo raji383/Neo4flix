@@ -1,6 +1,5 @@
 package com.neo4flix.user_service.service;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
@@ -12,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 import com.neo4flix.user_service.dto.LoginRequest;
@@ -33,7 +33,8 @@ public class AuthService {
             @Value("${jwt.expiration:3600000}") long tokenExpirationMs) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.signingKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        this.signingKey = Keys.hmacShaKeyFor(
+                Decoders.BASE64.decode(jwtSecret));
         this.tokenExpirationMs = tokenExpirationMs;
     }
 
