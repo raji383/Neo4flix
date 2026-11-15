@@ -13,11 +13,11 @@ public class User {
     private String email;
     private String password;
 
-    private String firstName;
-    private String lastName;
+    // private String firstName;
+    // private String lastName;
 
-    private String role;
-    private boolean enabled;
+    // private String role;
+    // private boolean enabled;
 
-    private Instant createdAt;
+    // private Instant createdAt;
 }
