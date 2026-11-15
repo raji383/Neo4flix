@@ -6,11 +6,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.neo4flix.user_service.dto.LoginRequest;
 import com.neo4flix.user_service.dto.RegisterRequest;
 import com.neo4flix.user_service.dto.UserResponse;
 import com.neo4flix.user_service.service.AuthService;
 import org.springframework.http.HttpStatus;
-
 
 import jakarta.validation.Valid;
 
@@ -27,5 +27,10 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse register(@RequestBody @Valid RegisterRequest request) {
         return authService.register(request);
+    }
+
+    @PostMapping("/login")
+    public UserResponse login(@RequestBody @Valid LoginRequest request) {
+        return authService.login(request);
     }
 }
