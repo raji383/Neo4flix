@@ -1,17 +1,20 @@
 package com.neo4flix.user_service.model;
-import java.time.Instant;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 
-@Node
+@Getter
+@Setter
+@Node("User")
 public class User {
     @Id
     private String id;
 
     private String username;
     private String email;
-    private String password;
+    private String passwordHash;
 
     // private String firstName;
     // private String lastName;
