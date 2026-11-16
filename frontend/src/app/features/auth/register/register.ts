@@ -8,7 +8,7 @@ import {
   ValidatorFn,
   Validators
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 
@@ -38,6 +38,7 @@ export class REGISTER {
   isLoading = signal(false);
   errorMessage = signal('');
   successMessage = signal('');
+  router = inject(Router);
 
   registerForm = this.fb.nonNullable.group({
     username: ['', Validators.required],
@@ -86,6 +87,7 @@ export class REGISTER {
         this.successMessage.set(
           `Account created successfully. Welcome ${response.username}!`
         );
+        this.router.navigate(['/login']);
       },
       error: (error) => {
         this.isLoading.set(false);

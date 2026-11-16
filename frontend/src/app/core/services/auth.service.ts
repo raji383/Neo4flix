@@ -1,4 +1,6 @@
+import { isPlatformBrowser } from '@angular/common';
 import { Injectable } from '@angular/core';
+import { inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -12,6 +14,11 @@ import { AuthResponse, LoginRequest, RegisterRequest } from '../../shared/models
 export class AuthService {
 
     private readonly apiUrl = `${environment.apiUrl}/api/auth`;
+    private readonly platformId = inject(PLATFORM_ID);
+
+    private get tokenStorage(): Storage | null {
+        return isPlatformBrowser(this.platformId) ? sessionStorage : null;
+    }
 
     constructor(private http: HttpClient) { }
 
@@ -21,7 +28,7 @@ export class AuthService {
             credentials
         ).pipe(
             tap(response => {
-                sessionStorage.setItem('jwtToken', response.jwtToken);
+                this.tokenStorage?.setItem('jwtToken', response.jwtToken);
             })
         );
     }
@@ -31,17 +38,17 @@ export class AuthService {
             data
         ).pipe(
             tap(response => {
-                sessionStorage.setItem('jwtToken', response.jwtToken);
+                this.tokenStorage?.setItem('jwtToken', response.jwtToken);
             })
         );
     }
 
     logout(): void {
-        sessionStorage.removeItem('jwtToken');
+        this.tokenStorage?.removeItem('jwtToken');
     }
 
     getToken(): string | null {
-        return sessionStorage.getItem('jwtToken');
+        return this.tokenStorage?.getItem('jwtToken') ?? null;
     }
 
     isAuthenticated(): boolean {

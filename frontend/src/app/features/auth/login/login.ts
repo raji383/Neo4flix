@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -16,6 +16,8 @@ export class Login {
   private authService = inject(AuthService);
 
   isLoading = signal(false);
+  router = inject(Router);
+
   errorMessage = '';
 
   loginForm = this.fb.nonNullable.group({
@@ -40,6 +42,8 @@ export class Login {
       next: (response) => {
         console.log('Login successful:', response.username);
         this.isLoading.set(false);
+        this.router.navigate(['/profile']);
+
 
 
       },
