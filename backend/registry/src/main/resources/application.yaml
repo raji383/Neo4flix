@@ -5,3 +5,8 @@ spring:
     name: registry
 server:
   port: ${REGISTRY_PORT}
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false

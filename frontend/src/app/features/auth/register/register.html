@@ -1,1 +1,94 @@
-<p>register works!</p>
+<div class="auth-page">
+    <div class="glow glow-red"></div>
+    <div class="glow glow-purple"></div>
+    <div class="posters"></div>
+
+    <main class="auth-card">
+        <div class="brand">🎬 Neo<span>4</span>flix</div>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+            <h1>Create account</h1>
+            <p class="subtitle">Join Neo4flix and discover movies you'll love</p>
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input id="username" type="text" formControlName="username" placeholder="Choose a username"
+                    autocomplete="username" />
+                @if (registerForm.controls.username.touched && registerForm.controls.username.invalid) {
+                <small>Username is required.</small>
+                }
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input id="email" type="email" formControlName="email" placeholder="you@example.com"
+                    autocomplete="email" />
+                @if (registerForm.controls.email.touched && registerForm.controls.email.hasError('required')) {
+                <small>Email is required.</small>
+                }
+                @if (registerForm.controls.email.touched && registerForm.controls.email.hasError('email')) {
+                <small>Please enter a valid email.</small>
+                }
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input id="password" [type]="showPassword() ? 'text' : 'password'" formControlName="password"
+                        placeholder="Create a password" autocomplete="new-password" />
+                    <button type="button" class="toggle" (click)="showPassword.set(!showPassword())">
+                        {{ showPassword() ? 'Hide' : 'Show' }}
+                    </button>
+                </div>
+
+                @if (registerForm.controls.password.value) {
+                <div class="strength" [attr.data-level]="passwordStrength()">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+                <em class="strength-label">{{ strengthLabel() }}</em>
+                }
+
+                @if (registerForm.controls.password.touched && registerForm.controls.password.invalid) {
+                <small>Password is required.</small>
+                }
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm password</label>
+                <div class="password-wrapper">
+                    <input id="confirmPassword" [type]="showConfirm() ? 'text' : 'password'"
+                        formControlName="confirmPassword" placeholder="Confirm your password"
+                        autocomplete="new-password" />
+                    <button type="button" class="toggle" (click)="showConfirm.set(!showConfirm())">
+                        {{ showConfirm() ? 'Hide' : 'Show' }}
+                    </button>
+                </div>
+                @if (registerForm.controls.confirmPassword.touched && registerForm.controls.confirmPassword.invalid) {
+                <small>Confirm Password is required.</small>
+                }
+                @if (registerForm.controls.confirmPassword.touched && registerForm.hasError('passwordMismatch')) {
+                <small>Passwords do not match.</small>
+                }
+            </div>
+
+            @if (errorMessage()) {
+            <div class="error-box" role="alert">{{ errorMessage() }}</div>
+            }
+            @if (successMessage()) {
+            <div class="success-box" role="status">{{ successMessage() }}</div>
+            }
+
+            <button type="submit" class="submit" [disabled]="isLoading()">
+                @if (isLoading()) {
+                <span class="spinner"></span> Creating account...
+                } @else {
+                Register
+                }
+            </button>
+
+            <p class="footer-text">
+                Already have an account? <a routerLink="/login">Login</a>
+            </p>
+        </form>
+    </main>
+</div>
