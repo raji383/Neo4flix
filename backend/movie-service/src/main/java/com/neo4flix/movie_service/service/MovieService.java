@@ -14,6 +14,7 @@ import com.neo4flix.movie_service.model.Genre;
 import com.neo4flix.movie_service.model.Movie;
 import com.neo4flix.movie_service.repository.GenreRepository;
 import com.neo4flix.movie_service.repository.MovieRepository;
+import com.neo4flix.movie_service.service.MediaUploadService.UploadResult;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +24,17 @@ import lombok.RequiredArgsConstructor;
 public class MovieService {
     private final MovieRepository movieRepository;
     private final GenreRepository genreRepository;
+    private final MediaUploadService mediaUploadService;
+
     @Transactional
     public MovieResponseDTO addMovie(CreateMovieDTO request, String userId) {
         Set<Genre> genres = resolveGenres(request.genres());
-
+        UploadResult uploadResult;
+        try {
+            uploadResult = mediaUploadService.uploadFile(request.file());
+        } catch (Exception e) {
+            throw ApiException.badRequest("Invalid file type. Only JPEG, PNG, and WEBP images are allowed.");
+        }
         Movie movie = Movie.builder()
                 .title(request.title())
                 .description(request.description())
@@ -34,6 +42,7 @@ public class MovieService {
                 .releaseYear(request.releaseYear())
                 .createdBy(userId)
                 .genres(genres)
+                .imageUrl(uploadResult.url())
                 .build();
 
         return toResponse(movieRepository.save(movie));
@@ -57,8 +66,7 @@ public class MovieService {
                 movie.getDirector(),
                 movie.getDescription(),
                 movie.getReleaseYear(),
-                movie.getGenres().stream().map(Genre::getName).collect(Collectors.toSet())
-        );
+                movie.getGenres().stream().map(Genre::getName).collect(Collectors.toSet()));
     }
 
 }

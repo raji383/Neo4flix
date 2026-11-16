@@ -17,7 +17,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-@Builder    
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Node("Movie")
@@ -30,7 +30,7 @@ public class Movie {
     private String director;
     private int releaseYear;
     private String createdBy;
-
+    private String imageUrl;
     @Builder.Default
     @Relationship(type = "HAS_GENRE", direction = Relationship.Direction.OUTGOING)
     private Set<Genre> genres = new HashSet<>();
