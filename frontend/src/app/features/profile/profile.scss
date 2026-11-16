@@ -5,10 +5,10 @@ $muted: #9a9aa5;
 
 .auth-page {
   position: relative;
-  min-height: 100vh;
-  padding: 48px 24px;
+  min-height: calc(100vh - 112px);
+  padding: 8px;
   overflow: hidden;
-  background: $bg;
+  background: transparent;
   color: $text;
   font-family: 'Segoe UI', system-ui, sans-serif;
 }

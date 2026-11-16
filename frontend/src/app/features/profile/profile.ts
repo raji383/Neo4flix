@@ -132,7 +132,11 @@ export class Profile implements OnInit {
       },
       error: (error) => {
         this.isSaving.set(false);
-        this.errorMessage.set(error.error?.message || 'Unable to update your profile.');
+        if (error.status === 409) {
+          this.errorMessage.set(error.error?.message || 'Username or email is already in use.');
+        } else {
+          this.errorMessage.set(error.error?.message || 'Unable to update your profile.');
+        }
       }
     });
   }
