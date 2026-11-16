@@ -10,7 +10,7 @@ spring:
           globalcors:
             add-to-simple-url-handler-mapping: true
             cors-configurations:
-              '[/**]':
+              "[/**]":
                 allowed-origins: http://localhost:4200
                 allowed-methods:
                   - GET
@@ -26,6 +26,7 @@ spring:
               uri: lb://user-service
               predicates:
                 - Path=/api/auth/**
+                - Path=/api/users/**
             - id: movie-service
               uri: lb://movie-service
               predicates:
