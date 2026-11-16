@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginRequest } from '../../shared/models/auth';
+import { AuthResponse, LoginRequest, RegisterRequest } from '../../shared/models/auth';
 
 
 
@@ -19,6 +19,16 @@ export class AuthService {
         return this.http.post<AuthResponse>(
             `${this.apiUrl}/login`,
             credentials
+        ).pipe(
+            tap(response => {
+                sessionStorage.setItem('jwtToken', response.jwtToken);
+            })
+        );
+    }
+    register(data: RegisterRequest): Observable<AuthResponse> {
+        return this.http.post<AuthResponse>(
+            `${this.apiUrl}/register`,
+            data
         ).pipe(
             tap(response => {
                 sessionStorage.setItem('jwtToken', response.jwtToken);
