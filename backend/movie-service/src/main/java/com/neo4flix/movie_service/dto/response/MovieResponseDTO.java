@@ -8,5 +8,6 @@ public record MovieResponseDTO(
         String director,
         String description,
         int releaseYear,
-        Set<String> genres) {
+        Set<String> genres,
+        String imageUrl) {
 }

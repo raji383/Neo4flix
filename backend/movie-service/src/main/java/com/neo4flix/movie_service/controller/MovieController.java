@@ -2,8 +2,12 @@ package com.neo4flix.movie_service.controller;
 
 import java.security.Principal;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,14 +28,25 @@ import lombok.RequiredArgsConstructor;
 public class MovieController {
     private final MovieService movieService;
 
-    @PostMapping("/add")
-    public ResponseEntity<MovieResponseDTO> addMovie(@RequestParam @Valid CreateMovieDTO request , Principal principal) {
-        MovieResponseDTO movieResponseDTO = movieService.addMovie(request, principal.getName());
-        return ResponseEntity.status(201).body(movieResponseDTO);
-    }
-    // @GetMapping()
-    // public ResponseEntity<PageResponse<MovieResponseDTO>> getMovies() {
+    @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<MovieResponseDTO> addMovie(
+            @Valid @ModelAttribute CreateMovieDTO request,
+            Principal principal) {
 
-    //     return ResponseEntity.ok("Hello from Movie Service");
-    // }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(movieService.addMovie(request, principal.getName()));
+    }
+
+    @GetMapping()
+    public ResponseEntity<PageResponse<MovieResponseDTO>> getMovies(
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) Integer releaseYear) {
+
+        PageResponse<MovieResponseDTO> response = movieService.getMovies(page, size, q, genre, releaseYear);
+        return ResponseEntity.ok(response);
+    }
+
 }

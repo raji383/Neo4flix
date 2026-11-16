@@ -5,10 +5,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.neo4flix.movie_service.dto.request.CreateMovieDTO;
 import com.neo4flix.movie_service.dto.response.MovieResponseDTO;
+import com.neo4flix.movie_service.dto.response.PageResponse;
 import com.neo4flix.movie_service.exceptions.ApiException;
 import com.neo4flix.movie_service.model.Genre;
 import com.neo4flix.movie_service.model.Movie;
@@ -59,6 +62,22 @@ public class MovieService {
         return new HashSet<>(found);
     }
 
+    public PageResponse<MovieResponseDTO> getMovies(int page, int size, String q, String genre, Integer releaseYear) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 50);
+
+        Page<Movie> result = movieRepository.search(
+                blankToNull(q), blankToNull(genre), releaseYear, PageRequest.of(safePage, safeSize));
+
+        List<MovieResponseDTO> content = result.getContent().stream().map(this::toResponse).toList();
+        return new PageResponse<>(content, result.getNumber(), result.getSize(),
+                result.getTotalElements(), result.getTotalPages());
+    }
+
+    private String blankToNull(String s) {
+        return (s == null || s.isBlank()) ? null : s.trim();
+    }
+
     private MovieResponseDTO toResponse(Movie movie) {
         return new MovieResponseDTO(
                 movie.getId(),
@@ -66,7 +85,8 @@ public class MovieService {
                 movie.getDirector(),
                 movie.getDescription(),
                 movie.getReleaseYear(),
-                movie.getGenres().stream().map(Genre::getName).collect(Collectors.toSet()));
+                movie.getGenres().stream().map(Genre::getName).collect(Collectors.toSet()),
+                movie.getImageUrl());
     }
 
 }

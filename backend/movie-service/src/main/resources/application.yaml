@@ -12,9 +12,19 @@ spring:
     neo4j:
       database: neo4j
 
-eureka:
-  client:
-    service-url:
-      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+# eureka:
+#   client:
+#     service-url:
+#       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
 server:
   port: ${MOVIE_SERVICE_PORT}
+
+servlet:
+  multipart:
+    max-file-size: 2MB
+    max-request-size: 2MB
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+  upload-prefix: ${CLOUDINARY_UPLOAD_PREFIX:https://api.cloudinary.com}
