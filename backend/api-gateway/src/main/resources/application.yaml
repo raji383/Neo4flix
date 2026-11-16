@@ -12,10 +12,14 @@ spring:
               uri: lb://user-service
               predicates:
                 - Path=/api/auth/**
+            - id: movie-service
+              uri: lb://movie-service
+              predicates:
+                - Path=/api/movies/**
 server:
   port: ${API_GATEWAY_PORT}
 jwt:
-  secret: ${JWT_SECRET:changeme123}
+  secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:3600000}
 
 eureka:
