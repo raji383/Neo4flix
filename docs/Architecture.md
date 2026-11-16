@@ -1,149 +1,194 @@
 # Neo4flix Architecture
 
-Neo4flix is organised as a set of Spring Boot microservices. Each module is an
-independently runnable Maven application using Java 21, Spring Boot 4.1.2, and
-Spring Cloud 2025.1.4. At present, the modules contain their application
-bootstrap classes and dependency definitions; API endpoints, database models,
-and inter-service calls can be added within the responsibilities below.
+Neo4flix is an early-stage, microservice-oriented application. The repository
+contains an Angular client, six independently runnable Spring Boot applications,
+and a shared Neo4j database. Most domain behavior is not implemented yet, so
+this document distinguishes the current system from the intended request flow.
 
-## Service overview
+## System topology
 
 ```text
-Client
+Browser
   |
   v
+Angular frontend
+  :
+  : intended HTTP API traffic (not implemented)
+  v
 API Gateway
-  |---------------------> User Service -----------+
-  |---------------------> Movie Service ----------+--> Neo4j
-  |---------------------> Rating Service ---------+
+  :
+  : intended service routes (not configured)
+  +---------------------> User Service -----------+
+  +---------------------> Movie Service ----------+
+  +---------------------> Rating Service ---------+--> shared Neo4j database
   `---------------------> Recommendation Service -+
 
-All application services <----------------------> Service Registry (Eureka)
+Domain services -------- Eureka registration ----> Service Registry
+API Gateway ------ Eureka registration/discovery -> Service Registry
 ```
 
-The diagram describes the intended relationship between modules. The current
-`application.yaml` files define service names only; gateway routes, Neo4j
-connection details, and Eureka server/client URLs still need configuration.
+The diagram labels target request paths explicitly. The domain services have
+Eureka and Neo4j connection settings, while the gateway has a configured Eureka
+client. There is currently no complete browser-to-database request path: the
+frontend makes no API calls, the gateway has no routes, and the domain services
+expose no controllers.
 
-## Shared platform dependencies
+## Technology stack
 
-All services use the Spring Boot parent for dependency and plugin version
-management, are built with Maven, and target Java 21. The Spring Cloud BOM
-(`spring-cloud-dependencies` version `2025.1.4`) keeps Spring Cloud libraries
-compatible with one another.
-
-| Dependency | Purpose |
+| Layer | Technology |
 | --- | --- |
-| `spring-boot-starter-actuator` | Health, metrics, and operational management endpoints. |
-| `spring-cloud-starter-netflix-eureka-client` | Registers a service with Eureka and lets it discover other registered services. |
-| `spring-boot-starter-security` | Provides endpoint protection and the foundation for JWT authentication and authorisation. |
-| `spring-boot-devtools` | Optional runtime development conveniences, such as restart support; not required in production. |
-| `lombok` | Optional compile-time generation of boilerplate Java code. |
-| `spring-boot-maven-plugin` | Packages and runs each application as a Spring Boot application. |
+| Client | Angular 22, TypeScript 6, RxJS, Angular SSR, Express 5 |
+| Edge | Spring Cloud Gateway WebFlux |
+| Services | Java 21, Spring Boot 4.1.2, Spring MVC, Maven |
+| Discovery | Spring Cloud Netflix Eureka, Spring Cloud 2025.1.4 |
+| Data | Spring Data Neo4j and Neo4j 5 Community |
+| Tests | Vitest through the Angular builder and Spring Boot test starters |
 
-## API Gateway (`backend/api-gateway`)
+Each backend module has its own Maven wrapper and build. There is no root Maven
+aggregator, shared backend library, or shared application configuration module.
 
-The API Gateway is the public entry point for clients. Its intended job is to
-route incoming requests to the appropriate internal service, so clients do not
-need to know individual service locations. It can later centralise cross-cutting
-concerns such as authentication, CORS, rate limiting, and request logging.
+## Components
 
-| Dependency | Why it is used here |
+| Component | Intended responsibility | Current implementation |
+| --- | --- | --- |
+| `frontend` | Browser UI and calls to the public API | Standalone Angular application with placeholder pages, routing, hydration, prerendering, and an SSR container image. `HttpClient` is provided but unused. |
+| `backend/api-gateway` | Public entry point, routing, and edge concerns | Reactive gateway bootstrap configured as a Eureka client with Security and Actuator dependencies. No routes, filters, CORS policy, or custom security configuration exist. |
+| `backend/registry` | Service registration and discovery | Standalone Eureka server enabled with `@EnableEurekaServer`; client registration and registry fetching are disabled. |
+| `backend/user-service` | Accounts, profiles, authentication, and authorization | Spring MVC, Security, Validation, Spring Data Neo4j, Eureka, and JJWT dependencies; no domain or API code. |
+| `backend/movie-service` | Movie catalogue and catalogue relationships | Spring MVC, Security, Validation, Spring Data Neo4j, and Eureka dependencies; no domain or API code. |
+| `backend/rating-service` | Ratings and reviews | Spring MVC, Security, Validation, Spring Data Neo4j, and Eureka dependencies; no domain or API code. |
+| `backend/recommendation-service` | Personalized movie suggestions | Spring MVC, Security, Validation, Spring Data Neo4j, and Eureka dependencies; no recommendation or API code. |
+| `neo4j` | Persistent graph storage | One Neo4j 5 Community container with a named Docker volume. |
+
+The four domain services' Java source currently contains only their Spring Boot
+application classes and context-load tests. No controllers, DTOs, entities,
+repositories, Cypher queries, inter-service clients, or background jobs have
+been added.
+
+## Frontend
+
+The Angular application is under `frontend/` and uses standalone components.
+The active browser routes are:
+
+| Path | Component |
 | --- | --- |
-| `spring-cloud-starter-gateway-server-webflux` | Provides the reactive Spring Cloud Gateway runtime and route/filter support. |
-| `spring-boot-starter-security` | Protects the public edge of the system. |
-| `spring-cloud-starter-netflix-eureka-client` | Resolves routes through service discovery instead of fixed service addresses. |
-| `spring-boot-starter-actuator` | Exposes gateway health and operational data. |
-| `reactor-test` (test) | Tests reactive gateway flows. |
-| `spring-boot-starter-actuator-test` (test) | Tests Actuator-related behaviour. |
+| `/` | Redirects to `/movies` |
+| `/movies` | `Movies` |
+| `/login` | `Login` |
+| Any other path | `Notfound` |
 
-## User Service (`backend/user-service`)
+The repository also contains generated components for registration, ratings,
+recommendations, watchlists, profiles, and layout elements, but they are not
+connected to the router or root layout. The similarly named files under
+`core/` and `shared/` are generated components rather than implemented guards,
+interceptors, services, models, or pipes.
 
-The User Service owns user-focused functionality: user profiles, account data,
-and, when implemented, authentication and authorisation rules. Its Neo4j
-integration makes it suitable for storing users and their relationships, such
-as follows, favourites, or viewing activity.
+Angular SSR is configured with an Express server. All server routes use
+`RenderMode.Prerender`; the Express entry point serves built browser assets and
+delegates other page requests to Angular. Development mode normally uses port
+`4200`, while the built Express server uses `PORT` or falls back to `4000`.
+The container passes `FRONTEND_ALLOWED_HOSTS` to Angular's SSR host allowlist.
 
-| Dependency | Why it is used here |
-| --- | --- |
-| `spring-boot-starter-webmvc` | Builds synchronous REST APIs with Spring MVC. |
-| `spring-boot-starter-data-neo4j` | Maps Java domain objects to Neo4j nodes and relationships and provides repository support. |
-| `spring-boot-starter-security` | Secures HTTP endpoints and provides authentication/authorisation infrastructure. |
-| `jjwt-api` | Provides the Java API used to create and parse JWTs. |
-| `jjwt-impl` (runtime) | Supplies JJWT's runtime implementation. |
-| `jjwt-jackson` (runtime) | Serialises JWT headers and claims with Jackson. |
-| `spring-boot-starter-validation` | Validates request data using Jakarta Bean Validation annotations. |
-| Actuator and Eureka client | Provides monitoring and service discovery. |
-| `spring-boot-starter-*-test` (test) | Test support for Actuator, Neo4j, Security, Validation, and Spring MVC. |
+## Backend request and discovery flow
 
-## Movie Service (`backend/movie-service`)
+The intended request flow is:
 
-The Movie Service is intended to own the movie catalogue: titles, descriptions,
-genres, people, and relationships between catalogue entities. Neo4j is a good
-fit for querying connected data such as movies by genre, cast, or similar
-titles.
+1. The browser sends API requests to the API Gateway.
+2. The gateway resolves a domain service through Eureka and forwards the
+   request.
+3. The domain service applies its business rules and accesses Neo4j.
+4. A service calls another service through an explicit HTTP client when it
+   needs behavior owned by that service.
 
-| Dependency | Why it is used here |
-| --- | --- |
-| `spring-boot-starter-webmvc` | Exposes movie catalogue REST endpoints. |
-| `spring-boot-starter-data-neo4j` | Persists and queries movie graph data in Neo4j. |
-| `spring-boot-starter-security` | Protects movie APIs from unauthenticated access. |
-| `spring-boot-starter-validation` | Validates catalogue create and update requests. |
-| Actuator and Eureka client | Provides monitoring and service discovery. |
-| `spring-boot-starter-*-test` (test) | Test support for Actuator, Neo4j, Validation, and MVC. |
+The gateway and four domain services register against `EUREKA_URL`, which
+defaults to `http://localhost:8761/eureka` for host-based development. Compose
+overrides it with `http://registry:8761/eureka`. The gateway does not enable
+discovery-based routes or define explicit routes. There are also no WebClient,
+RestClient, or Feign clients for service-to-service communication.
 
-## Rating Service (`backend/rating-service`)
+Service discovery does not itself expose an API. Gateway routes and service
+controllers must both exist before the target request flow is available.
 
-The Rating Service is intended to manage ratings or reviews that users give to
-movies. Its graph data model can represent relationships such as `USER` rated
-`MOVIE`, which can later be consumed by the recommendation system.
+## Data architecture
 
-| Dependency | Why it is used here |
-| --- | --- |
-| `spring-boot-starter-webmvc` | Exposes REST endpoints for creating and reading ratings. |
-| `spring-boot-starter-data-neo4j` | Stores rating nodes/relationships and queries graph data. |
-| `spring-boot-starter-security` | Ensures only authenticated users can access rating APIs. |
-| `spring-boot-starter-validation` | Validates rating input, for example a required score range. |
-| Actuator and Eureka client | Provides monitoring and service discovery. |
-| `spring-boot-starter-*-test` (test) | Test support for Actuator, Neo4j, Validation, and MVC. |
+Docker Compose starts one Neo4j 5 Community instance and persists `/data` in
+the `neo4j-data` volume. The User, Movie, Rating, and Recommendation services
+all connect to the same URI and to the same database named `neo4j`.
 
-## Recommendation Service (`backend/recommendation-service`)
+Logical ownership is intended to follow the service boundaries: only the
+owning service should mutate its data, and other services should use its API.
+Because all services are configured against one physical database, this
+boundary is currently a convention rather than enforced isolation.
 
-The Recommendation Service is intended to calculate or serve personalised movie
-suggestions. It can use Neo4j graph queries over users, movies, genres, and
-ratings to find related content. It may later call the Movie and Rating services
-through Eureka-discovered endpoints if those services remain the owners of that
-data.
+No graph schema is defined yet. In particular, the repository contains no node
+or relationship mappings, constraints, indexes, migrations, seed data, or
+Graph Data Science configuration. Labels and relationships such as users,
+movies, genres, ratings, and watchlists are design candidates, not current
+schema.
 
-| Dependency | Why it is used here |
-| --- | --- |
-| `spring-boot-starter-webmvc` | Exposes recommendation REST endpoints. |
-| `spring-boot-starter-data-neo4j` | Reads and queries connected graph data for recommendation logic. |
-| `spring-boot-starter-security` | Protects personalised recommendation APIs. |
-| `spring-boot-starter-validation` | Validates recommendation request parameters. |
-| Actuator and Eureka client | Provides monitoring and service discovery. |
-| `spring-boot-starter-*-test` (test) | Test support for Actuator, Neo4j, Validation, and MVC. |
+## Runtime configuration
 
-## Registry (`backend/registry`)
+Backend applications optionally import `../../.env`, or the file selected by
+`ENV_FILE`. The checked-in `.env.example` documents the local values:
 
-The Registry is intended to be the central Eureka service registry. Other
-services register with it at startup and query it to locate peers without
-hard-coded host names or ports.
+| Process | Port setting | Example value |
+| --- | --- | ---: |
+| Frontend Compose host | `FRONTEND_PORT` | `4200` |
+| API Gateway | `API_GATEWAY_PORT` | `8443` |
+| Movie Service | `MOVIE_SERVICE_PORT` | `8080` |
+| Rating Service | `RATING_SERVICE_PORT` | `8081` |
+| Recommendation Service | `RECOMMENDATION_SERVICE_PORT` | `8082` |
+| User Service | `USER_SERVICE_PORT` | `8083` |
+| Service Registry | `REGISTRY_PORT` | `8761` |
+| Angular development server | Angular CLI default | `4200` |
+| Angular Express server | `PORT` | `4000` |
+| Neo4j Browser | Docker port mapping | `7474` |
+| Neo4j Bolt | Docker port mapping | `7687` |
 
-| Dependency | Why it is used here |
-| --- | --- |
-| `spring-cloud-starter-netflix-eureka-server` | Runs the Eureka server that accepts registrations and serves discovery data. |
-| `spring-boot-starter-actuator` | Exposes health and management endpoints. |
-| `spring-boot-starter-actuator-test` (test) | Tests Actuator-related behaviour. |
+The backend port placeholders do not have application-level defaults, so each
+must be supplied through the environment, an environment file, or Compose.
+Port `8443` does not imply HTTPS; no TLS configuration is present.
 
-The application is annotated with `@EnableEurekaServer`. It still needs its
-Eureka server configuration (including its port and standalone/server settings)
-before other services can register with it.
+The domain services use `NEO4J_URI`, `NEO4J_USERNAME`, and `NEO4J_PASSWORD`.
+Compose fixes the bundled database user to `neo4j` and provides a development
+password fallback. `NEO4J_AUTH` only initializes credentials for a new data
+volume; changing `NEO4J_PASSWORD` later does not rotate an existing database.
+For disposable local data, `docker compose down --volumes` resets the database.
 
-## Dependency direction
+## Security
 
-The gateway should be the client-facing entry point. Business services should
-register with the registry and use its logical service names (`user-service`,
-`movie-service`, `rating-service`, and `recommendation-service`) for service
-discovery. Each business service should own its data and API boundary; avoid
-letting one service write directly to another service's data store.
+Security dependencies are present, but application authentication and
+authorization are not implemented. The User Service includes JJWT libraries,
+and the gateway reads `JWT_SECRET` and `JWT_EXPIRATION`, but there is no login
+API, password handling, token issuer, JWT filter, security filter chain, route
+authorization, or frontend token handling. Until custom configuration is
+added, Spring Security's framework defaults apply.
+
+Neo4j authentication is separate from application user authentication. Local
+Compose defaults are for loopback-only development and must not be treated as
+production secrets. Override them before using a non-local deployment.
+
+## Deployment and operations
+
+`docker-compose.yml` runs the frontend, registry, gateway, four domain services,
+and Neo4j on one Compose network. Compose uses `registry` and `neo4j` as the
+internal DNS names, waits for dependency health checks, and publishes each
+process on its configurable loopback-only host port.
+
+The backend services share a multi-stage Dockerfile selected by a `SERVICE`
+build argument. Maven creates each executable jar, and the runtime image runs it
+as a non-root user on Java 21. The frontend image builds the Angular application
+with npm and runs the generated Express server as the Node user. The complete
+local stack starts with `docker compose up --build --detach`.
+
+Compose health checks provide local startup ordering. All backend applications
+include Actuator, but no centralized logging, distributed tracing, metrics
+export, or alerting is configured. The repository has no reverse proxy,
+Kubernetes configuration, infrastructure-as-code, or CI/CD workflow.
+
+## Test boundaries
+
+Backend coverage consists of one Spring context-load test per application.
+Frontend specs are generated component-creation tests. There are currently no
+API, security, graph, contract, integration, recommendation, or browser end-to-
+end tests.

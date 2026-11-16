@@ -6,15 +6,23 @@ spring:
   neo4j:
     uri: ${NEO4J_URI:bolt://localhost:7687}
     authentication:
-      username: ${NEO4J_USERNAME:neo4j}
-      password: ${NEO4J_PASSWORD:changeme123}
+      username: ${NEO4J_USERNAME}
+      password: ${NEO4J_PASSWORD}
   data:
     neo4j:
       database: neo4j
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:3600000}
 
 eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
 server:
-  port: ${USER_SERVICE_PORT}
+  port: ${USER_SERVICE_PORT:8083}
