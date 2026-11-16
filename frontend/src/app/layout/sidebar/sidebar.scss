@@ -17,14 +17,14 @@
 }
 
 .sidebar a:hover {
-	color: #fff;
+	color: var(--text);
 	background: #202025;
 }
 
 .sidebar a.active {
-	color: #fff;
+	color: var(--text);
 	background: #302024;
-	box-shadow: inset 3px 0 #e50914;
+	box-shadow: inset 3px 0 var(--red);
 }
 
 @media (max-width: 720px) {
@@ -36,5 +36,5 @@
 	}
 
 	.sidebar a { flex: 1; text-align: center; }
-	.sidebar a.active { box-shadow: inset 0 -3px #e50914; }
+	.sidebar a.active { box-shadow: inset 0 -3px var(--red); }
 }

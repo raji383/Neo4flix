@@ -1,7 +1,7 @@
-$bg: #0b0b0f;
-$red: #e50914;
-$text: #fff;
-$muted: #9a9aa5;
+$bg: var(--bg);
+$red: var(--red);
+$text: var(--text);
+$muted: var(--muted);
 
 .auth-page {
     position: relative;
