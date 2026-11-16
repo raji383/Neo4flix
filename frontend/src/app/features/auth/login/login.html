@@ -1,1 +1,42 @@
-<p>login works!</p>
+<div class="login-container">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+        <h1>Welcome Back</h1>
+        <p>Sign in to Neo4flix</p>
+
+        <div class="form-group">
+            <label for="username">Username</label>
+
+            <input id="username" type="text" formControlName="username" placeholder="Enter your username" />
+
+            @if (
+            loginForm.controls.username.touched &&
+            loginForm.controls.username.invalid
+            ) {
+            <small>Username is required.</small>
+            }
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+
+            <input id="password" type="password" formControlName="password" placeholder="Enter your password" />
+
+            @if (
+            loginForm.controls.password.touched &&
+            loginForm.controls.password.invalid
+            ) {
+            <small>Password is required.</small>
+            }
+        </div>
+
+        @if (errorMessage) {
+        <p class="error-message">{{ errorMessage }}</p>
+        }
+
+        <button type="submit" [disabled]="isLoading">
+            {{ isLoading ? 'Signing in...' : 'Login' }}
+        </button>
+
+    </form>
+</div>
