@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
@@ -7,4 +7,14 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './sidebar.scss',
   templateUrl: './sidebar.html',
 })
-export class Sidebar {}
+export class Sidebar {
+  collapsed = signal(false);
+
+  toggle() {
+    this.collapsed.update(v => !v);
+  }
+
+  onLogout() {
+    // call your auth service logout(), then navigate to /login
+  }
+}

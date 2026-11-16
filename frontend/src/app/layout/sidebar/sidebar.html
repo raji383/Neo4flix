@@ -1,6 +1,32 @@
-<nav class="sidebar" aria-label="Main navigation">
-	<a routerLink="/movies" routerLinkActive="active" ariaCurrentWhenActive="page">Movies</a>
-	<a routerLink="/profile" routerLinkActive="active" ariaCurrentWhenActive="page">Profile</a>
-	<a routerLink="/recommendations" routerLinkActive="active" ariaCurrentWhenActive="page">Recommendations</a>
-	<a routerLink="/rating" routerLinkActive="active" ariaCurrentWhenActive="page">Ratings</a>
-</nav>
+<aside class="sidebar" [class.collapsed]="collapsed()">
+  <div class="top">
+    <a class="brand" routerLink="/movies">
+      <span class="logo">🎬</span>
+      <span class="brand-text">Neo<span>4</span>flix</span>
+    </a>
+
+    <button type="button" class="collapse-btn" (click)="toggle()"
+            [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+      {{ collapsed() ? '›' : '‹' }}
+    </button>
+  </div>
+
+  <nav aria-label="Main navigation">
+    <a routerLink="/movies" routerLinkActive="active" ariaCurrentWhenActive="page" title="Movies">
+      <span class="icon">🎞️</span><span class="label">Movies</span>
+    </a>
+    <a routerLink="/recommendations" routerLinkActive="active" ariaCurrentWhenActive="page" title="Recommendations">
+      <span class="icon">✨</span><span class="label">Recommendations</span>
+    </a>
+    <a routerLink="/rating" routerLinkActive="active" ariaCurrentWhenActive="page" title="Ratings">
+      <span class="icon">⭐</span><span class="label">Ratings</span>
+    </a>
+    <a routerLink="/profile" routerLinkActive="active" ariaCurrentWhenActive="page" title="Profile">
+      <span class="icon">👤</span><span class="label">Profile</span>
+    </a>
+  </nav>
+
+  <button type="button" class="logout" (click)="onLogout()" title="Logout">
+    <span class="icon">🚪</span><span class="label">Logout</span>
+  </button>
+</aside>
