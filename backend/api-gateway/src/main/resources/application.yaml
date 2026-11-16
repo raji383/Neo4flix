@@ -26,6 +26,9 @@ spring:
               uri: lb://user-service
               predicates:
                 - Path=/api/auth/**
+            - id: user-profile
+              uri: lb://user-service
+              predicates:
                 - Path=/api/users/**
             - id: movie-service
               uri: lb://movie-service
