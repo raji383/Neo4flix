@@ -5,11 +5,12 @@ import java.security.Principal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -49,4 +50,23 @@ public class MovieController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<MovieResponseDTO> getMovie(@PathVariable String id) {
+        return ResponseEntity.ok(movieService.getById(id));
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<MovieResponseDTO> updateMovie(
+            @PathVariable String id,
+            @Valid @ModelAttribute CreateMovieDTO request,
+            Principal principal) {
+
+        return ResponseEntity.ok(movieService.updateMovie(id, request, principal.getName()));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMovie(@PathVariable String id, Principal principal) {
+        movieService.deleteMovie(id, principal.getName());
+        return ResponseEntity.noContent().build();
+    }
 }
