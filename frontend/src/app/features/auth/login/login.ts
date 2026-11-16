@@ -45,12 +45,8 @@ export class Login {
       },
       error: (error) => {
         this.isLoading.set(false);
+        this.errorMessage = error.error?.message || 'An error occurred during login.';
 
-        if (error.status === 401) {
-          this.errorMessage = 'Invalid username or password.';
-        } else {
-          this.errorMessage = 'Something went wrong. Please try again.';
-        }
       }
     });
   }
