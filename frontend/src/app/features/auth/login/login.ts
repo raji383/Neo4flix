@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.html',
   styleUrl: './login.scss'
 })
@@ -14,32 +15,36 @@ export class Login {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
 
-  isLoading = false;
+  isLoading = signal(false);
   errorMessage = '';
 
   loginForm = this.fb.nonNullable.group({
     username: ['', Validators.required],
     password: ['', Validators.required]
   });
+  showPassword = signal(false);
 
+  togglePassword() {
+    this.showPassword.update(v => !v);
+  }
   onSubmit(): void {
-    if (this.loginForm.invalid || this.isLoading) {
+    if (this.loginForm.invalid || this.isLoading()) {
       this.loginForm.markAllAsTouched();
       return;
     }
 
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.errorMessage = '';
 
     this.authService.login(this.loginForm.getRawValue()).subscribe({
       next: (response) => {
         console.log('Login successful:', response.username);
-        this.isLoading = false;
+        this.isLoading.set(false);
 
-       
+
       },
       error: (error) => {
-        this.isLoading = false;
+        this.isLoading.set(false);
 
         if (error.status === 401) {
           this.errorMessage = 'Invalid username or password.';
