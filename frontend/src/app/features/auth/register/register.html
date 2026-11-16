@@ -71,15 +71,15 @@
                 }
             </div>
 
-            @if (errorMessage) {
-            <div class="error-box" role="alert">{{ errorMessage }}</div>
+            @if (errorMessage()) {
+            <div class="error-box" role="alert">{{ errorMessage() }}</div>
             }
-            @if (successMessage) {
-            <div class="success-box" role="status">{{ successMessage }}</div>
+            @if (successMessage()) {
+            <div class="success-box" role="status">{{ successMessage() }}</div>
             }
 
-            <button type="submit" class="submit" [disabled]="isLoading">
-                @if (isLoading) {
+            <button type="submit" class="submit" [disabled]="isLoading()">
+                @if (isLoading()) {
                 <span class="spinner"></span> Creating account...
                 } @else {
                 Register
