@@ -1,0 +1,292 @@
+$bg: #0b0b0f;
+$red: #e50914;
+$text: #fff;
+$muted: #9a9aa5;
+
+.auth-page {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px;
+    overflow: hidden;
+    background: $bg;
+    color: $text;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ---------- Background ---------- */
+.glow {
+    position: absolute;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.35;
+    animation: float 12s ease-in-out infinite alternate;
+
+    &.glow-red {
+        background: $red;
+        top: -120px;
+        right: -120px;
+    }
+
+    &.glow-purple {
+        background: #6a1bff;
+        bottom: -140px;
+        left: -120px;
+        animation-delay: -6s;
+    }
+}
+
+.posters {
+    position: absolute;
+    inset: 0;
+    opacity: 0.07;
+    background-image:
+        repeating-linear-gradient(90deg, #fff 0 90px, transparent 90px 110px),
+        repeating-linear-gradient(0deg, transparent 0 130px, $bg 130px 150px);
+    transform: rotate(8deg) scale(1.4);
+    mask-image: radial-gradient(circle at center, transparent 20%, #000 90%);
+}
+
+@keyframes float {
+    to {
+        transform: translate(-60px, 40px) scale(1.15);
+    }
+}
+
+/* ---------- Card ---------- */
+.auth-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    padding: 36px 32px 28px;
+    background: rgba(30, 30, 38, 0.65);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    animation: rise 0.6s ease both;
+}
+
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+}
+
+.brand {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 24px;
+
+    span {
+        color: $red;
+    }
+}
+
+h1 {
+    margin: 0 0 6px;
+    font-size: 1.6rem;
+}
+
+.subtitle {
+    margin: 0 0 22px;
+    color: $muted;
+    font-size: 0.92rem;
+}
+
+/* ---------- Form ---------- */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+
+    label {
+        font-size: 0.85rem;
+        color: #ccc;
+    }
+}
+
+input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: $text;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+    &::placeholder {
+        color: #6f6f7a;
+    }
+
+    &:focus {
+        border-color: $red;
+        background: rgba(255, 255, 255, 0.09);
+        box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.2);
+    }
+}
+
+.password-wrapper {
+    position: relative;
+
+    input {
+        padding-right: 64px;
+    }
+
+    .toggle {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 6px 10px;
+        background: transparent;
+        border: none;
+        color: $muted;
+        font-size: 0.8rem;
+        cursor: pointer;
+
+        &:hover {
+            color: $text;
+        }
+    }
+}
+
+small {
+    color: #ff6b6b;
+    font-size: 0.8rem;
+}
+
+/* ---------- Password strength ---------- */
+.strength {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+
+    span {
+        height: 4px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.12);
+        transition: background 0.25s;
+    }
+
+    &[data-level='1'] span:nth-child(-n + 1) {
+        background: #ff4d4d;
+    }
+
+    &[data-level='2'] span:nth-child(-n + 2) {
+        background: #ffa534;
+    }
+
+    &[data-level='3'] span:nth-child(-n + 3) {
+        background: #f2d024;
+    }
+
+    &[data-level='4'] span:nth-child(-n + 4) {
+        background: #2ecc71;
+    }
+}
+
+.strength-label {
+    font-size: 0.75rem;
+    font-style: normal;
+    color: $muted;
+}
+
+/* ---------- Messages ---------- */
+.error-box,
+.success-box {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+}
+
+.error-box {
+    background: rgba(255, 70, 70, 0.12);
+    border: 1px solid rgba(255, 70, 70, 0.35);
+    color: #ff8a8a;
+}
+
+.success-box {
+    background: rgba(46, 204, 113, 0.12);
+    border: 1px solid rgba(46, 204, 113, 0.35);
+    color: #6ee7a0;
+}
+
+/* ---------- Submit ---------- */
+.submit {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, $red, #b20710);
+    color: $text;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(229, 9, 20, 0.4);
+    }
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.footer-text {
+    margin: 20px 0 0;
+    text-align: center;
+    color: $muted;
+    font-size: 0.9rem;
+
+    a {
+        color: $text;
+        font-weight: 600;
+        text-decoration: none;
+
+        &:hover {
+            color: $red;
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 28px 20px 22px;
+    }
+}

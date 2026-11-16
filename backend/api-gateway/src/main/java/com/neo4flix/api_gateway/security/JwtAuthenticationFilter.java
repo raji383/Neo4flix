@@ -83,10 +83,12 @@ public class JwtAuthenticationFilter implements WebFilter {
 
         String path = request.getPath().value();
 
-        return request.getMethod() == HttpMethod.POST &&
-                (path.equals("/api/auth/register") ||
-                        path.equals("/api/auth/login"))
-                || path.equals("/actuator/health");
+        return (request.getMethod() == HttpMethod.POST &&
+            (path.equals("/api/auth/register")
+                || path.equals("/api/auth/login")
+                || path.equals("/api/users/me")))
+            || (request.getMethod() == HttpMethod.GET
+                && path.equals("/actuator/health"));
     }
 
     private Mono<Void> unauthorized(ServerWebExchange exchange) {
