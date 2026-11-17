@@ -1,1 +1,148 @@
-<p>movies works!</p>
+<section class="movies">
+  @if (featured(); as hero) {
+    <header class="hero">
+      @if (hero.imageUrl && hasImage(hero.id)) {
+        <img class="hero__bg" [src]="hero.imageUrl" [alt]="hero.title" (error)="onImageError(hero.id)" />
+      }
+      <div class="hero__shade"></div>
+
+      <label class="search">
+        <span class="search__icon" aria-hidden="true">⌕</span>
+        <input
+          type="search"
+          placeholder="Search movies or directors"
+          [value]="params().q ?? ''"
+          (input)="onSearch($any($event.target).value)"
+        />
+      </label>
+
+      <div class="hero__content">
+        <h1 class="hero__title">{{ hero.title }}</h1>
+        <p class="hero__meta">{{ hero.director }} · {{ hero.releaseYear }}</p>
+        <p class="hero__desc">{{ hero.description }}</p>
+
+        <div class="stars" [attr.aria-label]="formatRating(hero.averageRating) + ' out of 5'">
+          @for (star of stars(hero.averageRating); track $index) {
+            <span class="star star--{{ star }}">★</span>
+          }
+          <small>{{ formatRating(hero.averageRating) }} ({{ hero.ratingCount ?? 0 }})</small>
+        </div>
+
+        <div class="hero__actions">
+          <button class="btn btn--primary" type="button">▶ Watch now</button>
+          <button class="btn btn--ghost" type="button">Trailer</button>
+        </div>
+      </div>
+    </header>
+  } @else {
+    <header class="hero hero--empty">
+      <label class="search">
+        <span class="search__icon" aria-hidden="true">⌕</span>
+        <input
+          type="search"
+          placeholder="Search movies or directors"
+          [value]="params().q ?? ''"
+          (input)="onSearch($any($event.target).value)"
+        />
+      </label>
+      <div class="hero__content">
+        <h1 class="hero__title">Discover movies</h1>
+        <p class="hero__meta">Find your next favorite film</p>
+      </div>
+    </header>
+  }
+
+  <section class="popular" aria-labelledby="popular-heading">
+    <h2 class="section-title" id="popular-heading">Popular movies</h2>
+    @if (popularError()) {
+      <p class="status-message status-message--error">{{ popularError() }}</p>
+    } @else if (loadingPopular()) {
+      <p class="status-message">Loading popular movies…</p>
+    } @else if (popular().length) {
+      <div class="carousel">
+        <div class="carousel__track" #track>
+          @for (movie of popular(); track movie.id) {
+            <button
+              type="button"
+              class="poster"
+              [class.poster--active]="movie.id === featuredId()"
+              [attr.aria-label]="movie.title"
+              (click)="featuredId.set(movie.id)"
+            >
+              @if (movie.imageUrl && hasImage(movie.id)) {
+                <img [src]="movie.imageUrl" [alt]="movie.title" loading="lazy" (error)="onImageError(movie.id)" />
+              } @else {
+                <span class="poster__fallback">{{ movie.title }}</span>
+              }
+            </button>
+          }
+        </div>
+        <button class="carousel__next" type="button" aria-label="Next" (click)="scrollCarousel(track)">›</button>
+      </div>
+    } @else {
+      <p class="status-message">No popular movies yet.</p>
+    }
+  </section>
+
+  <div class="chips" aria-label="Filter by genre">
+    @if (genresError()) {
+      <p class="status-message status-message--error">{{ genresError() }}</p>
+    } @else {
+      @for (genre of genreList(); track genre) {
+        <button
+          type="button"
+          class="chip"
+          [class.chip--active]="isGenreActive(genre)"
+          [attr.aria-pressed]="isGenreActive(genre)"
+          (click)="toggleGenre(genre)"
+        >
+          {{ genre }}
+        </button>
+      }
+    }
+  </div>
+
+  @if (moviesError()) {
+    <p class="status-message status-message--error">{{ moviesError() }}</p>
+  } @else if (loadingMovies()) {
+    <p class="status-message">Loading movies…</p>
+  } @else if (movies().length) {
+    <div class="grid">
+      @for (movie of movies(); track movie.id) {
+        <article class="card" tabindex="0" (click)="featuredId.set(movie.id)" (keydown.enter)="featuredId.set(movie.id)">
+          <div class="card__poster">
+            @if (movie.imageUrl && hasImage(movie.id)) {
+              <img [src]="movie.imageUrl" [alt]="movie.title" loading="lazy" (error)="onImageError(movie.id)" />
+            } @else {
+              <span class="poster__fallback">{{ movie.title }}</span>
+            }
+            <span class="card__rating">★ {{ formatRating(movie.averageRating) }}</span>
+          </div>
+          <h3 class="card__title">{{ movie.title }}</h3>
+          <p class="card__sub">{{ movie.releaseYear }} · {{ movie.genres.slice(0, 2).join(', ') }}</p>
+        </article>
+      }
+    </div>
+
+    @if (pageResponse(); as page) {
+      @if (page.totalPages > 1) {
+        <nav class="pagination" aria-label="Movie pages">
+          <button type="button" class="pagination__button" [disabled]="page.page === 0" (click)="previousPage()">
+            Previous
+          </button>
+          <span>Page {{ page.page + 1 }} of {{ page.totalPages }}</span>
+          <button
+            type="button"
+            class="pagination__button"
+            [disabled]="page.page + 1 >= page.totalPages"
+            (click)="nextPage()"
+          >
+            Next
+          </button>
+        </nav>
+      }
+    }
+  } @else {
+    <p class="empty">No movies match your search. Try another title or clear the genre filters.</p>
+  }
+</section>

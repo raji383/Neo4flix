@@ -3,30 +3,26 @@ export interface Movie {
   title: string;
   director: string;
   description: string;
-  releaseDate: number;
+  releaseYear: number;
   genres: string[];
-  imageUrl: string;
-  averageRating?: number;
-  ratingCount?: number;
-
+  imageUrl?: string | null;
+  averageRating?: number | null;
+  ratingCount: number;
 }
 
 export interface CreateMovie {
   title: string;
-  releaseDate: number;
+  releaseYear: number;
   director: string;
   description: string;
   genres: string[];
-  file: File;
+  file?: File;
 }
 
-
-
 export interface MovieSearchParams {
-
   q?: string;
   page?: number;
   size?: number;
   genres?: string[];
-  releaseDate?: number;
+  releaseYear?: number;
 }

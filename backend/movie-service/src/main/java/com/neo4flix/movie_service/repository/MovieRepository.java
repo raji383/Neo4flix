@@ -20,7 +20,10 @@ public interface MovieRepository extends Neo4jRepository<Movie, String>, MovieRe
       WHERE ($q IS NULL OR toLower(m.title) CONTAINS toLower($q)
                         OR toLower(m.director) CONTAINS toLower($q))
         AND ($year IS NULL OR m.releaseYear = $year)
-        AND ($genre IS NULL OR EXISTS { (m)-[:HAS_GENRE]->(:Genre {name: $genre}) })
+        AND (size($genres) = 0 OR EXISTS {
+          MATCH (m)-[:HAS_GENRE]->(g:Genre)
+          WHERE g.name IN $genres
+        })
       OPTIONAL MATCH (m)-[r:HAS_GENRE]->(g:Genre)
       RETURN m, collect(r), collect(g)
       ORDER BY m.title
@@ -30,10 +33,13 @@ public interface MovieRepository extends Neo4jRepository<Movie, String>, MovieRe
       WHERE ($q IS NULL OR toLower(m.title) CONTAINS toLower($q)
                         OR toLower(m.director) CONTAINS toLower($q))
         AND ($year IS NULL OR m.releaseYear = $year)
-        AND ($genre IS NULL OR EXISTS { (m)-[:HAS_GENRE]->(:Genre {name: $genre}) })
+        AND (size($genres) = 0 OR EXISTS {
+          MATCH (m)-[:HAS_GENRE]->(g:Genre)
+          WHERE g.name IN $genres
+        })
       RETURN count(m)
       """)
-  Page<Movie> search(String q, String genre, Integer year, Pageable pageable);
+  Page<Movie> search(String q, List<String> genres, Integer year, Pageable pageable);
 
   @Query("""
       MATCH (:User)-[r:RATED]->(:Movie {id: $id})

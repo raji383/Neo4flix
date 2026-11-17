@@ -44,7 +44,7 @@ public class MovieController {
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String genre,
+            @RequestParam(name = "genre", required = false) List<String> genre,
             @RequestParam(required = false) Integer releaseYear) {
 
         PageResponse<MovieResponseDTO> response = movieService.getMovies(page, size, q, genre, releaseYear);

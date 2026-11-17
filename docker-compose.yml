@@ -58,6 +58,8 @@ services:
         condition: service_healthy
       user-service:
         condition: service_healthy
+      movie-service:
+        condition: service_healthy
     healthcheck:
       <<: *backend-healthcheck
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8443/actuator/health"]
@@ -88,18 +90,21 @@ services:
       <<: *backend-healthcheck
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8083/actuator/health"]
 
-  # movie-service:
-  #   build:
-  #     <<: *backend-build
-  #     args:
-  #       SERVICE: movie-service
-  #   environment:
-  #     <<: *domain-environment
-  #     MOVIE_SERVICE_PORT: 8080
-  #   depends_on: *domain-dependencies
-  #   healthcheck:
-  #     <<: *backend-healthcheck
-  #     test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health"]
+  movie-service:
+    build:
+      <<: *backend-build
+      args:
+        SERVICE: movie-service
+    environment:
+      <<: *domain-environment
+      MOVIE_SERVICE_PORT: 8080
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-demo}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-demo}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-demo}
+    depends_on: *domain-dependencies
+    healthcheck:
+      <<: *backend-healthcheck
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health"]
 
   # rating-service:
   #   build:

@@ -12,10 +12,10 @@ spring:
     neo4j:
       database: neo4j
 
-# eureka:
-#   client:
-#     service-url:
-#       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
 server:
   port: ${MOVIE_SERVICE_PORT}
 

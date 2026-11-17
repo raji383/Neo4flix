@@ -102,12 +102,13 @@ public class MovieService {
         return new HashSet<>(found);
     }
 
-    public PageResponse<MovieResponseDTO> getMovies(int page, int size, String q, String genre, Integer releaseYear) {
+    public PageResponse<MovieResponseDTO> getMovies(
+            int page, int size, String q, List<String> genres, Integer releaseYear) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 50);
 
         Page<Movie> result = movieRepository.search(
-                blankToNull(q), blankToNull(genre), releaseYear, PageRequest.of(safePage, safeSize));
+                blankToNull(q), cleanGenres(genres), releaseYear, PageRequest.of(safePage, safeSize));
 
         Map<String, RatingSummary> ratings = movieRepository.summaries(
                 result.getContent().stream().map(Movie::getId).toList());
@@ -122,6 +123,11 @@ public class MovieService {
 
     private String blankToNull(String s) {
         return (s == null || s.isBlank()) ? null : s.trim();
+    }
+
+    private List<String> cleanGenres(List<String> genres) {
+        return genres == null ? List.of()
+                : genres.stream().filter(genre -> genre != null && !genre.isBlank()).map(String::trim).toList();
     }
 
     public MovieResponseDTO getById(String id) {
