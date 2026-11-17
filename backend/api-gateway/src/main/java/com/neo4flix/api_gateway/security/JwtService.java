@@ -19,7 +19,7 @@ public class JwtService {
                 Decoders.BASE64.decode(jwtSecret));
     }
 
-    public String validateAndExtractUserId(String token) {
+    public Identity validateAndExtractIdentity(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(signingKey)
                 .build()
@@ -27,11 +27,17 @@ public class JwtService {
                 .getPayload();
 
         String userId = claims.getSubject();
+        String role = claims.get("role", String.class);
 
         if (userId == null || userId.isBlank()) {
             throw new IllegalArgumentException("JWT subject is missing");
         }
+        if (role == null || role.isBlank()) {
+            throw new IllegalArgumentException("JWT role is missing");
+        }
 
-        return userId;
+        return new Identity(userId, role);
     }
+
+    public record Identity(String userId, String role) {}
 }

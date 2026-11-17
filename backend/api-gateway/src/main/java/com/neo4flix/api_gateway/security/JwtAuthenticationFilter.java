@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 public class JwtAuthenticationFilter implements WebFilter {
 
     private static final String USER_ID_HEADER = "X-Authenticated-User-Id";
+    private static final String USER_ROLE_HEADER = "X-Authenticated-User-Role";
 
     private final JwtService jwtService;
 
@@ -33,7 +34,10 @@ public class JwtAuthenticationFilter implements WebFilter {
 
         // Always remove a client-supplied identity header.
         var sanitizedRequest = request.mutate()
-                .headers(headers -> headers.remove(USER_ID_HEADER))
+                .headers(headers -> {
+                    headers.remove(USER_ID_HEADER);
+                    headers.remove(USER_ROLE_HEADER);
+                })
                 .build();
 
         var sanitizedExchange = exchange.mutate()
@@ -62,10 +66,11 @@ public class JwtAuthenticationFilter implements WebFilter {
         String token = authorization.substring(7).trim();
 
         try {
-            String userId = jwtService.validateAndExtractUserId(token);
+            JwtService.Identity identity = jwtService.validateAndExtractIdentity(token);
 
             var authenticatedRequest = sanitizedRequest.mutate()
-                    .header(USER_ID_HEADER, userId)
+                    .header(USER_ID_HEADER, identity.userId())
+                    .header(USER_ROLE_HEADER, identity.role())
                     .build();
 
             var authenticatedExchange = sanitizedExchange.mutate()
