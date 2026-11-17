@@ -72,6 +72,7 @@ public class AuthService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setRole("USER");
         return user;
     }
 
@@ -80,9 +81,11 @@ public class AuthService {
         response.setId(user.getId());
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
+        response.setRole(user.getRole());
         Instant issuedAt = Instant.now();
         response.setJwtToken(Jwts.builder()
                 .subject(user.getId())
+                .claim("role", user.getRole())
                 .issuedAt(Date.from(issuedAt))
                 .expiration(Date.from(issuedAt.plusMillis(tokenExpirationMs)))
                 .signWith(signingKey)
