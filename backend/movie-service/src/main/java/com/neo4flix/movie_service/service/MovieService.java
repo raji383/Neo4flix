@@ -30,6 +30,8 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final GenreRepository genreRepository;
     private final MediaUploadService mediaUploadService;
+    private static final int POPULAR_MIN_VOTES = 3;
+
 
     @Transactional
     public MovieResponseDTO addMovie(CreateMovieDTO request, String userId) {
@@ -128,10 +130,28 @@ public class MovieService {
         return toResponse(movie, movieRepository.summaries(List.of(id)).get(id));
     }
 
+
+    public List<MovieResponseDTO> getPopular(int limit) {
+        int safeLimit = Math.min(Math.max(limit, 1), 20);
+
+        List<RatingSummary> top = movieRepository.topRated(POPULAR_MIN_VOTES, safeLimit);
+
+        Map<String, Movie> movies = movieRepository
+                .findAllById(top.stream().map(RatingSummary::movieId).toList())
+                .stream().collect(Collectors.toMap(Movie::getId, m -> m));
+
+        // keep the ranking order from the query
+        return top.stream()
+                .filter(s -> movies.containsKey(s.movieId()))
+                .map(s -> toResponse(movies.get(s.movieId()), s))
+                .toList();
+    }
+
     private MovieResponseDTO toResponse(Movie movie, RatingSummary rating) {
-        Set<String> genres = movie.getGenres() == null ? Set.of() : movie.getGenres().stream()
-                .map(Genre::getName)
-                .collect(Collectors.toSet());
+        Set<String> genres = movie.getGenres() == null ? Set.of()
+                : movie.getGenres().stream()
+                        .map(Genre::getName)
+                        .collect(Collectors.toSet());
 
         Double avg = (rating == null || rating.average() == null) ? null
                 : Math.round(rating.average() * 10) / 10.0;
