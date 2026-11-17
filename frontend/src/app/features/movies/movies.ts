@@ -1,5 +1,6 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { EMPTY, catchError, finalize, switchMap } from 'rxjs';
 import { ErrorMessageService } from '../../core/services/error-message.service';
 import { MovieService } from '../../core/services/movie.service';
@@ -7,12 +8,13 @@ import { Movie, MovieSearchParams } from '../../shared/models/movie';
 import { PageResponse } from '../../shared/models/pageResponse';
 
 @Component({
-  imports: [],
+  imports: [RouterLink],
   selector: 'app-movies',
   styleUrl: './movies.scss',
   templateUrl: './movies.html',
 })
 export class Movies {
+  private readonly host = inject(ElementRef<HTMLElement>);
   private readonly movieService = inject(MovieService);
   private readonly errorMessageService = inject(ErrorMessageService);
 
@@ -91,6 +93,30 @@ export class Movies {
 
   onSearch(value: string) {
     this.params.update((params) => ({ ...params, q: value, page: 0 }));
+  }
+
+  onReleaseYear(value: string) {
+    const releaseYear = value ? Number(value) : undefined;
+    const validReleaseYear =
+      releaseYear !== undefined &&
+      Number.isInteger(releaseYear) &&
+      releaseYear >= 1888 &&
+      releaseYear <= 2100
+        ? releaseYear
+        : undefined;
+    this.params.update((params) => ({
+      ...params,
+      releaseYear: validReleaseYear,
+      page: 0,
+    }));
+  }
+
+  selectMovie(movieId: string) {
+    this.featuredId.set(movieId);
+    const scrollContainer = this.host.nativeElement.closest('.content');
+    if (scrollContainer instanceof HTMLElement) {
+      scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   toggleGenre(genre: string) {

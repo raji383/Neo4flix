@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { Login } from './features/auth/login/login';
 import { REGISTER } from './features/auth/register/register';
 import { Movies } from './features/movies/movies';
+import { MovieDetails } from './features/movie-details/movie-details';
 import { Notfound } from './features/notfound/notfound';
 import { Profile } from './features/profile/profile';
 import { Page } from './layout/page/page';
@@ -20,6 +21,7 @@ export const routes: Routes = [
         canActivate: [authGuard],
         children: [
             { path: 'movies', component: Movies },
+            { path: 'movies/:id', component: MovieDetails },
             { path: 'profile', component: Profile },
             { path: 'recommendations', component: Recommendations },
             { path: 'rating', component: Ratings },
