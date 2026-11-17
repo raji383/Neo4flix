@@ -24,14 +24,14 @@ public class GatewayHeaderAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
 
         String userId = request.getHeader("X-Authenticated-User-Id");
+        String role = request.getHeader("X-Authenticated-User-Role");
 
-        if (userId != null && !userId.isBlank() && SecurityContextHolder.getContext().getAuthentication() == null) {
-            
-           
-
-            // Set userId as the Principal
+        if (userId != null && !userId.isBlank()
+            && role != null && !role.isBlank()
+            && SecurityContextHolder.getContext().getAuthentication() == null) {
             UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(userId, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+                new UsernamePasswordAuthenticationToken(userId, null,
+                    List.of(new SimpleGrantedAuthority("ROLE_" + role)));
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
         }
