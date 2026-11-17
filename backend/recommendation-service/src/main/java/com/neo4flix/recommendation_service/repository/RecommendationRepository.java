@@ -42,12 +42,19 @@ public class RecommendationRepository {
                     MATCH (:User {id: $userId})-[:RATED]->(movie)
                 }
 
+                OPTIONAL MATCH (movie)-[:HAS_GENRE]->(genre:Genre)
                 OPTIONAL MATCH (:User)-[r:RATED]->(movie)
 
                 RETURN
                     movie.id AS movieId,
                     movie.title AS title,
-                    coalesce(avg(r.value), 0.0) AS averageRating
+                    coalesce(movie.director, '') AS director,
+                    coalesce(movie.description, '') AS description,
+                    coalesce(movie.releaseYear, 0) AS releaseYear,
+                    coalesce(collect(DISTINCT genre.name), []) AS genres,
+                    coalesce(movie.imageUrl, '') AS imageUrl,
+                    coalesce(avg(r.value), 0.0) AS averageRating,
+                    count(r) AS ratingCount
                 """;
 
         return neo4jClient.query(query)
@@ -56,7 +63,13 @@ public class RecommendationRepository {
                 .mappedBy((typeSystem, record) -> new AvailableMovie(
                         record.get("movieId").asString(),
                         record.get("title").asString(),
-                        record.get("averageRating").asDouble()))
+                        record.get("director").asString(),
+                        record.get("description").asString(),
+                        record.get("releaseYear").asInt(),
+                        record.get("genres").asList(value -> value.asString()).stream().collect(java.util.stream.Collectors.toSet()),
+                        record.get("imageUrl").asString(),
+                        record.get("averageRating").asDouble(),
+                        record.get("ratingCount").asLong()))
                 .all()
                 .stream()
                 .toList();

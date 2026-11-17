@@ -7,9 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.Comparator;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.neo4flix.recommendation_service.dto.*;
 import com.neo4flix.recommendation_service.exceptions.ApiException;
@@ -97,7 +95,14 @@ public class RecommendationService {
                         recommendations.add(new MovieRecommendation(
                                         movie.movieId(),
                                         movie.title(),
-                                        hybridScore));
+                                        hybridScore,
+                                        movie.director(),
+                                        movie.description(),
+                                        movie.releaseYear(),
+                                        movie.genres(),
+                                        movie.imageUrl(),
+                                        movie.averageRating(),
+                                        movie.ratingCount()));
                 }
 
                 // Step 6: Return the best 10 movies
