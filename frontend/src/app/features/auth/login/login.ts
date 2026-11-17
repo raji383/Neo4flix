@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { ErrorMessageService } from '../../../core/services/error-message.service';
 
 @Component({
   selector: 'app-login',
@@ -14,6 +15,7 @@ import { AuthService } from '../../../core/services/auth.service';
 export class Login {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
+  private errorMessageService = inject(ErrorMessageService);
 
   isLoading = signal(false);
   router = inject(Router);
@@ -49,7 +51,10 @@ export class Login {
       },
       error: (error) => {
         this.isLoading.set(false);
-        this.errorMessage = error.error?.message || 'An error occurred during login.';
+        this.errorMessage = this.errorMessageService.getHttpErrorMessage(
+          error,
+          'An error occurred during login.',
+        );
 
       }
     });

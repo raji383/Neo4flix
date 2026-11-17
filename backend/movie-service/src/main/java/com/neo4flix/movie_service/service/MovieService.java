@@ -2,6 +2,7 @@ package com.neo4flix.movie_service.service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.neo4flix.movie_service.dto.request.CreateMovieDTO;
 import com.neo4flix.movie_service.dto.response.MovieResponseDTO;
 import com.neo4flix.movie_service.dto.response.PageResponse;
+import com.neo4flix.movie_service.dto.response.RatingSummary;
 import com.neo4flix.movie_service.exceptions.ApiException;
 import com.neo4flix.movie_service.model.Genre;
 import com.neo4flix.movie_service.model.Movie;
@@ -28,6 +30,8 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final GenreRepository genreRepository;
     private final MediaUploadService mediaUploadService;
+    private static final int POPULAR_MIN_VOTES = 3;
+
 
     @Transactional
     public MovieResponseDTO addMovie(CreateMovieDTO request, String userId) {
@@ -48,7 +52,7 @@ public class MovieService {
                 .imageUrl(uploadResult.url())
                 .build();
 
-        return toResponse(movieRepository.save(movie), null, null);
+        return toResponse(movieRepository.save(movie), null);
     }
 
     @Transactional
@@ -69,7 +73,7 @@ public class MovieService {
             }
         }
 
-        return toResponse(movieRepository.save(movie), null, null);
+        return toResponse(movieRepository.save(movie), null);
     }
 
     @Transactional
@@ -98,16 +102,21 @@ public class MovieService {
         return new HashSet<>(found);
     }
 
-    public PageResponse<MovieResponseDTO> getMovies(int page, int size, String q, String genre, Integer releaseYear) {
+    public PageResponse<MovieResponseDTO> getMovies(
+            int page, int size, String q, List<String> genres, Integer releaseYear) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 50);
 
         Page<Movie> result = movieRepository.search(
-                blankToNull(q), blankToNull(genre), releaseYear, PageRequest.of(safePage, safeSize));
+                blankToNull(q), cleanGenres(genres), releaseYear, PageRequest.of(safePage, safeSize));
 
-        List<MovieResponseDTO> content = result.getContent().stream().map(movie -> {
-            return toResponse(movie, null, null);
-        }).toList();
+        Map<String, RatingSummary> ratings = movieRepository.summaries(
+                result.getContent().stream().map(Movie::getId).toList());
+
+        List<MovieResponseDTO> content = result.getContent().stream()
+                .map(m -> toResponse(m, ratings.get(m.getId())))
+                .toList();
+
         return new PageResponse<>(content, result.getNumber(), result.getSize(),
                 result.getTotalElements(), result.getTotalPages());
     }
@@ -116,27 +125,53 @@ public class MovieService {
         return (s == null || s.isBlank()) ? null : s.trim();
     }
 
-   public MovieResponseDTO getById(String id) {
-    Movie movie = movieRepository.findById(id)
-            .orElseThrow(() -> ApiException.notFound("Movie not found"));
+    private List<String> cleanGenres(List<String> genres) {
+        return genres == null ? List.of()
+                : genres.stream().filter(genre -> genre != null && !genre.isBlank()).map(String::trim).toList();
+    }
 
-    Double avg = movieRepository.findAverageRating(id);
-    Long count = movieRepository.countRatings(id);
+    public MovieResponseDTO getById(String id) {
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(() -> ApiException.notFound("Movie not found"));
+        return toResponse(movie, movieRepository.summaries(List.of(id)).get(id));
+    }
 
-    Double rounded = avg == null ? null : Math.round(avg * 10) / 10.0;   
-    return toResponse(movie, rounded, count);
-}
-    private MovieResponseDTO toResponse(Movie movie, Double averageRating, Long ratingCount) {
+
+    public List<MovieResponseDTO> getPopular(int limit) {
+        int safeLimit = Math.min(Math.max(limit, 1), 20);
+
+        List<RatingSummary> top = movieRepository.topRated(POPULAR_MIN_VOTES, safeLimit);
+
+        Map<String, Movie> movies = movieRepository
+                .findAllById(top.stream().map(RatingSummary::movieId).toList())
+                .stream().collect(Collectors.toMap(Movie::getId, m -> m));
+
+        // keep the ranking order from the query
+        return top.stream()
+                .filter(s -> movies.containsKey(s.movieId()))
+                .map(s -> toResponse(movies.get(s.movieId()), s))
+                .toList();
+    }
+
+    private MovieResponseDTO toResponse(Movie movie, RatingSummary rating) {
+        Set<String> genres = movie.getGenres() == null ? Set.of()
+                : movie.getGenres().stream()
+                        .map(Genre::getName)
+                        .collect(Collectors.toSet());
+
+        Double avg = (rating == null || rating.average() == null) ? null
+                : Math.round(rating.average() * 10) / 10.0;
+        long count = rating == null ? 0 : rating.count();
+
         return new MovieResponseDTO(
                 movie.getId(),
                 movie.getTitle(),
                 movie.getDirector(),
                 movie.getDescription(),
                 movie.getReleaseYear(),
-                movie.getGenres().stream().map(Genre::getName).collect(Collectors.toSet()),
+                genres,
                 movie.getImageUrl(),
-                averageRating,
-                ratingCount);
+                avg,
+                count);
     }
-
 }

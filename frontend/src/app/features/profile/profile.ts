@@ -7,6 +7,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { ErrorMessageService } from '../../core/services/error-message.service';
 import { UserProfileService } from '../../core/services/user-profile.service';
 import { UserProfile } from '../../shared/models/user-profile.model';
 
@@ -23,6 +24,7 @@ export class Profile implements OnInit {
   private fb = inject(FormBuilder);
   private profileService = inject(UserProfileService);
   private authService = inject(AuthService);
+  private errorMessageService = inject(ErrorMessageService);
   private router = inject(Router);
 
   isLoading = signal(true);
@@ -76,7 +78,9 @@ export class Profile implements OnInit {
       },
       error: (error) => {
         this.isLoading.set(false);
-        this.errorMessage.set(error.error?.message || 'Unable to load your profile.');
+        this.errorMessage.set(
+          this.errorMessageService.getHttpErrorMessage(error, 'Unable to load your profile.'),
+        );
       }
     });
   }
@@ -132,11 +136,14 @@ export class Profile implements OnInit {
       },
       error: (error) => {
         this.isSaving.set(false);
-        if (error.status === 409) {
-          this.errorMessage.set(error.error?.message || 'Username or email is already in use.');
-        } else {
-          this.errorMessage.set(error.error?.message || 'Unable to update your profile.');
-        }
+        this.errorMessage.set(
+          this.errorMessageService.getHttpErrorMessage(
+            error,
+            error.status === 409
+              ? 'Username or email is already in use.'
+              : 'Unable to update your profile.',
+          ),
+        );
       }
     });
   }

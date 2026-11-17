@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { ErrorMessageService } from '../../../core/services/error-message.service';
 
 
 const passwordMatchValidator: ValidatorFn = (
@@ -34,6 +35,7 @@ export class REGISTER {
 
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
+  private errorMessageService = inject(ErrorMessageService);
 
   isLoading = signal(false);
   errorMessage = signal('');
@@ -91,20 +93,16 @@ export class REGISTER {
       },
       error: (error) => {
         this.isLoading.set(false);
-
-        if (error.status === 409) {
-          this.errorMessage.set(
-            'Username or email is already registered.'
-          );
-        } else if (error.status === 400) {
-          this.errorMessage.set(
-            'Please check the information you entered.'
-          );
-        } else {
-          this.errorMessage.set(
-            'Something went wrong. Please try again.'
-          );
-        }
+        this.errorMessage.set(
+          this.errorMessageService.getHttpErrorMessage(
+            error,
+            error.status === 409
+              ? 'Username or email is already registered.'
+              : error.status === 400
+                ? 'Please check the information you entered.'
+                : 'Something went wrong. Please try again.',
+          ),
+        );
       }
     });
   }

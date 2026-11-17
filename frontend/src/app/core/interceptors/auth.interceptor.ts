@@ -1,31 +1,61 @@
 import { inject } from '@angular/core';
 import {
+    HttpErrorResponse,
     HttpInterceptorFn
 } from '@angular/common/http';
 
-import { AuthService } from '../services/auth.service';
-import { environment } from '../../../environments/environment';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
+import { catchError } from 'rxjs/internal/operators/catchError';
+import { throwError } from 'rxjs';
+import { ErrorMessageService } from '../services/error-message.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+ const token = localStorage.getItem('jwtToken');
+  const snackBar = inject(MatSnackBar);
+  const router = inject(Router);
+  const errorMessageService = inject(ErrorMessageService);
 
-    const authService = inject(AuthService);
-    const token = authService.getToken();
-
-    const isApiRequest = req.url.startsWith(environment.apiUrl);
-
-    const isPublicAuthRequest =
-        req.url.includes('/api/auth/login') ||
-        req.url.includes('/api/auth/register');
-
-    if (!token || !isApiRequest || isPublicAuthRequest) {
-        return next(req);
-    }
-
-    const authReq = req.clone({
-        setHeaders: {
-            Authorization: `Bearer ${token}`
-        }
+  let authReq = req;
+  if (token) {
+    authReq = req.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
     });
+  }
 
-    return next(authReq);
+  return next(authReq).pipe(
+    catchError((error: HttpErrorResponse) => {
+      const backendMessage = errorMessageService.getHttpErrorMessage(error);
+
+      if (error.status === 401 && token) {
+        localStorage.removeItem('jwtToken');
+        router.navigate(['/login']);
+      }
+      if (error.status === 423 && token) {
+        localStorage.removeItem('jwtToken');
+        router.navigate(['/login']);
+      }
+      if (error.status === 403) {
+       
+        snackBar.open(backendMessage, 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+          horizontalPosition: 'end',
+          verticalPosition: 'bottom',
+        });
+        return throwError(() => error);
+      }
+
+      snackBar.open(backendMessage, 'Close', {
+        duration: 5000,
+        panelClass: ['error-snackbar'],
+        horizontalPosition: 'end',
+        verticalPosition: 'bottom',
+      });
+
+      return throwError(() => error);
+    }),
+  );
 };

@@ -1,6 +1,7 @@
 package com.neo4flix.movie_service.controller;
 
 import java.security.Principal;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -43,7 +44,7 @@ public class MovieController {
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String genre,
+            @RequestParam(name = "genre", required = false) List<String> genre,
             @RequestParam(required = false) Integer releaseYear) {
 
         PageResponse<MovieResponseDTO> response = movieService.getMovies(page, size, q, genre, releaseYear);
@@ -68,5 +69,10 @@ public class MovieController {
     public ResponseEntity<Void> deleteMovie(@PathVariable String id, Principal principal) {
         movieService.deleteMovie(id, principal.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/popular")
+    public ResponseEntity<List<MovieResponseDTO>> getPopular(@RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(movieService.getPopular(limit));
     }
 }
