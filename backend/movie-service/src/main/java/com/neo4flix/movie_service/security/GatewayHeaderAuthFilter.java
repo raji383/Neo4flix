@@ -23,7 +23,7 @@ public class GatewayHeaderAuthFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
-        String userId = request.getHeader("X-Authenticated-UserID");
+        String userId = request.getHeader("X-Authenticated-User-Id");
 
         if (userId != null && !userId.isBlank() && SecurityContextHolder.getContext().getAuthentication() == null) {
             

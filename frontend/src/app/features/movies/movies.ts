@@ -1,7 +1,7 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { EMPTY, catchError, finalize, switchMap } from 'rxjs';
+import { ErrorMessageService } from '../../core/services/error-message.service';
 import { MovieService } from '../../core/services/movie.service';
 import { Movie, MovieSearchParams } from '../../shared/models/movie';
 import { PageResponse } from '../../shared/models/pageResponse';
@@ -14,6 +14,7 @@ import { PageResponse } from '../../shared/models/pageResponse';
 })
 export class Movies {
   private readonly movieService = inject(MovieService);
+  private readonly errorMessageService = inject(ErrorMessageService);
 
   readonly movies = signal<Movie[]>([]);
   readonly popular = signal<Movie[]>([]);
@@ -42,7 +43,9 @@ export class Movies {
 
           return this.movieService.search(params).pipe(
             catchError((error: unknown) => {
-              this.moviesError.set(this.errorMessage(error, 'Could not load movies.'));
+              this.moviesError.set(
+                this.errorMessageService.getHttpErrorMessage(error, 'Could not load movies.'),
+              );
               return EMPTY;
             }),
             finalize(() => this.loadingMovies.set(false)),
@@ -59,7 +62,9 @@ export class Movies {
       .getPopular(8)
       .pipe(
         catchError((error: unknown) => {
-          this.popularError.set(this.errorMessage(error, 'Could not load popular movies.'));
+          this.popularError.set(
+            this.errorMessageService.getHttpErrorMessage(error, 'Could not load popular movies.'),
+          );
           return EMPTY;
         }),
         finalize(() => this.loadingPopular.set(false)),
@@ -74,7 +79,9 @@ export class Movies {
       .getGenres()
       .pipe(
         catchError((error: unknown) => {
-          this.genresError.set(this.errorMessage(error, 'Could not load movie genres.'));
+          this.genresError.set(
+            this.errorMessageService.getHttpErrorMessage(error, 'Could not load movie genres.'),
+          );
           return EMPTY;
         }),
         takeUntilDestroyed(),
@@ -137,12 +144,4 @@ export class Movies {
     el.scrollBy({ left: el.clientWidth * 0.8, behavior: 'smooth' });
   }
 
-  private errorMessage(error: unknown, fallback: string): string {
-    if (error instanceof HttpErrorResponse) {
-      return error.status
-        ? `${fallback} (HTTP ${error.status})`
-        : `${fallback} Check that the API is running and reachable.`;
-    }
-    return fallback;
-  }
 }

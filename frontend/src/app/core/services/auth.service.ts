@@ -17,7 +17,7 @@ export class AuthService {
     private readonly platformId = inject(PLATFORM_ID);
 
     private get tokenStorage(): Storage | null {
-        return isPlatformBrowser(this.platformId) ? sessionStorage : null;
+        return isPlatformBrowser(this.platformId) ? localStorage : null;
     }
 
     constructor(private http: HttpClient) { }

@@ -71,6 +71,8 @@ services:
         SERVICE: registry
     environment:
       REGISTRY_PORT: 8761
+    ports:
+      - "127.0.0.1:${REGISTRY_PORT:-8761}:8761"
     healthcheck:
       <<: *backend-healthcheck
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8761/actuator/health"]
