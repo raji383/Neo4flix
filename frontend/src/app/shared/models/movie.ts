@@ -9,7 +9,18 @@ export interface Movie {
   averageRating?: number | null;
   ratingCount: number;
 }
-
+export interface MovieRecommendation {
+  movieId: string;
+  title: string;
+  hybridScore: number;
+  director: string;
+  description: string;
+  releaseYear: number;
+  genres: string[];
+  imageUrl: string;
+  averageRating: number;
+  ratingCount: number;
+}
 export interface CreateMovie {
   title: string;
   releaseYear: number;

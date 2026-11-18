@@ -1,1 +1,81 @@
-<p>recommendations works!</p>
+<section class="recommendations-page">
+
+    <header class="page-header">
+        <div>
+            <span class="eyebrow">DISCOVER YOUR NEXT FAVORITE</span>
+            <h1>Recommended <span>For You</span></h1>
+            <p>Movies selected based on your taste and interests.</p>
+        </div>
+    </header>
+
+    @if (loading) {
+    <div class="state-container">
+        <div class="loader"></div>
+        <p>Finding movies you'll love...</p>
+    </div>
+    }
+
+    @else if (error) {
+    <div class="state-container">
+        <h2>Something went wrong</h2>
+        <p>We couldn't load your recommendations.</p>
+        <button (click)="loadRecommendations()">Try Again</button>
+    </div>
+    }
+
+    @else if (movies.length === 0) {
+    <div class="state-container">
+        <h2>No recommendations yet</h2>
+        <p>Rate some movies to help us discover your taste.</p>
+    </div>
+    }
+
+    @else {
+    <div class="recommendations-info">
+        <h2>Picked for you</h2>
+        <span>{{ movies.length }} recommendations</span>
+    </div>
+
+    <div class="movies-grid">
+
+        @for (movie of movies; track movie.movieId) {
+        <article class="movie-card">
+
+            <div class="poster-container">
+                <img [src]="movie.imageUrl" [alt]="movie.title" class="movie-poster" />
+
+                <span class="recommendation-score">
+                    {{ (movie.hybridScore * 100).toFixed(0) }}% Match
+                </span>
+
+                <span class="movie-rating">
+                    ★ {{ movie.averageRating | number:'1.1-1' }}
+                </span>
+            </div>
+
+            <div class="movie-info">
+                <h3>{{ movie.title }}</h3>
+
+                <span class="movie-year">{{ movie.releaseYear }}</span>
+
+                <div class="movie-genres">
+                    @for (genre of movie.genres; track genre) {
+                    <span>{{ genre }}</span>
+                    }
+                </div>
+
+                <p>{{ movie.description }}</p>
+
+                <div class="movie-extra">
+                    <span>{{ movie.director }}</span>
+                    <span>{{ movie.ratingCount }} ratings</span>
+                </div>
+            </div>
+
+        </article>
+        }
+
+    </div>
+    }
+
+</section>

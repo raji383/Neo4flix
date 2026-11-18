@@ -4,8 +4,8 @@ package com.neo4flix.recommendation_service.controller;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.neo4flix.recommendation_service.dto.MovieRecommendation;
@@ -22,7 +22,7 @@ public class RecommendationController {
 
     @GetMapping
     public List<MovieRecommendation> recommendMovies(
-            @RequestParam String currentUserId) {
+            @RequestHeader("X-Authenticated-User-Id") String currentUserId) {
 
         return recommendationService.recommendMovies(currentUserId);
     }
