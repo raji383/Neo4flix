@@ -21,6 +21,7 @@ admin:
     username: ${ADMIN_USERNAME:admin}
     email: ${ADMIN_EMAIL:admin@neo4flix.local}
     password: ${ADMIN_PASSWORD:}
+    user-id: ${ADMIN_USER_ID:}
 
 eureka:
   client:

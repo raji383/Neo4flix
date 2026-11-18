@@ -1,8 +1,10 @@
 package com.neo4flix.movie_service.config;
 
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.neo4flix.movie_service.model.Genre;
@@ -12,11 +14,12 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class GenreSeeder implements CommandLineRunner {
 
     private final GenreRepository genreRepository;
 
-    private static final List<String> GENRES = List.of(
+    static final Set<String> GENRES = Set.of(
             "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary",
             "Drama", "Fantasy", "Horror", "Mystery", "Romance", "Sci-Fi",
             "Thriller", "War", "Western");
