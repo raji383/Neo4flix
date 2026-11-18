@@ -6,7 +6,7 @@
     </a>
 
     <button type="button" class="collapse-btn" (click)="toggle()"
-            [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+      [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
       {{ collapsed() ? '›' : '‹' }}
     </button>
   </div>
@@ -24,6 +24,15 @@
     <a routerLink="/profile" routerLinkActive="active" ariaCurrentWhenActive="page" title="Profile">
       <span class="icon">👤</span><span class="label">Profile</span>
     </a>
+   @if (user()?.role === 'ADMIN') {
+  <a routerLink="/dashboard"
+     routerLinkActive="active"
+     ariaCurrentWhenActive="page"
+     title="Admin">
+    <span class="icon">🛠️</span>
+    <span class="label">Dashboard</span>
+  </a>
+}
   </nav>
 
   <button type="button" class="logout" (click)="onLogout()" title="Logout">

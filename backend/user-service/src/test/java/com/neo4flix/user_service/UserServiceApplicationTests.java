@@ -20,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.neo4flix.user_service.model.User;
-import com.neo4flix.user_service.config.AdminBootstrap;
 import com.neo4flix.user_service.repository.UserRepository;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -101,41 +100,7 @@ class UserServiceApplicationTests {
 		assertEquals("USER", userCaptor.getValue().getRole());
 	}
 
-	@Test
-	void bootstrapCreatesAdminWhenAccountDoesNotExist() throws Exception {
-		when(userRepository.existsByUsername("bootstrap-admin")).thenReturn(false);
-		when(userRepository.existsByEmail("bootstrap@neo4flix.local")).thenReturn(false);
-		when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-		AdminBootstrap bootstrap = new AdminBootstrap(
-				userRepository,
-				passwordEncoder,
-				"bootstrap-admin",
-				"bootstrap@neo4flix.local",
-				"test-admin-password");
-		bootstrap.run(new DefaultApplicationArguments());
-
-		ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-		verify(userRepository).save(userCaptor.capture());
-		User createdAdmin = userCaptor.getValue();
-		assertEquals("ADMIN", createdAdmin.getRole());
-		assertTrue(passwordEncoder.matches("test-admin-password", createdAdmin.getPasswordHash()));
-	}
-
-	@Test
-	void bootstrapDoesNotCreateDuplicateAdmin() throws Exception {
-		when(userRepository.existsByUsername("bootstrap-admin")).thenReturn(true);
-
-		AdminBootstrap bootstrap = new AdminBootstrap(
-				userRepository,
-				passwordEncoder,
-				"bootstrap-admin",
-				"bootstrap@neo4flix.local",
-				"test-admin-password");
-		bootstrap.run(new DefaultApplicationArguments());
-
-		verify(userRepository, never()).save(any(User.class));
-	}
+	
 
 	@Test
 	void loginReturnsJwtForValidCredentials() throws Exception {

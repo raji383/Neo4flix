@@ -9,7 +9,10 @@ import { ErrorMessageService } from '../../core/services/error-message.service';
   styleUrl: './sidebar.scss',
   templateUrl: './sidebar.html',
 })
-export class Sidebar {
+export class Sidebar implements OnInit {
+  private router = inject(Router);
+  private userProfileService = inject(UserProfileService);
+  private user = signal<UserProfile | null>(null);
   collapsed = signal(false);
   private authService = inject(AuthService);
   private errorMessageService = inject(ErrorMessageService);
@@ -17,6 +20,16 @@ export class Sidebar {
 
   toggle() {
     this.collapsed.update(v => !v);
+  }
+  ngOnInit() {
+    this.userProfileService.getProfile().subscribe({
+      next: (profile) => {
+        this.user.set(profile);
+      },
+      error: (error) => {
+        console.error('Error fetching user profile:', error);
+      }
+    });
   }
 
   onLogout() {
