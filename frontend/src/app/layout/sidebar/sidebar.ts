@@ -1,7 +1,7 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { UserProfile } from '../../shared/models/user-profile.model';
-import { UserProfileService } from '../../core/services/user-profile.service';
+import { AuthService } from '../../core/services/auth.service';
+import { ErrorMessageService } from '../../core/services/error-message.service';
 
 @Component({
   imports: [RouterLink, RouterLinkActive],
@@ -14,6 +14,9 @@ export class Sidebar implements OnInit {
   private userProfileService = inject(UserProfileService);
   private user = signal<UserProfile | null>(null);
   collapsed = signal(false);
+  private authService = inject(AuthService);
+  private errorMessageService = inject(ErrorMessageService);
+  private router = inject(Router);
 
   toggle() {
     this.collapsed.update(v => !v);
@@ -30,7 +33,8 @@ export class Sidebar implements OnInit {
   }
 
   onLogout() {
-    localStorage.removeItem('jwtToken');
-    this.router.navigate(['/login']);
+
+    this.authService.logout();
+    void this.router.navigateByUrl('/login');
   }
 }

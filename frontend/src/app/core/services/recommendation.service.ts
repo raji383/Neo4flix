@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { MovieRecommendation } from '../../shared/models/movie';
 
 @Injectable({
@@ -9,7 +10,7 @@ import { MovieRecommendation } from '../../shared/models/movie';
 })
 export class RecommendationService {
 
-  private readonly apiUrl = '/api/recommendations';
+  private readonly apiUrl = `${environment.apiUrl}/api/recommendations`;
 
   constructor(private http: HttpClient) {}
 

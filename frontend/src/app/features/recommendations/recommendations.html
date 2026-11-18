@@ -8,14 +8,14 @@
         </div>
     </header>
 
-    @if (loading) {
+    @if (loading()) {
     <div class="state-container">
         <div class="loader"></div>
         <p>Finding movies you'll love...</p>
     </div>
     }
 
-    @else if (error) {
+    @else if (error()) {
     <div class="state-container">
         <h2>Something went wrong</h2>
         <p>We couldn't load your recommendations.</p>
@@ -23,7 +23,7 @@
     </div>
     }
 
-    @else if (movies.length === 0) {
+    @else if (movies().length === 0) {
     <div class="state-container">
         <h2>No recommendations yet</h2>
         <p>Rate some movies to help us discover your taste.</p>
@@ -33,12 +33,12 @@
     @else {
     <div class="recommendations-info">
         <h2>Picked for you</h2>
-        <span>{{ movies.length }} recommendations</span>
+        <span>{{ movies().length }} recommendations</span>
     </div>
 
     <div class="movies-grid">
 
-        @for (movie of movies; track movie.movieId) {
+        @for (movie of movies(); track movie.movieId) {
         <article class="movie-card">
 
             <div class="poster-container">

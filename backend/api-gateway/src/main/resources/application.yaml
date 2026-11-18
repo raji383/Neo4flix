@@ -41,6 +41,14 @@ spring:
               uri: lb://movie-service
               predicates:
                 - Path=/api/genres/**
+            - id: recommendation-service
+              uri: lb://recommendation-service
+              predicates:
+                - Path=/api/recommendations/**
+            - id: rating-service
+              uri: lb://rating-service
+              predicates:
+                - Path=/api/ratings/**
 
 server:
   port: ${API_GATEWAY_PORT}

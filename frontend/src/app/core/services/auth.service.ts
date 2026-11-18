@@ -29,6 +29,8 @@ export class AuthService {
         ).pipe(
             tap(response => {
                 this.tokenStorage?.setItem('jwtToken', response.jwtToken);
+                console.log(response);
+                
             })
         );
     }
