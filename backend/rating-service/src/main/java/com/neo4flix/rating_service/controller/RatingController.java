@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.neo4flix.rating_service.dto.request.RatingRequest;
-import com.neo4flix.rating_service.repository.RatedMovieProjection;
+import com.neo4flix.rating_service.dto.response.RatedMovieResponse;
 import com.neo4flix.rating_service.service.RatingService;
 
 import jakarta.validation.Valid;
@@ -53,7 +53,7 @@ public class RatingController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<List<RatedMovieProjection>> getMyRatedMovies(
+    public ResponseEntity<List<RatedMovieResponse>> getMyRatedMovies(
             @RequestHeader("X-Authenticated-User-Id") String userId) {
 
         return ResponseEntity.ok(

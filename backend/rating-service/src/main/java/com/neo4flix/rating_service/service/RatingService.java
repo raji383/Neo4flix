@@ -2,7 +2,7 @@ package com.neo4flix.rating_service.service;
 
 import java.util.List;
 
-import com.neo4flix.rating_service.repository.RatedMovieProjection;
+import com.neo4flix.rating_service.dto.response.RatedMovieResponse;
 
 public interface RatingService {
 
@@ -12,5 +12,5 @@ public interface RatingService {
 
     void deleteRating(String userId, String movieId);
 
-    List<RatedMovieProjection> getMoviesRatedByUser(String userId);
+    List<RatedMovieResponse> getMoviesRatedByUser(String userId);
 }

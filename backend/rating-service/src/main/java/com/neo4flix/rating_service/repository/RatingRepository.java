@@ -64,34 +64,4 @@ public interface RatingRepository extends Neo4jRepository<User, String> {
         @Param("movieId") String movieId
     );
 
-    // Get all movies rated by current user
-    @Query("""
-        MATCH (:User {id: $userId})-[:RATED]->(m:Movie)
-
-        CALL {
-            WITH m
-            OPTIONAL MATCH (m)<-[r:RATED]-(:User)
-            RETURN avg(r.value) AS averageRating,
-                   count(r) AS ratingCount
-        }
-
-        CALL {
-            WITH m
-            OPTIONAL MATCH (m)-[:HAS_GENRE]->(g:Genre)
-            RETURN collect(g.name) AS genres
-        }
-
-        RETURN m.id AS id,
-               m.title AS title,
-               m.director AS director,
-               m.description AS description,
-               m.releaseYear AS releaseYear,
-               genres AS genres,
-               m.imageUrl AS imageUrl,
-               averageRating AS averageRating,
-               ratingCount AS ratingCount
-        """)
-    List<RatedMovieProjection> findMoviesRatedByUser(
-        @Param("userId") String userId
-    );
 }

@@ -5,7 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.neo4flix.rating_service.repository.RatedMovieProjection;
+import com.neo4flix.rating_service.dto.response.RatedMovieResponse;
+import com.neo4flix.rating_service.repository.RatingQueryRepository;
 import com.neo4flix.rating_service.repository.RatingRepository;
 import com.neo4flix.rating_service.service.RatingService;
 import com.neo4flix.rating_service.exceptions.ApiException;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class RatingServiceImpl implements RatingService {
 
     private final RatingRepository ratingRepository;
+    private final RatingQueryRepository ratingQueryRepository;
 
     private void validateRating(Integer value) {
         if (value == null || value < 1 || value > 5) {
@@ -65,8 +67,8 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RatedMovieProjection> getMoviesRatedByUser(String userId) {
+    public List<RatedMovieResponse> getMoviesRatedByUser(String userId) {
 
-        return ratingRepository.findMoviesRatedByUser(userId);
+        return ratingQueryRepository.findMoviesRatedByUser(userId);
     }
 }
