@@ -1,5 +1,5 @@
 
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, Signal } from '@angular/core';
 import { RecommendationService } from '../../core/services/recommendation.service';
 import { MovieRecommendation } from '../../shared/models/movie';
 import { DecimalPipe } from '@angular/common';
@@ -15,27 +15,27 @@ export class Recommendations {
 
   private recommendationService = inject(RecommendationService);
 
-  movies: MovieRecommendation[] = [];
-  loading = true;
-  error = false;
+  movies = signal<MovieRecommendation[]>([]);
+  loading = signal(true);
+  error = signal(false);
 
   ngOnInit(): void {
     this.loadRecommendations();
   }
 
   loadRecommendations(): void {
-    this.loading = true;
-    this.error = false;
+    this.loading.set(true);
+    this.error.set(false);
 
     this.recommendationService.getRecommendations().subscribe({
       next: (data) => {
-        this.movies = data;
-        this.loading = false;
+        this.movies.set(data);
+        this.loading.set(false);
       },
       error: (err) => {
         console.error('Failed to load recommendations:', err);
-        this.error = true;
-        this.loading = false;
+        this.error.set(true);
+        this.loading.set(false);
       }
     });
   }
