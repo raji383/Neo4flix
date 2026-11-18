@@ -25,13 +25,15 @@ class MovieDataSeederTest {
         TmdbClient tmdbClient = mock(TmdbClient.class);
         MovieService movieService = mock(MovieService.class);
         when(tmdbClient.discoverMovies(1)).thenReturn(objectMapper.readTree("""
-                {"results":[{"id":42,"title":"Example Film"}]}
+                {"results":[{"id":42,"title":"Example Film","popularity":42.5}]}
                 """));
         when(tmdbClient.getMovieDetails(42)).thenReturn(objectMapper.readTree("""
                 {
                   "title":"Example Film",
                   "overview":"A sufficiently long overview.",
                   "release_date":"2020-01-01",
+                  "vote_average":7.5,
+                  "vote_count":1234,
                   "poster_path":"/poster.jpg",
                   "genres":[
                     {"id":878,"name":"Science Fiction"},
@@ -57,7 +59,14 @@ class MovieDataSeederTest {
 
         ArgumentCaptor<CreateMovieDTO> movieCaptor =
                 ArgumentCaptor.forClass(CreateMovieDTO.class);
-        verify(movieService).addMovie(movieCaptor.capture(), eq("admin-user-id"));
+        verify(movieService).addOrUpdateTmdbMovie(
+                movieCaptor.capture(),
+                eq("admin-user-id"),
+                eq(42L),
+                eq(42.5),
+                eq(7.5),
+                eq(1234L)
+        );
         assertEquals(Set.of("Sci-Fi", "Drama"), movieCaptor.getValue().genres());
     }
 }

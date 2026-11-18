@@ -64,10 +64,10 @@ public class MovieDataSeeder implements ApplicationRunner {
 
         log.info("Starting TMDB movie seeding. Target: {}", targetCount);
 
-        int created = 0;
+        int processed = 0;
         int failed = 0;
 
-        for (int page = 1; page <= 500 && created < targetCount; page++) {
+        for (int page = 1; page <= 500 && processed < targetCount; page++) {
 
             JsonNode response = tmdbClient.discoverMovies(page);
             JsonNode movies = response.path("results");
@@ -78,7 +78,7 @@ public class MovieDataSeeder implements ApplicationRunner {
 
             for (JsonNode movie : movies) {
 
-                if (created >= targetCount) {
+                if (processed >= targetCount) {
                     break;
                 }
 
@@ -87,11 +87,11 @@ public class MovieDataSeeder implements ApplicationRunner {
                 try {
                     seedMovie(movie, tmdbId);
 
-                    created++;
+                    processed++;
 
                     log.info(
-                            "Created movie {}/{}: {}",
-                            created,
+                            "Seeded movie {}/{}: {}",
+                            processed,
                             targetCount,
                             movie.path("title").asText()
                     );
@@ -110,8 +110,8 @@ public class MovieDataSeeder implements ApplicationRunner {
         }
 
         log.info(
-                "Movie seeding finished. Created: {}, Failed: {}",
-                created,
+                "Movie seeding finished. Processed: {}, Failed: {}",
+                processed,
                 failed
         );
     }
@@ -153,6 +153,8 @@ public class MovieDataSeeder implements ApplicationRunner {
         }
 
         String director = findDirector(details);
+        double voteAverage = details.path("vote_average").asDouble();
+        long voteCount = details.path("vote_count").asLong();
 
         Set<String> genres = new HashSet<>();
 
@@ -192,7 +194,14 @@ public class MovieDataSeeder implements ApplicationRunner {
         );
 
         // Reuse your existing business logic.
-        movieService.addMovie(dto, owner);
+        movieService.addOrUpdateTmdbMovie(
+                dto,
+                owner,
+                tmdbId,
+                movie.path("popularity").asDouble(),
+                voteAverage,
+                voteCount
+        );
     }
 
     private String findDirector(JsonNode details) {

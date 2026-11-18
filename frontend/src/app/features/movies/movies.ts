@@ -61,7 +61,7 @@ export class Movies {
       });
 
     this.movieService
-      .getPopular(8)
+      .getPopular(20)
       .pipe(
         catchError((error: unknown) => {
           this.popularError.set(
@@ -158,6 +158,42 @@ export class Movies {
     return rating == null ? '—' : rating.toFixed(1);
   }
 
+  displayRating(movie: Movie): string {
+    if (movie.averageRating != null) {
+      return this.formatRating(movie.averageRating);
+    }
+    return movie.tmdbVoteAverage == null
+      ? '—'
+      : `${this.formatRating(movie.tmdbVoteAverage)}/10`;
+  }
+
+  ratingForStars(movie: Movie): number | null {
+    if (movie.averageRating != null) {
+      return movie.averageRating;
+    }
+    return movie.tmdbVoteAverage == null ? null : movie.tmdbVoteAverage / 2;
+  }
+
+  ratingAriaLabel(movie: Movie): string {
+    if (movie.averageRating != null) {
+      return `${this.formatRating(movie.averageRating)} out of 5 from ${movie.ratingCount ?? 0} app ratings`;
+    }
+    if (movie.tmdbVoteAverage != null) {
+      return `TMDB rating ${this.formatRating(movie.tmdbVoteAverage)} out of 10 from ${movie.tmdbVoteCount ?? 0} votes`;
+    }
+    return 'No ratings yet';
+  }
+
+  ratingCountLabel(movie: Movie): string {
+    if (movie.averageRating != null) {
+      return `${movie.ratingCount ?? 0} app ratings`;
+    }
+    if (movie.tmdbVoteAverage != null) {
+      return `TMDB · ${(movie.tmdbVoteCount ?? 0).toLocaleString()} votes`;
+    }
+    return 'No ratings yet';
+  }
+
   onImageError(id: string) {
     this.failedImages.update((images) => new Set(images).add(id));
   }
@@ -166,8 +202,8 @@ export class Movies {
     return !this.failedImages().has(id);
   }
 
-  scrollCarousel(el: HTMLElement) {
-    el.scrollBy({ left: el.clientWidth * 0.8, behavior: 'smooth' });
+  scrollCarousel(el: HTMLElement, direction: -1 | 1) {
+    el.scrollBy({ left: el.clientWidth * 0.8 * direction, behavior: 'smooth' });
   }
 
 }

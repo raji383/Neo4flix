@@ -25,6 +25,10 @@ public class Movie {
     @Id
     @GeneratedValue(UUIDStringGenerator.class)
     private String id;
+    private Long tmdbId;
+    private Double tmdbPopularity;
+    private Double tmdbVoteAverage;
+    private Long tmdbVoteCount;
     private String title;
     private String description;
     private String director;

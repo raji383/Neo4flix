@@ -60,4 +60,40 @@ export class MovieDetails {
   formatRating(rating: number | null | undefined): string {
     return rating == null ? '—' : rating.toFixed(1);
   }
+
+  displayRating(movie: Movie): string {
+    if (movie.averageRating != null) {
+      return this.formatRating(movie.averageRating);
+    }
+    return movie.tmdbVoteAverage == null
+      ? '—'
+      : `${this.formatRating(movie.tmdbVoteAverage)}/10`;
+  }
+
+  ratingForStars(movie: Movie): number | null {
+    if (movie.averageRating != null) {
+      return movie.averageRating;
+    }
+    return movie.tmdbVoteAverage == null ? null : movie.tmdbVoteAverage / 2;
+  }
+
+  ratingAriaLabel(movie: Movie): string {
+    if (movie.averageRating != null) {
+      return `${this.formatRating(movie.averageRating)} out of 5 from ${movie.ratingCount ?? 0} app ratings`;
+    }
+    if (movie.tmdbVoteAverage != null) {
+      return `TMDB rating ${this.formatRating(movie.tmdbVoteAverage)} out of 10 from ${movie.tmdbVoteCount ?? 0} votes`;
+    }
+    return 'No ratings yet';
+  }
+
+  ratingCountLabel(movie: Movie): string {
+    if (movie.averageRating != null) {
+      return `${movie.ratingCount ?? 0} app ratings`;
+    }
+    if (movie.tmdbVoteAverage != null) {
+      return `TMDB · ${(movie.tmdbVoteCount ?? 0).toLocaleString()} votes`;
+    }
+    return 'No ratings yet';
+  }
 }

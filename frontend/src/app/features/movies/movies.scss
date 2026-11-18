@@ -194,6 +194,13 @@ input:focus-visible {
 .section-count { color: var(--muted); font-size: 0.78rem; }
 
 .carousel {
+  box-sizing: border-box;
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  gap: 12px;
+  margin-inline: auto;
   position: relative;
   padding: 16px;
   border: 1px solid var(--line);
@@ -204,6 +211,9 @@ input:focus-visible {
 
   &__track {
     display: flex;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
     align-items: center;
     gap: 14px;
     overflow-x: auto;
@@ -212,19 +222,21 @@ input:focus-visible {
     scrollbar-width: none;
   }
   &__track::-webkit-scrollbar { display: none; }
+  &__previous,
   &__next {
-    position: absolute;
-    top: 50%;
-    right: -17px;
+    position: static;
+    flex: 0 0 42px;
+    display: grid;
     width: 42px;
     height: 42px;
-    transform: translateY(-50%);
+    place-items: center;
     border: 1px solid var(--line);
     border-radius: 50%;
     background: #20202a;
     font-size: 1.55rem;
     line-height: 1;
   }
+  &__previous:hover,
   &__next:hover { background: var(--accent); }
 }
 

@@ -15,5 +15,7 @@ public record MovieResponseDTO(
     Set<String> genres,
     String imageUrl,
     Double averageRating,
-    Long ratingCount
+    Long ratingCount,
+    Double tmdbVoteAverage,
+    Long tmdbVoteCount
 ) {}

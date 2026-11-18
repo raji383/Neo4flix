@@ -8,6 +8,8 @@ export interface Movie {
   imageUrl?: string | null;
   averageRating?: number | null;
   ratingCount: number;
+  tmdbVoteAverage?: number | null;
+  tmdbVoteCount?: number | null;
 }
 export interface MovieRecommendation {
   movieId: string;
