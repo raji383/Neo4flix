@@ -52,7 +52,7 @@ public class RatingQueryRepository {
                         record.get("director").asString(),
                         record.get("description").asString(),
                         record.get("releaseYear").asInt(),
-                        Set.copyOf(record.get("genres").asList(String.class::cast)),
+                        Set.copyOf(record.get("genres").asList(value -> value.asString())),
                         record.get("imageUrl").isNull()
                                 ? null
                                 : record.get("imageUrl").asString(),
