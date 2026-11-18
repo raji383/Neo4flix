@@ -1,1 +1,201 @@
-<p>dashboard works!</p>
+<!-- ============ SHARED FORM (used by "Add a movie" and by the edit popup) ============ -->
+<ng-template #movieForm let-form let-mode="mode" let-preview="preview">
+  <form class="form" [formGroup]="form" (ngSubmit)="mode === 'create' ? submitCreate() : submitEdit()" novalidate>
+    <label class="frame" [class.frame--filled]="preview">
+      <span class="frame__holes" aria-hidden="true"></span>
+      <span class="frame__image">
+        @if (preview) {
+          <img [src]="preview" alt="Poster preview" />
+          <span class="frame__hint frame__hint--over">Change poster</span>
+        } @else {
+          <span class="frame__icon" aria-hidden="true">🎞️</span>
+          <span class="frame__hint">Drop a poster here or browse</span>
+          <small>JPG or PNG, portrait works best</small>
+        }
+      </span>
+      <span class="frame__holes" aria-hidden="true"></span>
+      <input type="file" accept="image/*" (change)="onFile($event, mode)" />
+    </label>
+
+    <div class="field" [class.field--error]="invalid(form, 'title')">
+      <label [for]="mode + '-title'">Title</label>
+      <input [id]="mode + '-title'" formControlName="title" placeholder="e.g. Blade Runner 2049" autocomplete="off" />
+      @if (invalid(form, 'title')) { <small>Enter a title (120 characters max).</small> }
+    </div>
+
+    <div class="row">
+      <div class="field" [class.field--error]="invalid(form, 'director')">
+        <label [for]="mode + '-director'">Director</label>
+        <input [id]="mode + '-director'" formControlName="director" placeholder="Full name" autocomplete="off" />
+        @if (invalid(form, 'director')) { <small>Enter the director's name.</small> }
+      </div>
+      <div class="field field--year" [class.field--error]="invalid(form, 'releaseYear')">
+        <label [for]="mode + '-year'">Release year</label>
+        <input [id]="mode + '-year'" type="number" formControlName="releaseYear" />
+        @if (invalid(form, 'releaseYear')) { <small>Between 1888 and {{ maxYear }}.</small> }
+      </div>
+    </div>
+
+    <div class="field" [class.field--error]="invalid(form, 'description')">
+      <label [for]="mode + '-desc'">Description</label>
+      <textarea [id]="mode + '-desc'" rows="4" formControlName="description" placeholder="What is this movie about?"></textarea>
+      <span class="counter">{{ form.controls.description.value.length }} / 600</span>
+      @if (invalid(form, 'description')) { <small>Write at least 20 characters.</small> }
+    </div>
+
+    <fieldset class="field genres" [class.field--error]="invalid(form, 'genres')">
+      <legend>Genres</legend>
+      <div class="chips">
+        @for (g of genreOptions(); track g) {
+          <button type="button" class="chip" [class.chip--on]="form.controls.genres.value.includes(g)"
+                  [attr.aria-pressed]="form.controls.genres.value.includes(g)" (click)="toggleGenre(form, g)">
+            {{ g }}
+          </button>
+        }
+        <span class="chip-add">
+          <input #custom placeholder="New genre" (keydown.enter)="$event.preventDefault(); addCustomGenre(form, custom)" />
+          <button type="button" (click)="addCustomGenre(form, custom)" aria-label="Add genre">+</button>
+        </span>
+      </div>
+      @if (invalid(form, 'genres')) { <small>Pick at least one genre.</small> }
+    </fieldset>
+
+    <div class="form__actions">
+      @if (mode === 'create') {
+        <button type="button" class="btn btn--ghost" (click)="resetCreate()">Clear</button>
+        <button type="submit" class="btn btn--primary">Add movie</button>
+      } @else {
+        <button type="button" class="btn btn--ghost" (click)="closeEdit()">Cancel</button>
+        <button type="submit" class="btn btn--primary">Save changes</button>
+      }
+    </div>
+  </form>
+</ng-template>
+
+<!-- ============ PAGE ============ -->
+<section class="admin">
+  <header class="top">
+    <div>
+      <h1>Movie administration</h1>
+      <p>Add, edit and remove titles in the catalog.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><strong>{{ stats().total }}</strong><span>Movies</span></div>
+      <div class="stat"><strong>{{ stats().ratings.toLocaleString() }}</strong><span>Ratings</span></div>
+      <div class="stat"><strong>{{ stats().average.toFixed(1) }}</strong><span>Avg. score</span></div>
+      <div class="stat"><strong>{{ stats().genres }}</strong><span>Genres</span></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- CREATE -->
+    <aside class="panel create">
+      <h2>Add a movie</h2>
+      <ng-container
+        [ngTemplateOutlet]="movieForm"
+        [ngTemplateOutletContext]="{ $implicit: createForm, mode: 'create', preview: createPreview() }" />
+    </aside>
+
+    <!-- LIST -->
+    <div class="panel list">
+      <div class="toolbar">
+        <h2>Catalog <small>{{ view().totalElements }} titles</small></h2>
+        <div class="toolbar__filters">
+          <label class="search">
+            <span aria-hidden="true">⌕</span>
+            <input type="search" placeholder="Search title or director" (input)="onSearch($any($event.target).value)" />
+          </label>
+          <select aria-label="Filter by genre" (change)="onGenreFilter($any($event.target).value)">
+            <option value="">All genres</option>
+            @for (g of genreOptions(); track g) { <option [value]="g">{{ g }}</option> }
+          </select>
+        </div>
+      </div>
+
+      @if (view().content.length) {
+        <ul class="rows">
+          @for (m of view().content; track m.id) {
+            <li class="row-item">
+              <div class="thumb">
+                @if (m.imageUrl) {
+                  <img [src]="m.imageUrl" [alt]="m.title" loading="lazy" />
+                } @else {
+                  <span>{{ m.title.charAt(0) }}</span>
+                }
+              </div>
+
+              <div class="info">
+                <h3>{{ m.title }}</h3>
+                <p>{{ m.director }}, {{ m.releaseYear }}</p>
+                <div class="tags">
+                  @for (g of m.genres; track g) { <span class="tag">{{ g }}</span> }
+                </div>
+              </div>
+
+              <div class="score">
+                @if (m.averageRating != null) {
+                  <div class="stars" [attr.aria-label]="m.averageRating + ' out of 5'">
+                    @for (s of stars(m.averageRating); track $index) { <i class="star star--{{ s }}">★</i> }
+                  </div>
+                  <small>{{ m.averageRating.toFixed(1) }} from {{ m.ratingCount }}</small>
+                } @else {
+                  <small class="muted">No ratings yet</small>
+                }
+              </div>
+
+              <div class="actions">
+                <button type="button" class="icon-btn icon-btn--edit" (click)="openEdit(m)" [attr.aria-label]="'Edit ' + m.title">
+                  ✎ <span>Edit</span>
+                </button>
+                <button type="button" class="icon-btn icon-btn--delete" (click)="askDelete(m)" [attr.aria-label]="'Delete ' + m.title">
+                  🗑 <span>Delete</span>
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+
+        <nav class="pager" aria-label="Pagination">
+          <button type="button" [disabled]="view().page === 0" (click)="goTo(view().page - 1)">‹ Previous</button>
+          <span>Page {{ view().page + 1 }} of {{ view().totalPages }}</span>
+          <button type="button" [disabled]="view().page >= view().totalPages - 1" (click)="goTo(view().page + 1)">Next ›</button>
+        </nav>
+      } @else {
+        <p class="empty">No movies match your filters. Clear the search or pick another genre.</p>
+      }
+    </div>
+  </div>
+
+  <!-- EDIT POPUP -->
+  @if (editing(); as m) {
+    <div class="backdrop" (click)="closeEdit()">
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="edit-title" (click)="$event.stopPropagation()">
+        <header class="dialog__head">
+          <h2 id="edit-title">Edit “{{ m.title }}”</h2>
+          <button type="button" class="close" (click)="closeEdit()" aria-label="Close">✕</button>
+        </header>
+        <ng-container
+          [ngTemplateOutlet]="movieForm"
+          [ngTemplateOutletContext]="{ $implicit: editForm, mode: 'edit', preview: editPreview() }" />
+      </div>
+    </div>
+  }
+
+  <!-- DELETE CONFIRM -->
+  @if (deleting(); as m) {
+    <div class="backdrop" (click)="deleting.set(null)">
+      <div class="dialog dialog--small" role="alertdialog" aria-modal="true" aria-labelledby="del-title" (click)="$event.stopPropagation()">
+        <h2 id="del-title">Delete this movie?</h2>
+        <p>“{{ m.title }}” and its {{ m.ratingCount }} ratings will be removed. This can't be undone.</p>
+        <div class="form__actions">
+          <button type="button" class="btn btn--ghost" (click)="deleting.set(null)">Keep movie</button>
+          <button type="button" class="btn btn--danger" (click)="confirmDelete()">Delete movie</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (toast(); as t) {
+    <div class="toast toast--{{ t.tone }}" role="status">{{ t.text }}</div>
+  }
+</section>
