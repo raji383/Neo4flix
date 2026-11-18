@@ -3,9 +3,11 @@ package com.neo4flix.movie_service.controller;
 import java.security.Principal;
 import java.util.List;
 
+import org.springframework.context.annotation.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -31,6 +33,7 @@ public class MovieController {
     private final MovieService movieService;
 
     @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MovieResponseDTO> addMovie(
             @Valid @ModelAttribute CreateMovieDTO request,
             Principal principal) {
@@ -57,6 +60,7 @@ public class MovieController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MovieResponseDTO> updateMovie(
             @PathVariable String id,
             @Valid @ModelAttribute CreateMovieDTO request,
@@ -66,6 +70,7 @@ public class MovieController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteMovie(@PathVariable String id, Principal principal) {
         movieService.deleteMovie(id, principal.getName());
         return ResponseEntity.noContent().build();
