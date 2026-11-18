@@ -10,10 +10,12 @@ import { Recommendations } from './features/recommendations/recommendations';
 import { Ratings } from './features/ratings/ratings';
 import { guestGuard } from './core/guards/guest-guard';
 import { authGuard } from './core/guards/auth-guard';
+import { Dashboard } from './features/dashboard/dashboard';
+import { roleGuard } from './core/guards/role-guard';
 
 export const routes: Routes = [
-    { path: 'login', component: Login , canActivate: [guestGuard]},
-    { path: 'register', component: REGISTER , canActivate: [guestGuard]},
+    { path: 'login', component: Login, canActivate: [guestGuard] },
+    { path: 'register', component: REGISTER, canActivate: [guestGuard] },
     { path: '', redirectTo: 'movies', pathMatch: 'full' },
     {
         path: '',
@@ -25,6 +27,7 @@ export const routes: Routes = [
             { path: 'profile', component: Profile },
             { path: 'recommendations', component: Recommendations },
             { path: 'rating', component: Ratings },
+            { path: 'dashboard', component: Dashboard, canActivate: [roleGuard(['ADMIN'])] },
         ]
     },
     { path: '**', component: Notfound }
