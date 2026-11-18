@@ -28,15 +28,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       const backendMessage = errorMessageService.getHttpErrorMessage(error);
+console.log(error);
 
       if (error.status === 401 && token) {
         localStorage.removeItem('jwtToken');
         router.navigate(['/login']);
       }
-      if (error.status === 423 && token) {
-        localStorage.removeItem('jwtToken');
-        router.navigate(['/login']);
-      }
+  
       if (error.status === 403) {
        
         snackBar.open(backendMessage, 'Close', {

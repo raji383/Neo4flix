@@ -9,15 +9,9 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked npm ci
 COPY . .
 RUN npm run build
 
-FROM node:24.22.3-alpine
+FROM nginx:alpine
 
-ENV NODE_ENV=production \
-    PORT=4000
+COPY --from=build /app/dist/neo4flix-frontend/browser/ /usr/share/nginx/html/
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-WORKDIR /app
-COPY --from=build --chown=node:node /app/dist ./dist
-
-USER node
 EXPOSE 4000
-
-CMD ["node", "dist/neo4flix-frontend/server/server.mjs"]

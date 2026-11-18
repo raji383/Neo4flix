@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
+
 public class GatewayHeaderAuthFilter extends OncePerRequestFilter {
 
     @Override
@@ -24,13 +25,13 @@ public class GatewayHeaderAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
 
         String userId = request.getHeader("X-Authenticated-User-Id");
-        String role = request.getHeader("X-Authenticated-User-Role");
+        String role = request.getHeader("X-Authenticated-Role");
+        
 
         if (userId != null && !userId.isBlank()
-            && role != null && !role.isBlank()
-            && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken(userId, null,
+                && role != null && !role.isBlank()
+                && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userId, null,
                     List.of(new SimpleGrantedAuthority("ROLE_" + role)));
 
             SecurityContextHolder.getContext().setAuthentication(authToken);

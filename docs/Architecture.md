@@ -178,8 +178,24 @@ process on its configurable loopback-only host port.
 The backend services share a multi-stage Dockerfile selected by a `SERVICE`
 build argument. Maven creates each executable jar, and the runtime image runs it
 as a non-root user on Java 21. The frontend image builds the Angular application
-with npm and runs the generated Express server as the Node user. The complete
-local stack starts with `docker compose up --build --detach`.
+with npm and runs the generated Express server as the Node user. The backend
+applications can be managed individually or together with `run-services.sh`:
+
+```sh
+./run-services.sh start all
+./run-services.sh start movie-service
+./run-services.sh stop movie-service
+./run-services.sh stop all
+./run-services.sh status
+```
+
+The script runs the six Spring Boot applications directly through their Maven
+wrappers. It does not start Neo4j or the frontend. Each backend writes to its
+own append-only `docs/logs/<service>.log`; PID files are stored under
+`docs/logs/.pids/`. Provide the required values in the root `.env` file.
+Services that use Neo4j still require a separately running database.
+The launcher requires Bash, Java 21, and `setsid` on Linux. Generated logs and
+PID files are local runtime output and should not be committed.
 
 Compose health checks provide local startup ordering. All backend applications
 include Actuator, but no centralized logging, distributed tracing, metrics
