@@ -10,9 +10,6 @@ import lombok.Setter;
 @Setter
 @Node("Genre")
 public class Genre {
-
     @Id
-    private String id;
-
     private String name;
 }
