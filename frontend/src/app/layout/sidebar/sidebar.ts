@@ -18,7 +18,6 @@ export class Sidebar implements OnInit {
   collapsed = signal(false);
   private authService = inject(AuthService);
   private errorMessageService = inject(ErrorMessageService);
-  private router = inject(Router);
 
   toggle() {
     this.collapsed.update(v => !v);
