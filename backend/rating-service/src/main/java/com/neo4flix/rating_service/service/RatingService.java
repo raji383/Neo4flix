@@ -12,5 +12,7 @@ public interface RatingService {
 
     void deleteRating(String userId, String movieId);
 
+    Integer getMyRating(String userId, String movieId);
+
     List<RatedMovieResponse> getMoviesRatedByUser(String userId);
 }

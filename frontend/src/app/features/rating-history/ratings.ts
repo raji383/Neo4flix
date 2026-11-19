@@ -56,7 +56,7 @@ export class Ratings {
       )
       .subscribe((ratings) => {
         console.log(ratings);
-        
+
         this.movies.set(ratings);
       });
   }

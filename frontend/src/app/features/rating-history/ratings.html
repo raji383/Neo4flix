@@ -51,7 +51,7 @@
   } @else {
     <div class="grid">
       @for (m of visibleMovies(); track m.id) {
-        <article class="card">
+        <article class="card" routerLink="/movies/{{ m.id }}" [attr.aria-label]="'View details for ' + m.title">
           <div class="poster" [style.background]="m.imageUrl ? null : colorFor(m.title)">
             @if (m.imageUrl) {
               <img [src]="m.imageUrl" [alt]="m.title + ' poster'" loading="lazy" />

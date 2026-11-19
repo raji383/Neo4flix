@@ -11,3 +11,6 @@ export interface RatedMovie {
   ratingCount: number;
   myRating: number;
 }
+export interface RatingRequest {
+  value: number;
+}
