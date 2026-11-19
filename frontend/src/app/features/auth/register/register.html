@@ -49,7 +49,11 @@
                 }
 
                 @if (registerForm.controls.password.touched && registerForm.controls.password.invalid) {
+                @if (registerForm.controls.password.hasError('required')) {
                 <small>Password is required.</small>
+                } @else {
+                <small>Use at least 8 characters with uppercase, lowercase, a number, and a special character.</small>
+                }
                 }
             </div>
 

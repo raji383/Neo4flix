@@ -49,16 +49,17 @@ class ApiGatewayApplicationTests {
 	void corsAllowsConfiguredFrontendPatchPreflight() {
 		CorsConfiguration corsConfiguration = globalCorsProperties.getCorsConfigurations().get("/**");
 		assertNotNull(corsConfiguration);
+		assertEquals("https://localhost:4200", corsConfiguration.checkOrigin("https://localhost:4200"));
 		assertEquals("http://localhost:4200", corsConfiguration.checkOrigin("http://localhost:4200"));
 		assertTrue(corsConfiguration.getAllowedMethods().contains("PATCH"));
 
 		testClient().options()
 				.uri("/api/movies")
-				.header("Origin", "http://localhost:4200")
+				.header("Origin", "https://localhost:4200")
 				.header("Access-Control-Request-Method", "PATCH")
 				.exchange()
 				.expectStatus().isOk()
-				.expectHeader().valueEquals("Access-Control-Allow-Origin", "http://localhost:4200")
+				.expectHeader().valueEquals("Access-Control-Allow-Origin", "https://localhost:4200")
 				.expectHeader().value("Access-Control-Allow-Methods",
 						methods -> assertTrue(methods.contains("PATCH")));
 	}
@@ -67,12 +68,12 @@ class ApiGatewayApplicationTests {
 	void corsHeadersAreIncludedOnLoginPostResponses() {
 		testClient().post()
 				.uri("/api/auth/login")
-				.header("Origin", "http://localhost:4200")
+				.header("Origin", "https://localhost:4200")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("{}")
 				.exchange()
 				.expectStatus().isEqualTo(503)
-				.expectHeader().valueEquals("Access-Control-Allow-Origin", "http://localhost:4200");
+				.expectHeader().valueEquals("Access-Control-Allow-Origin", "https://localhost:4200");
 	}
 
 	private WebTestClient testClient() {

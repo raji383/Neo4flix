@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EMPTY, catchError, finalize, switchMap } from 'rxjs';
@@ -6,9 +6,10 @@ import { ErrorMessageService } from '../../core/services/error-message.service';
 import { MovieService } from '../../core/services/movie.service';
 import { Movie } from '../../shared/models/movie';
 import { RatingComponent } from "../../shared/components/rating/rating";
+import { ShareMovie } from '../../shared/components/share-movie/share-movie';
 
 @Component({
-  imports: [RouterLink, RatingComponent],
+  imports: [RouterLink, RatingComponent,ShareMovie],
   selector: 'app-movie-details',
   styleUrl: './movie-details.scss',
   templateUrl: './movie-details.html',
@@ -17,6 +18,7 @@ export class MovieDetails {
   private readonly route = inject(ActivatedRoute);
   private readonly movieService = inject(MovieService);
   private readonly errorMessageService = inject(ErrorMessageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly movie = signal<Movie | null>(null);
   readonly loading = signal(true);
@@ -91,7 +93,7 @@ export class MovieDetails {
     }
 
     this.movieService.getById(currentMovie.id)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (movie) => this.movie.set(movie),
         error: (error: unknown) => {

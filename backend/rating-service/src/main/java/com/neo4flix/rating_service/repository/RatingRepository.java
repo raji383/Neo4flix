@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 
 import com.neo4flix.rating_service.model.User;
 
-import java.util.List;
 
 @Repository
 public interface RatingRepository extends Neo4jRepository<User, String> {

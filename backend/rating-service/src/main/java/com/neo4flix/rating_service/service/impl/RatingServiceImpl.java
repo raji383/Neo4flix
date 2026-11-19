@@ -77,7 +77,7 @@ public class RatingServiceImpl implements RatingService {
         Integer rating = ratingRepository.getMyRating(userId, movieId);
 
         if (rating == null) {
-            throw ApiException.notFound("Rating not found");
+            rating = 0; 
         }
 
         return rating;
