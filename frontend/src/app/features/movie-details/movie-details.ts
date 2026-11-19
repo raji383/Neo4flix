@@ -1,11 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { EMPTY, catchError, finalize, switchMap } from 'rxjs';
+import { EMPTY, catchError, finalize, map, of, switchMap } from 'rxjs';
 import { ErrorMessageService } from '../../core/services/error-message.service';
 import { MovieService } from '../../core/services/movie.service';
 import { Movie } from '../../shared/models/movie';
 import { RatingComponent } from "../../shared/components/rating/rating";
+import { WatchlistService } from '../../core/services/watchlist.service';
 
 @Component({
   imports: [RouterLink, RatingComponent],
@@ -16,12 +17,17 @@ import { RatingComponent } from "../../shared/components/rating/rating";
 export class MovieDetails {
   private readonly route = inject(ActivatedRoute);
   private readonly movieService = inject(MovieService);
+  private readonly watchlistService = inject(WatchlistService);
   private readonly errorMessageService = inject(ErrorMessageService);
 
   readonly movie = signal<Movie | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly imageFailed = signal(false);
+  readonly inWatchlist = signal<boolean | null>(null);
+  readonly watchlistLoading = signal(true);
+  readonly watchlistPending = signal(false);
+  readonly watchlistError = signal<string | null>(null);
 
   constructor() {
     this.route.paramMap
@@ -31,24 +37,66 @@ export class MovieDetails {
           this.loading.set(true);
           this.error.set(null);
           this.imageFailed.set(false);
+          this.inWatchlist.set(null);
+          this.watchlistLoading.set(true);
+          this.watchlistError.set(null);
 
           if (!id) {
             this.error.set('Movie not found.');
             this.loading.set(false);
+            this.watchlistLoading.set(false);
             return EMPTY;
           }
 
           return this.movieService.getById(id).pipe(
+            switchMap((movie) => this.watchlistService.isInWatchlist(movie.id).pipe(
+              map((response) => ({ movie, inWatchlist: response.inWatchlist })),
+              catchError((error: unknown) => {
+                this.watchlistError.set(
+                  this.errorMessageService.getHttpErrorMessage(error, 'Could not check your watchlist.'),
+                );
+                return of({ movie, inWatchlist: null });
+              }),
+              finalize(() => this.watchlistLoading.set(false)),
+            )),
             catchError((error: unknown) => {
               this.error.set(this.errorMessageService.getHttpErrorMessage(error, 'Could not load this movie.'));
               return EMPTY;
             }),
-            finalize(() => this.loading.set(false)),
+            finalize(() => {
+              this.loading.set(false);
+              this.watchlistLoading.set(false);
+            }),
           );
         }),
         takeUntilDestroyed(),
       )
-      .subscribe((movie) => this.movie.set(movie));
+      .subscribe(({ movie, inWatchlist }) => {
+        this.movie.set(movie);
+        this.inWatchlist.set(inWatchlist);
+      });
+  }
+
+  toggleWatchlist(movieId: string): void {
+    const wasInWatchlist = this.inWatchlist();
+    if (wasInWatchlist === null || this.watchlistLoading() || this.watchlistPending()) {
+      return;
+    }
+
+    this.watchlistError.set(null);
+    this.watchlistPending.set(true);
+    const request = wasInWatchlist
+      ? this.watchlistService.delete(movieId)
+      : this.watchlistService.create(movieId);
+
+    request.pipe(finalize(() => this.watchlistPending.set(false))).subscribe({
+      next: () => this.inWatchlist.set(!wasInWatchlist),
+      error: (error: unknown) => {
+        this.watchlistError.set(
+          this.errorMessageService.getHttpErrorMessage(error, 'Could not update your watchlist.'),
+        );
+      },
+    });
   }
 
   stars(rating: number | null | undefined): ('full' | 'half' | 'empty')[] {

@@ -6,6 +6,7 @@ import { ErrorMessageService } from '../../core/services/error-message.service';
 import { MovieService } from '../../core/services/movie.service';
 import { Movie, MovieSearchParams } from '../../shared/models/movie';
 import { PageResponse } from '../../shared/models/pageResponse';
+import { WatchlistService } from '../../core/services/watchlist.service';
 
 @Component({
   imports: [RouterLink],
@@ -14,6 +15,8 @@ import { PageResponse } from '../../shared/models/pageResponse';
   templateUrl: './movies.html',
 })
 export class Movies {
+  private readonly watchlistService = inject(WatchlistService);
+
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly movieService = inject(MovieService);
   private readonly errorMessageService = inject(ErrorMessageService);
@@ -30,13 +33,30 @@ export class Movies {
   readonly moviesError = signal<string | null>(null);
   readonly popularError = signal<string | null>(null);
   readonly genresError = signal<string | null>(null);
-
+  readonly watchlistMovieIds = signal<ReadonlySet<string>>(new Set());
+  readonly pendingWatchlistIds = signal<ReadonlySet<string>>(new Set());
+  readonly watchlistLoading = signal(true);
+  readonly watchlistError = signal<string | null>(null);
   readonly featured = computed(() => {
     const movies = [...this.popular(), ...this.movies()];
     return movies.find((movie) => movie.id === this.featuredId()) ?? movies[0] ?? null;
   });
 
   constructor() {
+    this.watchlistService
+      .getWatchlist()
+      .pipe(
+        catchError((error: unknown) => {
+          this.watchlistError.set(
+            this.errorMessageService.getHttpErrorMessage(error, 'Could not load your watchlist.'),
+          );
+          return EMPTY;
+        }),
+        finalize(() => this.watchlistLoading.set(false)),
+        takeUntilDestroyed(),
+      )
+      .subscribe((items) => this.watchlistMovieIds.set(new Set(items.map((item) => item.id))));
+
     toObservable(this.params)
       .pipe(
         switchMap((params) => {
@@ -99,9 +119,9 @@ export class Movies {
     const releaseYear = value ? Number(value) : undefined;
     const validReleaseYear =
       releaseYear !== undefined &&
-      Number.isInteger(releaseYear) &&
-      releaseYear >= 1888 &&
-      releaseYear <= 2100
+        Number.isInteger(releaseYear) &&
+        releaseYear >= 1888 &&
+        releaseYear <= 2100
         ? releaseYear
         : undefined;
     this.params.update((params) => ({
@@ -192,4 +212,49 @@ export class Movies {
     el.scrollBy({ left: el.clientWidth * 0.8 * direction, behavior: 'smooth' });
   }
 
+  isInWatchlist(movieId: string): boolean {
+    return this.watchlistMovieIds().has(movieId);
+  }
+
+  isWatchlistPending(movieId: string): boolean {
+    return this.pendingWatchlistIds().has(movieId);
+  }
+
+  toggleWatchlist(movieId: string): void {
+    if (this.watchlistLoading() || this.isWatchlistPending(movieId)) {
+      return;
+    }
+
+    this.watchlistError.set(null);
+    this.pendingWatchlistIds.update((ids) => new Set(ids).add(movieId));
+    const wasInWatchlist = this.isInWatchlist(movieId);
+    const request = wasInWatchlist
+      ? this.watchlistService.delete(movieId)
+      : this.watchlistService.create(movieId);
+
+    request.pipe(finalize(() => {
+      this.pendingWatchlistIds.update((ids) => {
+        const next = new Set(ids);
+        next.delete(movieId);
+        return next;
+      });
+    })).subscribe({
+      next: () => {
+        this.watchlistMovieIds.update((ids) => {
+          const next = new Set(ids);
+          if (wasInWatchlist) {
+            next.delete(movieId);
+          } else {
+            next.add(movieId);
+          }
+          return next;
+        });
+      },
+      error: (error: unknown) => {
+        this.watchlistError.set(
+          this.errorMessageService.getHttpErrorMessage(error, 'Could not update your watchlist.'),
+        );
+      },
+    });
+  }
 }

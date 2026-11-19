@@ -1,70 +1,76 @@
 <section class="movies">
   @if (featured(); as hero) {
-    <header class="hero">
-      <img
-        class="hero__bg"
-        [src]="hero.imageUrl && hasImage(hero.id) ? hero.imageUrl : '/default-movie.svg'"
-        [alt]="hero.title"
-        (error)="onImageError(hero.id)"
-      />
-      <div class="hero__shade"></div>
+  <header class="hero">
+    <img class="hero__bg" [src]="hero.imageUrl && hasImage(hero.id) ? hero.imageUrl : '/default-movie.svg'"
+      [alt]="hero.title" (error)="onImageError(hero.id)" />
+    <div class="hero__shade"></div>
 
-      <label class="search">
-        <span class="search__icon" aria-hidden="true">⌕</span>
-        <input
-          type="search"
-          placeholder="Search movies or directors"
-          [value]="params().q ?? ''"
-          (input)="onSearch($any($event.target).value)"
-        />
-      </label>
+    <label class="search">
+      <span class="search__icon" aria-hidden="true">⌕</span>
+      <input type="search" placeholder="Search movies or directors" [value]="params().q ?? ''"
+        (input)="onSearch($any($event.target).value)" />
+    </label>
 
-      <div class="hero__content">
-        <span class="eyebrow">Featured film</span>
-        <h1 class="hero__title">{{ hero.title }}</h1>
-        <p class="hero__meta">{{ hero.director }} · {{ hero.releaseYear }}</p>
-        <p class="hero__desc">{{ hero.description }}</p>
+    <div class="hero__content">
+      <span class="eyebrow">Featured film</span>
+      <h1 class="hero__title">{{ hero.title }}</h1>
+      <p class="hero__meta">{{ hero.director }} · {{ hero.releaseYear }}</p>
+      <p class="hero__desc">{{ hero.description }}</p>
 
-        <div class="rating-score" [attr.aria-label]="ratingAriaLabel(hero)">
-          <span class="rating-score__value">{{ displayRating(hero) }}</span>
-          <span class="rating-score__stars" aria-hidden="true">
-            @for (star of stars(ratingForStars(hero)); track $index) {
-              <span class="star star--{{ star }}">★</span>
-            }
-          </span>
-          <span class="rating-score__count">{{ ratingCountLabel(hero) }}</span>
-        </div>
+      <div class="rating-score" [attr.aria-label]="ratingAriaLabel(hero)">
+        <span class="rating-score__value">{{ displayRating(hero) }}</span>
+        <span class="rating-score__stars" aria-hidden="true">
+          @for (star of stars(ratingForStars(hero)); track $index) {
+          <span class="star star--{{ star }}">★</span>
+          }
+        </span>
+        <span class="rating-score__count">{{ ratingCountLabel(hero) }}</span>
+      </div>
 
-        @if (hero.genres.length) {
-          <div class="hero__genres" aria-label="Genres">
-            @for (genre of hero.genres; track genre) {
-              <span class="genre-tag">{{ genre }}</span>
-            }
-          </div>
+      @if (hero.genres.length) {
+      <div class="hero__genres" aria-label="Genres">
+        @for (genre of hero.genres; track genre) {
+        <span class="genre-tag">{{ genre }}</span>
         }
+      </div>
+      }
 
-        <div class="hero__actions">
-          <a class="btn btn--primary" [routerLink]="['/movies', hero.id]">View movie details <span aria-hidden="true">→</span></a>
-        </div>
+      <div class="hero__actions">
+        <a class="btn btn--primary" [routerLink]="['/movies', hero.id]">View movie details <span
+            aria-hidden="true">→</span></a>
+        <button type="button" class="btn btn--secondary watchlist-btn"
+          [class.watchlist-btn--in-list]="isInWatchlist(hero.id)"
+          [attr.aria-pressed]="isInWatchlist(hero.id)"
+          [attr.aria-label]="isInWatchlist(hero.id) ? 'Remove from watchlist' : 'Add to watchlist'"
+          [disabled]="watchlistLoading() || isWatchlistPending(hero.id)"
+          (click)="toggleWatchlist(hero.id)">
+          <svg class="icon" aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"
+              stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"
+              [attr.fill]="isInWatchlist(hero.id) ? 'currentColor' : 'none'" />
+          </svg>
+          {{ isInWatchlist(hero.id) ? 'In watchlist' : 'Add to watchlist' }}
+        </button>
       </div>
-    </header>
+    </div>
+  </header>
   } @else {
-    <header class="hero hero--empty">
-      <label class="search">
-        <span class="search__icon" aria-hidden="true">⌕</span>
-        <input
-          type="search"
-          placeholder="Search movies or directors"
-          [value]="params().q ?? ''"
-          (input)="onSearch($any($event.target).value)"
-        />
-      </label>
-      <div class="hero__content">
-        <span class="eyebrow">Your next favorite</span>
-        <h1 class="hero__title">Discover movies</h1>
-        <p class="hero__meta">Find your next favorite film</p>
-      </div>
-    </header>
+  <header class="hero hero--empty">
+    <label class="search">
+      <span class="search__icon" aria-hidden="true">⌕</span>
+      <input type="search" placeholder="Search movies or directors" [value]="params().q ?? ''"
+        (input)="onSearch($any($event.target).value)" />
+    </label>
+    <div class="hero__content">
+      <span class="eyebrow">Your next favorite</span>
+      <h1 class="hero__title">Discover movies</h1>
+      <p class="hero__meta">Find your next favorite film</p>
+    </div>
+  </header>
+  }
+
+  @if (watchlistError()) {
+  <p class="status-message status-message--error" role="alert">{{ watchlistError() }}</p>
   }
 
   <section class="popular" aria-labelledby="popular-heading">
@@ -74,55 +80,38 @@
         <h2 class="section-title" id="popular-heading">Popular movies</h2>
       </div>
       @if (popular().length) {
-        <span class="section-count">{{ popular().length }} films</span>
+      <span class="section-count">{{ popular().length }} films</span>
       }
     </div>
     @if (popularError()) {
-      <p class="status-message status-message--error">{{ popularError() }}</p>
+    <p class="status-message status-message--error">{{ popularError() }}</p>
     } @else if (loadingPopular()) {
-      <p class="status-message">Loading popular movies…</p>
+    <p class="status-message">Loading popular movies…</p>
     } @else if (popular().length) {
-      <div class="carousel">
-        <button
-          class="carousel__previous"
-          type="button"
-          aria-label="Previous popular movies"
-          (click)="scrollCarousel(track, -1)"
-        >‹</button>
-        <div class="carousel__track" #track>
-          @for (movie of popular(); track movie.id) {
-            <button
-              type="button"
-              class="poster"
-              [class.poster--active]="movie.id === featuredId()"
-              [attr.aria-label]="'Feature ' + movie.title"
-              (click)="selectMovie(movie.id)"
-            >
-              <img
-                [src]="movie.imageUrl && hasImage(movie.id) ? movie.imageUrl : '/default-movie.svg'"
-                [alt]="movie.title"
-                loading="lazy"
-                (error)="onImageError(movie.id)"
-              />
-              <span class="poster__shade"></span>
-              <span class="poster__info">
-                <span class="poster__title">{{ movie.title }}</span>
-                <span class="poster__rating" [attr.aria-label]="ratingAriaLabel(movie)">
-                  ★ {{ displayRating(movie) }}
-                </span>
-              </span>
-            </button>
-          }
-        </div>
-        <button
-          class="carousel__next"
-          type="button"
-          aria-label="Next popular movies"
-          (click)="scrollCarousel(track, 1)"
-        >›</button>
+    <div class="carousel">
+      <button class="carousel__previous" type="button" aria-label="Previous popular movies"
+        (click)="scrollCarousel(track, -1)">‹</button>
+      <div class="carousel__track" #track>
+        @for (movie of popular(); track movie.id) {
+        <button type="button" class="poster" [class.poster--active]="movie.id === featuredId()"
+          [attr.aria-label]="'Feature ' + movie.title" (click)="selectMovie(movie.id)">
+          <img [src]="movie.imageUrl && hasImage(movie.id) ? movie.imageUrl : '/default-movie.svg'" [alt]="movie.title"
+            loading="lazy" (error)="onImageError(movie.id)" />
+          <span class="poster__shade"></span>
+          <span class="poster__info">
+            <span class="poster__title">{{ movie.title }}</span>
+            <span class="poster__rating" [attr.aria-label]="ratingAriaLabel(movie)">
+              ★ {{ displayRating(movie) }}
+            </span>
+          </span>
+        </button>
+        }
       </div>
+      <button class="carousel__next" type="button" aria-label="Next popular movies"
+        (click)="scrollCarousel(track, 1)">›</button>
+    </div>
     } @else {
-      <p class="status-message">No popular movies yet.</p>
+    <p class="status-message">No popular movies yet.</p>
     }
   </section>
 
@@ -134,89 +123,83 @@
       </div>
       <label class="year-filter">
         <span>Release year</span>
-        <input
-          type="number"
-          min="1888"
-          max="2100"
-          inputmode="numeric"
-          placeholder="Any year"
-          [value]="params().releaseYear ?? ''"
-          (input)="onReleaseYear($any($event.target).value)"
-        />
+        <input type="number" min="1888" max="2100" inputmode="numeric" placeholder="Any year"
+          [value]="params().releaseYear ?? ''" (input)="onReleaseYear($any($event.target).value)" />
       </label>
     </div>
 
     <div class="chips" aria-label="Filter by genre">
       @if (genresError()) {
-        <p class="status-message status-message--error">{{ genresError() }}</p>
+      <p class="status-message status-message--error">{{ genresError() }}</p>
       } @else {
-        @for (genre of genreList(); track genre) {
-          <button
-            type="button"
-            class="chip"
-            [class.chip--active]="isGenreActive(genre)"
-            [attr.aria-pressed]="isGenreActive(genre)"
-            (click)="toggleGenre(genre)"
-          >
-            <span class="chip__dot" aria-hidden="true"></span>
-            {{ genre }}
-          </button>
-        }
+      @for (genre of genreList(); track genre) {
+      <button type="button" class="chip" [class.chip--active]="isGenreActive(genre)"
+        [attr.aria-pressed]="isGenreActive(genre)" (click)="toggleGenre(genre)">
+        <span class="chip__dot" aria-hidden="true"></span>
+        {{ genre }}
+      </button>
+      }
       }
     </div>
 
     @if (moviesError()) {
-      <p class="status-message status-message--error">{{ moviesError() }}</p>
+    <p class="status-message status-message--error">{{ moviesError() }}</p>
     } @else if (loadingMovies()) {
-      <p class="status-message">Loading movies…</p>
+    <p class="status-message">Loading movies…</p>
     } @else if (movies().length) {
-      <div class="grid">
-        @for (movie of movies(); track movie.id) {
-          <button type="button" class="card" (click)="selectMovie(movie.id)">
-            <span class="card__poster">
-              <img
-                [src]="movie.imageUrl && hasImage(movie.id) ? movie.imageUrl : '/default-movie.svg'"
-                [alt]="movie.title"
-                loading="lazy"
-                (error)="onImageError(movie.id)"
-              />
-              <span class="card__rating" [attr.aria-label]="ratingAriaLabel(movie)">
-                <span aria-hidden="true">★</span> {{ displayRating(movie) }}
-              </span>
-            </span>
-            <span class="card__details">
-              <span class="card__title">{{ movie.title }}</span>
-              <span class="card__sub">{{ movie.releaseYear }} · {{ movie.director }}</span>
-              <span class="card__genres">
-                @for (genre of movie.genres.slice(0, 2); track genre) {
-                  <span class="genre-tag">{{ genre }}</span>
-                }
-              </span>
-            </span>
-          </button>
-        }
-      </div>
-
-      @if (pageResponse(); as page) {
-        @if (page.totalPages > 1) {
-          <nav class="pagination" aria-label="Movie pages">
-            <button type="button" class="pagination__button" [disabled]="page.page === 0" (click)="previousPage()">
-              Previous
-            </button>
-            <span>Page {{ page.page + 1 }} of {{ page.totalPages }}</span>
-            <button
-              type="button"
-              class="pagination__button"
-              [disabled]="page.page + 1 >= page.totalPages"
-              (click)="nextPage()"
-            >
-              Next
-            </button>
-          </nav>
-        }
+    <div class="grid">
+      @for (movie of movies(); track movie.id) {
+    <article class="card">
+      <button type="button" class="card__watchlist"
+        [class.card__watchlist--active]="isInWatchlist(movie.id)"
+        [attr.aria-pressed]="isInWatchlist(movie.id)"
+        [attr.aria-label]="isInWatchlist(movie.id) ? 'Remove ' + movie.title + ' from watchlist' : 'Add ' + movie.title + ' to watchlist'"
+        [disabled]="watchlistLoading() || isWatchlistPending(movie.id)"
+        (click)="toggleWatchlist(movie.id)">
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"
+            stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"
+            [attr.fill]="isInWatchlist(movie.id) ? 'currentColor' : 'none'" />
+        </svg>
+      </button>
+      <button type="button" class="card__select" (click)="selectMovie(movie.id)">
+        <span class="card__poster">
+          <img [src]="movie.imageUrl && hasImage(movie.id) ? movie.imageUrl : '/default-movie.svg'" [alt]="movie.title"
+            loading="lazy" (error)="onImageError(movie.id)" />
+          <span class="card__rating" [attr.aria-label]="ratingAriaLabel(movie)">
+            <span aria-hidden="true">★</span> {{ displayRating(movie) }}
+          </span>
+          </span>
+        <span class="card__details">
+          <span class="card__title">{{ movie.title }}</span>
+          <span class="card__sub">{{ movie.releaseYear }} · {{ movie.director }}</span>
+          <span class="card__genres">
+            @for (genre of movie.genres.slice(0, 2); track genre) {
+            <span class="genre-tag">{{ genre }}</span>
+            }
+          </span>
+          </span>
+      </button>
+    </article>
       }
+    </div>
+
+    @if (pageResponse(); as page) {
+    @if (page.totalPages > 1) {
+    <nav class="pagination" aria-label="Movie pages">
+      <button type="button" class="pagination__button" [disabled]="page.page === 0" (click)="previousPage()">
+        Previous
+      </button>
+      <span>Page {{ page.page + 1 }} of {{ page.totalPages }}</span>
+      <button type="button" class="pagination__button" [disabled]="page.page + 1 >= page.totalPages"
+        (click)="nextPage()">
+        Next
+      </button>
+    </nav>
+    }
+    }
     } @else {
-      <p class="empty">No movies match your search. Try another title or clear the genre and year filters.</p>
+    <p class="empty">No movies match your search. Try another title or clear the genre and year filters.</p>
     }
   </section>
 </section>
