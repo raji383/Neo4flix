@@ -44,7 +44,7 @@ public class RecommendationService {
                 if (!selectedUsers.isEmpty()) {
 
                         var similarUserIds = selectedUsers.stream()
-                                        .map(SimilarUser::userId)
+                                        .map(user -> user.userId())
                                         .toList();
 
                         var candidateRatings = recommendationRepository.findCandidateMovies(
@@ -53,16 +53,16 @@ public class RecommendationService {
 
                         Map<String, SimilarUser> similarUsersMap = selectedUsers.stream()
                                         .collect(Collectors.toMap(
-                                                        SimilarUser::userId,
+                                                        user -> user.userId(),
                                                         user -> user));
 
                         Map<String, List<CandidateMovieRating>> groupedMovies = candidateRatings.stream()
                                         .collect(Collectors.groupingBy(
-                                                        CandidateMovieRating::movieId));
+                                                        rating -> rating.movieId()));
 
                         collaborativeScores = groupedMovies.entrySet().stream()
                                         .collect(Collectors.toMap(
-                                                        Map.Entry::getKey,
+                                                        entry -> entry.getKey(),
                                                         entry -> calculatePredictedRating(
                                                                         entry.getValue(),
                                                                         similarUsersMap)));
@@ -72,8 +72,8 @@ public class RecommendationService {
                 var genreScores = recommendationRepository.findMovieGenreScores(currentUserId)
                                 .stream()
                                 .collect(Collectors.toMap(
-                                                MovieGenreScore::movieId,
-                                                MovieGenreScore::genreScore));
+                                               movieGenreScore -> movieGenreScore.movieId(),
+                                                movieGenreScore -> movieGenreScore.genreScore()));
 
                 // Step 4: Get all movies not rated by the current user
                 var availableMovies = recommendationRepository.findAvailableMovies(currentUserId);
@@ -108,7 +108,7 @@ public class RecommendationService {
                 // Step 6: Return the best 10 movies
                 return recommendations.stream()
                                 .sorted(Comparator.comparingDouble(
-                                                MovieRecommendation::hybridScore).reversed())
+                                                (MovieRecommendation movie) -> movie.hybridScore()).reversed())
                                 .limit(10)
                                 .toList();
         }
