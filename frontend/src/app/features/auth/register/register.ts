@@ -12,6 +12,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ErrorMessageService } from '../../../core/services/error-message.service';
 
+const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,72}$/;
 
 const passwordMatchValidator: ValidatorFn = (
   control: AbstractControl
@@ -45,7 +46,7 @@ export class REGISTER {
   registerForm = this.fb.nonNullable.group({
     username: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required],
+    password: ['', [Validators.required, Validators.pattern(strongPasswordPattern)]],
     confirmPassword: ['', Validators.required]
   }, {
     validators: passwordMatchValidator
@@ -76,13 +77,14 @@ export class REGISTER {
     this.errorMessage.set('');
     this.successMessage.set('');
 
-    const { username, email, password } =
+    const { username, email, password, confirmPassword } =
       this.registerForm.getRawValue();
 
     this.authService.register({
       username,
       email,
-      password
+      password,
+      confirmPassword,
     }).subscribe({
       next: (response) => {
         this.isLoading.set(false);

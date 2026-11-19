@@ -5,12 +5,10 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -46,7 +44,7 @@ class UserServiceApplicationTests {
 		mockMvc.perform(post("/api/auth/register")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content("""
-							{"username":"azraji","password":"123456","email":"raji.com"}
+							{"username":"azraji","password":"StrongPass1!","confirmPassword":"StrongPass1!","email":"raji.com"}
 							"""))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.details").value("Email should be valid"));
@@ -59,7 +57,7 @@ class UserServiceApplicationTests {
 		mockMvc.perform(post("/api/auth/register")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content("""
-							{"username":"azraji","password":"123456","email":"azraji@example.com"}
+							{"username":"azraji","password":"StrongPass1!","confirmPassword":"StrongPass1!","email":"azraji@example.com"}
 							"""))
 				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.details").value("Username already exists"));
@@ -72,7 +70,7 @@ class UserServiceApplicationTests {
 		mockMvc.perform(post("/api/auth/register")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content("""
-							{"username":"azraji","password":"123456","email":"azraji@example.com"}
+							{"username":"azraji","password":"StrongPass1!","confirmPassword":"StrongPass1!","email":"azraji@example.com"}
 							"""))
 				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.details").value("Email already exists"));
@@ -85,7 +83,7 @@ class UserServiceApplicationTests {
 		mockMvc.perform(post("/api/auth/register")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content("""
-							{"username":"azraji","password":"123456","email":"azraji@example.com"}
+							{"username":"azraji","password":"StrongPass1!","confirmPassword":"StrongPass1!","email":"azraji@example.com"}
 							"""))
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.id").isNotEmpty())
@@ -96,8 +94,31 @@ class UserServiceApplicationTests {
 
 		ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 		verify(userRepository).save(userCaptor.capture());
-		assertTrue(passwordEncoder.matches("123456", userCaptor.getValue().getPasswordHash()));
+		assertTrue(passwordEncoder.matches("StrongPass1!", userCaptor.getValue().getPasswordHash()));
 		assertEquals("USER", userCaptor.getValue().getRole());
+	}
+
+	@Test
+	void registrationRejectsMismatchedPasswords() throws Exception {
+		mockMvc.perform(post("/api/auth/register")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content("""
+							{"username":"azraji","password":"StrongPass1!","confirmPassword":"DifferentPass1!","email":"azraji@example.com"}
+							"""))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.details").value("Passwords do not match"));
+	}
+
+	@Test
+	void registrationRejectsWeakPassword() throws Exception {
+		mockMvc.perform(post("/api/auth/register")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content("""
+							{"username":"azraji","password":"weakpass","confirmPassword":"weakpass","email":"azraji@example.com"}
+							"""))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.details")
+						.value("Password must include uppercase, lowercase, a number, and a special character"));
 	}
 
 	

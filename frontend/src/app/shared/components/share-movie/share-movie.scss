@@ -1,0 +1,64 @@
+:host {
+    display: inline-block;
+}
+
+.share-movie {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    &__copy {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 11px 17px;
+        border-radius: 9px;
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 650;
+        cursor: pointer;
+        transition:
+            background 0.2s,
+            border-color 0.2s,
+            transform 0.2s;
+
+        &:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        &:focus-visible {
+            outline: 2px solid #ffc94a;
+            outline-offset: 4px;
+        }
+
+        &:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+    }
+
+    &__copy {
+        border: 1px solid #e50914;
+        color: #fff;
+        background: #e50914;
+
+        &:hover:not(:disabled) {
+            background: #bd0812;
+        }
+    }
+
+    &__error {
+        flex-basis: 100%;
+        margin: 0;
+        color: #ff777e;
+        font-size: 0.8rem;
+    }
+
+    &__success {
+        flex-basis: 100%;
+        color: #75d6a1;
+        font-size: 0.8rem;
+    }
+}

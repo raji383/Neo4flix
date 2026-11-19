@@ -113,7 +113,7 @@ All domain services use the shared Neo4j database (:7687).
    npm start
    ```
 
-   Open `http://localhost:4200`. The development frontend uses the API Gateway
+   Open `https://localhost:4200`. The development frontend uses the API Gateway
    at `http://localhost:8443`.
 
 To stop backend services, run `./run-services.sh stop all` from the repository

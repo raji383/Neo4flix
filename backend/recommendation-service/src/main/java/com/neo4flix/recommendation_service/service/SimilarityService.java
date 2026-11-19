@@ -27,12 +27,12 @@ public class SimilarityService {
         }
 
         double currentAverage = ratings.stream()
-                .mapToDouble(RatingPair::currentRating)
+                .mapToDouble(r->r.currentRating())
                 .average()
                 .orElse(0);
 
         double otherAverage = ratings.stream()
-                .mapToDouble(RatingPair::otherRating)
+                .mapToDouble(r->r.otherRating())
                 .average()
                 .orElse(0);
 
@@ -66,8 +66,7 @@ public class SimilarityService {
             List<RatingComparison> comparisons) {
 
         Map<String, List<RatingComparison>> groupedRatings = comparisons.stream()
-                .collect(Collectors.groupingBy(
-                        RatingComparison::userId));
+                .collect(Collectors.groupingBy(r -> r.userId()));
 
         List<SimilarUser> similarUsers = new ArrayList<>();
 
