@@ -19,7 +19,7 @@ public class RatingQueryRepository {
     public List<RatedMovieResponse> findMoviesRatedByUser(String userId) {
 
         String query = """
-                MATCH (:User {id: $userId})-[:RATED]->(m:Movie)
+                MATCH (:User {id: $userId})-[myRating:RATED]->(m:Movie)
 
                 CALL (m) {
                     OPTIONAL MATCH (m)<-[r:RATED]-(:User)
@@ -40,7 +40,8 @@ public class RatingQueryRepository {
                        genres AS genres,
                        m.imageUrl AS imageUrl,
                        averageRating AS averageRating,
-                       ratingCount AS ratingCount
+                       ratingCount AS ratingCount,
+                       myRating.value AS myRating
                 """;
 
         return List.copyOf(neo4jClient.query(query)
@@ -59,7 +60,10 @@ public class RatingQueryRepository {
                         record.get("averageRating").isNull()
                                 ? null
                                 : record.get("averageRating").asDouble(),
-                        record.get("ratingCount").asLong()))
+                        record.get("ratingCount").asLong(),
+                        record.get("myRating").isNull()
+                                ? null
+                                : record.get("myRating").asInt()))
                 .all());
     }
 }

@@ -11,5 +11,6 @@ public record RatedMovieResponse(
     Set<String> genres,
     String imageUrl,
     Double averageRating,
-    Long ratingCount
+    Long ratingCount,
+    Integer myRating
 ) {}

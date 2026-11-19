@@ -52,12 +52,17 @@ public class RatingController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{movieId}")
+    public ResponseEntity<Integer> getMyRating(@RequestHeader("X-Authenticated-User-Id") String userId,
+            @PathVariable String movieId) {
+        return ResponseEntity.ok(ratingService.getMyRating(userId, movieId));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<List<RatedMovieResponse>> getMyRatedMovies(
             @RequestHeader("X-Authenticated-User-Id") String userId) {
 
         return ResponseEntity.ok(
-            ratingService.getMoviesRatedByUser(userId)
-        );
+                ratingService.getMoviesRatedByUser(userId));
     }
 }

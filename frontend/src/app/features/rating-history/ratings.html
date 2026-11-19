@@ -1,0 +1,97 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>My Rating History</h1>
+      <p class="subtitle">Movies you've rated</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <strong>{{ movies().length }}</strong>
+        <span>Rated</span>
+      </div>
+      <div class="stat">
+        <strong>{{ myAverage() }}</strong>
+        <span>My average</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <input
+      type="search"
+      placeholder="Search by title..."
+      [value]="search()"
+      (input)="search.set($any($event.target).value)"
+    />
+
+    <select [value]="sortBy()" (change)="sortBy.set($any($event.target).value)">
+      <option value="rating-desc">Highest rated</option>
+      <option value="rating-asc">Lowest rated</option>
+      <option value="title">Title (A-Z)</option>
+      <option value="year">Newest release</option>
+    </select>
+  </div>
+
+  @if (isLoading()) {
+    <p class="state">Loading your ratings...</p>
+  } @else if (error(); as message) {
+    <p class="state" role="alert">{{ message }}</p>
+  } @else if (visibleMovies().length === 0) {
+    <div class="empty">
+      <span>⭐</span>
+      <h2>{{ search() ? 'No results' : 'No ratings yet' }}</h2>
+      <p>
+        {{ search() ? 'Try a different title.' : 'Rate some movies and they will show up here.' }}
+      </p>
+      @if (!search()) {
+        <a routerLink="/movies" class="btn">Browse movies</a>
+      }
+    </div>
+  } @else {
+    <div class="grid">
+      @for (m of visibleMovies(); track m.id) {
+        <article class="card" routerLink="/movies/{{ m.id }}" [attr.aria-label]="'View details for ' + m.title">
+          <div class="poster" [style.background]="m.imageUrl ? null : colorFor(m.title)">
+            @if (m.imageUrl) {
+              <img [src]="m.imageUrl" [alt]="m.title + ' poster'" loading="lazy" />
+            } @else {
+              <span class="letter">{{ m.title.charAt(0).toUpperCase() }}</span>
+            }
+            <span class="badge">★ {{ m.myRating }}</span>
+          </div>
+
+          <div class="body">
+            <h3 [title]="m.title">{{ m.title }}</h3>
+            <p class="meta">{{ m.releaseYear }} · {{ m.director }}</p>
+
+            <div class="genres">
+              @for (g of m.genres.slice(0, 3); track g) {
+                <span class="chip">{{ g }}</span>
+              }
+            </div>
+
+            <div class="my-rating" [attr.aria-label]="'Your rating: ' + m.myRating + ' out of 5'">
+              <span class="label">Your rating</span>
+              <span class="stars">
+                @for (n of stars; track n) {
+                  <i [class.on]="n <= m.myRating">★</i>
+                }
+              </span>
+            </div>
+
+            <p class="community">
+              Community:
+              @if (m.averageRating !== null) {
+                <strong>★ {{ m.averageRating | number: '1.1-1' }}</strong>
+                <span>({{ m.ratingCount }})</span>
+              } @else {
+                <span>No ratings</span>
+              }
+            </p>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

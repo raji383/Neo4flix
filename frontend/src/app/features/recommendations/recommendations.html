@@ -39,7 +39,7 @@
     <div class="movies-grid">
 
         @for (movie of movies(); track movie.movieId) {
-        <article class="movie-card">
+        <article class="movie-card" routerLink="/movies/{{ movie.movieId }}" >
 
             <div class="poster-container">
                 <img [src]="movie.imageUrl" [alt]="movie.title" class="movie-poster" />

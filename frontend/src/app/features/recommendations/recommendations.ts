@@ -3,11 +3,12 @@ import { Component, inject, signal, Signal } from '@angular/core';
 import { RecommendationService } from '../../core/services/recommendation.service';
 import { MovieRecommendation } from '../../shared/models/movie';
 import { DecimalPipe } from '@angular/common';
+import { RouterLink } from "@angular/router";
 
 
 @Component({
   selector: 'app-recommendations',
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, RouterLink],
   templateUrl: './recommendations.html',
   styleUrl: './recommendations.scss',
 })
