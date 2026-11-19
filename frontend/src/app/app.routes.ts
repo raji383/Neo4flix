@@ -7,7 +7,7 @@ import { Notfound } from './features/notfound/notfound';
 import { Profile } from './features/profile/profile';
 import { Page } from './layout/page/page';
 import { Recommendations } from './features/recommendations/recommendations';
-import { Ratings } from './features/ratings/ratings';
+import { Ratings } from './features/rating-history/ratings';
 import { guestGuard } from './core/guards/guest-guard';
 import { authGuard } from './core/guards/auth-guard';
 import { Dashboard } from './features/dashboard/dashboard';
