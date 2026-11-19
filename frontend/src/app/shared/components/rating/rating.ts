@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { RatingService } from '../../../core/services/rating.service';
 
@@ -20,7 +21,7 @@ export class RatingComponent {
   isLoading = signal(false);
   isSaving = signal(false);
   errorMessage = signal('');
-  israting = signal(false)
+  hasRating = signal(false);
 
   constructor() {
     // reload whenever the movie changes
@@ -36,11 +37,13 @@ export class RatingComponent {
     this.ratingService.getMyRatingToMovie(id).subscribe({
       next: value => {
         this.myRating.set(value ?? 0);
-        this.israting.set(true)
+        this.hasRating.set(true);
         this.isLoading.set(false);
       },
       error: () => {
         this.myRating.set(0);
+        this.hasRating.set(false);
+
         this.isLoading.set(false);
       },
     });
@@ -53,35 +56,41 @@ export class RatingComponent {
     this.myRating.set(value); // optimistic update
     this.isSaving.set(true);
     this.errorMessage.set('');
-    console.log(this.myRating());
 
-    if (this.israting() == false) {
-      this.ratingService.addRating(this.movieId(), value).subscribe({
-        next: () => {
-          this.isSaving.set(false);
-          this.ratingChanged.emit();
-        },
-        error: () => {
-          this.myRating.set(previous); // rollback
-          this.isSaving.set(false);
-          this.errorMessage.set('Could not save your rating. Please try again.');
-        },
-      });
-    } else {
-      this.ratingService.updateRating(this.movieId(), value).subscribe({
-        next: () => {
-          this.isSaving.set(false);
-          this.ratingChanged.emit();
-        },
-        error: () => {
-          this.myRating.set(previous); // rollback
-          this.isSaving.set(false);
-          this.errorMessage.set('Could not save your rating. Please try again.');
-        },
-      });
-    }
+    this.saveRating(value, previous, this.hasRating());
   }
 
+  private saveRating(value: number, previous: number, update: boolean): void {
+    const request = update
+      ? this.ratingService.updateRating(this.movieId(), value)
+      : this.ratingService.addRating(this.movieId(), value);
+
+    request.subscribe({
+      next: () => {
+        this.hasRating.set(true);
+        this.isSaving.set(false);
+        this.ratingChanged.emit();
+      },
+      error: (error: unknown) => {
+        const status = error instanceof HttpErrorResponse ? error.status : undefined;
+
+        
+        if (!update && status === 409) {
+          this.saveRating(value, previous, true);
+          return;
+        }
+
+        if (update && status === 404) {
+          this.saveRating(value, previous, false);
+          return;
+        }
+
+        this.myRating.set(previous); // rollback
+        this.isSaving.set(false);
+        this.errorMessage.set('Could not save your rating. Please try again.');
+      },
+    });
+  }
   remove() {
     if (this.isSaving()) return;
 
@@ -94,6 +103,8 @@ export class RatingComponent {
       next: () => {
         this.isSaving.set(false);
         this.ratingChanged.emit();
+        this.hasRating.set(false);
+
       },
       error: () => {
         this.myRating.set(previous);
