@@ -37,8 +37,6 @@ class MovieServiceTmdbTest {
                 .id("tmdb-movie")
                 .title("Example Film")
                 .tmdbPopularity(42.5)
-                .tmdbVoteAverage(8.4)
-                .tmdbVoteCount(1200L)
                 .build();
         when(movieRepository.topTmdbPopular(8)).thenReturn(List.of(tmdbMovie));
         when(movieRepository.summaries(List.of("tmdb-movie"))).thenReturn(
@@ -49,7 +47,6 @@ class MovieServiceTmdbTest {
 
         assertEquals(1, popular.size());
         assertEquals("tmdb-movie", popular.get(0).id());
-        assertEquals(8.4, popular.get(0).tmdbVoteAverage());
         verify(movieRepository, never()).topRated(3, 8);
     }
 
@@ -98,17 +95,11 @@ class MovieServiceTmdbTest {
                 request,
                 "admin-id",
                 42,
-                42.5,
-                8.4,
-                1200
+                42.5
         );
 
         assertEquals(42L, existing.getTmdbId());
         assertEquals(42.5, existing.getTmdbPopularity());
-        assertEquals(8.4, existing.getTmdbVoteAverage());
-        assertEquals(1200L, existing.getTmdbVoteCount());
-        assertEquals(8.4, response.tmdbVoteAverage());
-        assertEquals(1200L, response.tmdbVoteCount());
         assertNull(response.averageRating());
         verify(mediaUploadService, never()).uploadFile(any());
         verify(movieRepository).save(existing);

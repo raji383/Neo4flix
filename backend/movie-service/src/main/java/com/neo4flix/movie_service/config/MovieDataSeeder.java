@@ -153,8 +153,6 @@ public class MovieDataSeeder implements ApplicationRunner {
         }
 
         String director = findDirector(details);
-        double voteAverage = details.path("vote_average").asDouble();
-        long voteCount = details.path("vote_count").asLong();
 
         Set<String> genres = new HashSet<>();
 
@@ -198,9 +196,7 @@ public class MovieDataSeeder implements ApplicationRunner {
                 dto,
                 owner,
                 tmdbId,
-                movie.path("popularity").asDouble(),
-                voteAverage,
-                voteCount
+                movie.path("popularity").asDouble()
         );
     }
 

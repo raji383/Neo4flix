@@ -32,8 +32,6 @@ class MovieDataSeederTest {
                   "title":"Example Film",
                   "overview":"A sufficiently long overview.",
                   "release_date":"2020-01-01",
-                  "vote_average":7.5,
-                  "vote_count":1234,
                   "poster_path":"/poster.jpg",
                   "genres":[
                     {"id":878,"name":"Science Fiction"},
@@ -63,9 +61,7 @@ class MovieDataSeederTest {
                 movieCaptor.capture(),
                 eq("admin-user-id"),
                 eq(42L),
-                eq(42.5),
-                eq(7.5),
-                eq(1234L)
+                eq(42.5)
         );
         assertEquals(Set.of("Sci-Fi", "Drama"), movieCaptor.getValue().genres());
     }

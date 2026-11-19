@@ -60,9 +60,7 @@ public class MovieService {
             CreateMovieDTO request,
             String userId,
             long tmdbId,
-            double tmdbPopularity,
-            double voteAverage,
-            long voteCount) {
+            double tmdbPopularity) {
         Set<Genre> genres = resolveGenres(request.genres());
         Movie movie = movieRepository.findFirstByTmdbId(tmdbId).orElse(null);
         if (movie == null) {
@@ -91,8 +89,6 @@ public class MovieService {
 
         movie.setTmdbId(tmdbId);
         movie.setTmdbPopularity(tmdbPopularity);
-        movie.setTmdbVoteAverage(voteAverage);
-        movie.setTmdbVoteCount(voteCount);
         movie.setTitle(request.title());
         movie.setDirector(request.director());
         movie.setDescription(request.description());
@@ -228,8 +224,6 @@ public class MovieService {
                 genres,
                 movie.getImageUrl(),
                 avg,
-                count,
-                movie.getTmdbVoteAverage(),
-                movie.getTmdbVoteCount());
+                count);
     }
 }

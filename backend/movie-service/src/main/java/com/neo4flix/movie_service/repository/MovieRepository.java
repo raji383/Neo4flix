@@ -23,11 +23,18 @@ public interface MovieRepository extends Neo4jRepository<Movie, String>, MovieRe
 
   @Query("""
       MATCH (m:Movie)
-      WHERE m.tmdbVoteAverage IS NOT NULL
+      WHERE m.tmdbVoteAverage IS NOT NULL OR m.tmdbVoteCount IS NOT NULL
+      REMOVE m.tmdbVoteAverage, m.tmdbVoteCount
+      RETURN count(m)
+      """)
+  long removeTmdbRatingMetadata();
+
+  @Query("""
+      MATCH (m:Movie)
+      WHERE m.tmdbId IS NOT NULL
       OPTIONAL MATCH (m)-[r:HAS_GENRE]->(g:Genre)
       RETURN m, collect(r), collect(g)
-      ORDER BY coalesce(m.tmdbPopularity, toFloat(m.tmdbVoteCount), 0.0) DESC,
-               m.tmdbVoteCount DESC,
+      ORDER BY coalesce(m.tmdbPopularity, 0.0) DESC,
                m.title
       LIMIT $limit
       """)
