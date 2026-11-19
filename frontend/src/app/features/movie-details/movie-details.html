@@ -2,51 +2,48 @@
   <a class="back-link" routerLink="/movies"><span aria-hidden="true">←</span> Back to movies</a>
 
   @if (loading()) {
-    <p class="details__status" role="status">Loading movie details…</p>
+  <p class="details__status" role="status">Loading movie details…</p>
   } @else if (error()) {
-    <section class="details__error" role="alert">
-      <h1>Movie unavailable</h1>
-      <p>{{ error() }}</p>
-      <a class="details__button" routerLink="/movies">Browse movies</a>
-    </section>
+  <section class="details__error" role="alert">
+    <h1>Movie unavailable</h1>
+    <p>{{ error() }}</p>
+    <a class="details__button" routerLink="/movies">Browse movies</a>
+  </section>
   } @else if (movie(); as film) {
-    <article class="film">
-      <div class="film__poster">
-        <img
-          [src]="film.imageUrl && !imageFailed() ? film.imageUrl : '/default-movie.svg'"
-          [alt]="film.title"
-          (error)="imageFailed.set(true)"
-        />
+  <article class="film">
+    <div class="film__poster">
+      <img [src]="film.imageUrl && !imageFailed() ? film.imageUrl : '/default-movie.svg'" [alt]="film.title"
+        (error)="imageFailed.set(true)" />
+    </div>
+    <div class="film__content">
+      <span class="eyebrow">Movie details</span>
+      <h1 class="film__title">{{ film.title }}</h1>
+      <p class="film__meta">{{ film.releaseYear }} <span aria-hidden="true">·</span> Directed by {{ film.director }}</p>
+
+      <div class="rating-score" [attr.aria-label]="ratingAriaLabel(film)">
+        <strong>{{ displayRating(film) }}</strong>
+        <span class="rating-score__stars" aria-hidden="true">
+          @for (star of stars(ratingForStars(film)); track $index) {
+          <span class="star star--{{ star }}">★</span>
+          }
+        </span>
+        <span class="rating-score__count">{{ ratingCountLabel(film) }}</span>
       </div>
-      <div class="film__content">
-        <span class="eyebrow">Movie details</span>
-        <h1 class="film__title">{{ film.title }}</h1>
-        <p class="film__meta">{{ film.releaseYear }} <span aria-hidden="true">·</span> Directed by {{ film.director }}</p>
 
-        <div class="rating-score" [attr.aria-label]="ratingAriaLabel(film)">
-          <strong>{{ displayRating(film) }}</strong>
-          <span class="rating-score__stars" aria-hidden="true">
-            @for (star of stars(ratingForStars(film)); track $index) {
-              <span class="star star--{{ star }}">★</span>
-            }
-          </span>
-          <span class="rating-score__count">{{ ratingCountLabel(film) }}</span>
-        </div>
-
-        @if (film.genres.length) {
-          <div class="film__genres" aria-label="Genres">
-            @for (genre of film.genres; track genre) {
-              <span class="genre-tag">{{ genre }}</span>
-            }
-          </div>
+      @if (film.genres.length) {
+      <div class="film__genres" aria-label="Genres">
+        @for (genre of film.genres; track genre) {
+        <span class="genre-tag">{{ genre }}</span>
         }
-
-        <section class="film__synopsis">
-          <h2>Synopsis</h2>
-          <p>{{ film.description || 'No synopsis is available for this movie yet.' }}</p>
-        </section>
-        <app-rating [movieId]="film.id" (ratingChanged)="onRatingChanged()"></app-rating>
       </div>
-    </article>
+      }
+      <app-share-movie [movieId]="film.id" [title]="film.title" />
+      <section class="film__synopsis">
+        <h2>Synopsis</h2>
+        <p>{{ film.description || 'No synopsis is available for this movie yet.' }}</p>
+      </section>
+      <app-rating [movieId]="film.id" (ratingChanged)="onRatingChanged()"></app-rating>
+    </div>
+  </article>
   }
 </main>

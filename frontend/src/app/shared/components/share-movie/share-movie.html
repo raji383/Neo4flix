@@ -1,0 +1,37 @@
+<div class="share-movie">
+    <button type="button" class="share-movie__button" [disabled]="sharing()" (click)="share()"
+        aria-label="Share this movie">
+        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <path d="m8.7 10.7 6.6-4.4" />
+            <path d="m8.7 13.3 6.6 4.4" />
+        </svg>
+
+        <span>
+            {{ sharing() ? 'Sharing...' : 'Share movie' }}
+        </span>
+    </button>
+
+    <button type="button" class="share-movie__copy" (click)="copyLink()" aria-label="Copy movie link">
+        @if (copied()) {
+        <span>✓ Copied</span>
+        } @else {
+        <span>Copy link</span>
+        }
+    </button>
+
+    @if (error()) {
+    <p class="share-movie__error" role="alert">
+        {{ error() }}
+    </p>
+    }
+
+    @if (copied()) {
+    <span class="share-movie__success" role="status">
+        Movie link copied to clipboard.
+    </span>
+    }
+</div>

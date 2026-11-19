@@ -6,9 +6,10 @@ import { ErrorMessageService } from '../../core/services/error-message.service';
 import { MovieService } from '../../core/services/movie.service';
 import { Movie } from '../../shared/models/movie';
 import { RatingComponent } from "../../shared/components/rating/rating";
+import { ShareMovie } from '../../shared/components/share-movie/share-movie';
 
 @Component({
-  imports: [RouterLink, RatingComponent],
+  imports: [RouterLink, RatingComponent,ShareMovie],
   selector: 'app-movie-details',
   styleUrl: './movie-details.scss',
   templateUrl: './movie-details.html',
