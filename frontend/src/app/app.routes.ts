@@ -12,7 +12,6 @@ import { guestGuard } from './core/guards/guest-guard';
 import { authGuard } from './core/guards/auth-guard';
 import { Dashboard } from './features/dashboard/dashboard';
 import { roleGuard } from './core/guards/role-guard';
-import { Watchlist } from './features/watchlist/watchlist';
 
 export const routes: Routes = [
     { path: 'login', component: Login, canActivate: [guestGuard] },
@@ -25,7 +24,6 @@ export const routes: Routes = [
         children: [
             { path: 'movies', component: Movies },
             { path: 'movies/:id', component: MovieDetails },
-            { path: 'watchlist', component: Watchlist },
             { path: 'profile', component: Profile },
             { path: 'recommendations', component: Recommendations },
             { path: 'rating', component: Ratings },

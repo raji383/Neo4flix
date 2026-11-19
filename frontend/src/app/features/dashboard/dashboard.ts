@@ -252,15 +252,7 @@ export class Dashboard {
     ctrl.markAsTouched();
   }
 
-  addCustomGenre(form: MovieForm, input: HTMLInputElement) {
-    const name = input.value.trim();
-    if (!name) return;
-    const known = this.genreOptions().find((g) => g.toLowerCase() === name.toLowerCase());
-    const genre = known ?? name;
-    if (!known) this.genreOptions.update((g) => [...g, genre]);
-    if (!form.controls.genres.value.includes(genre)) this.toggleGenre(form, genre);
-    input.value = '';
-  }
+
 
   invalid(form: MovieForm, name: keyof MovieForm["controls"]) {
     const c = form.controls[name];

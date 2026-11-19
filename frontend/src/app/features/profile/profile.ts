@@ -10,6 +10,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { ErrorMessageService } from '../../core/services/error-message.service';
 import { UserProfileService } from '../../core/services/user-profile.service';
 import { UserProfile } from '../../shared/models/user-profile.model';
+import { WatchlistItem } from '../../shared/models/whatchlist';
+import { WatchlistService } from '../../core/services/watchlist.service';
+import { catchError } from 'rxjs/internal/operators/catchError';
+import { EMPTY } from 'rxjs/internal/observable/empty';
+import { finalize } from 'rxjs/internal/operators/finalize';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 
 @Component({
@@ -20,11 +26,16 @@ import { UserProfile } from '../../shared/models/user-profile.model';
   styleUrl: './profile.scss'
 })
 export class Profile implements OnInit {
+  private readonly watchlistService = inject(WatchlistService);
+  private readonly errorMessageService = inject(ErrorMessageService);
 
+  readonly movies = signal<WatchlistItem[]>([]);
+  readonly loading = signal(true);
+  readonly error = signal<string | null>(null);
+  readonly removingIds = signal<ReadonlySet<string>>(new Set());
   private fb = inject(FormBuilder);
   private profileService = inject(UserProfileService);
   private authService = inject(AuthService);
-  private errorMessageService = inject(ErrorMessageService);
   private router = inject(Router);
 
   isLoading = signal(true);
@@ -151,5 +162,59 @@ export class Profile implements OnInit {
   onLogout(): void {
     this.authService.logout();
     void this.router.navigateByUrl('/login');
+  }
+
+
+
+  constructor() {
+    this.loadWatchlist();
+  }
+
+  loadWatchlist(): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.watchlistService
+      .getWatchlist()
+      .pipe(
+        catchError((error: unknown) => {
+          this.error.set(
+            this.errorMessageService.getHttpErrorMessage(error, 'Could not load your watchlist.'),
+          );
+          return EMPTY;
+        }),
+        finalize(() => this.loading.set(false)),
+        takeUntilDestroyed(),
+      )
+      .subscribe((movies) => this.movies.set(movies));
+  }
+
+  remove(movieId: string): void {
+    if (this.removingIds().has(movieId)) {
+      return;
+    }
+
+    this.error.set(null);
+    this.removingIds.update((ids) => new Set(ids).add(movieId));
+    this.watchlistService
+      .delete(movieId)
+      .pipe(finalize(() => {
+        this.removingIds.update((ids) => {
+          const next = new Set(ids);
+          next.delete(movieId);
+          return next;
+        });
+      }))
+      .subscribe({
+        next: () => this.movies.update((movies) => movies.filter((movie) => movie.id !== movieId)),
+        error: (error: unknown) => {
+          this.error.set(
+            this.errorMessageService.getHttpErrorMessage(error, 'Could not remove this movie.'),
+          );
+        },
+      });
+  }
+
+  isRemoving(movieId: string): boolean {
+    return this.removingIds().has(movieId);
   }
 }
