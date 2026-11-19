@@ -40,6 +40,7 @@ public class AuthService {
 
     // Service methods
     public UserResponse register(RegisterRequest request) {
+        ensurePasswordsMatch(request);
         ensureUserIsAvailable(request);
         User savedUser = userRepository.save(createUser(request));
         return createUserResponse(savedUser);
@@ -56,6 +57,12 @@ public class AuthService {
     }
 
     // Helper methods
+    private void ensurePasswordsMatch(RegisterRequest request) {
+        if (request.getPassword() == null || !request.getPassword().equals(request.getConfirmPassword())) {
+            throw ApiException.badRequest("Passwords do not match");
+        }
+    }
+
     private void ensureUserIsAvailable(RegisterRequest request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
