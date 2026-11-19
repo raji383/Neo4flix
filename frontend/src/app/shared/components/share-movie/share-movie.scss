@@ -8,7 +8,6 @@
     flex-wrap: wrap;
     gap: 10px;
 
-    &__button,
     &__copy {
         display: inline-flex;
         align-items: center;
@@ -40,23 +39,13 @@
         }
     }
 
-    &__button {
+    &__copy {
         border: 1px solid #e50914;
         color: #fff;
         background: #e50914;
 
         &:hover:not(:disabled) {
             background: #bd0812;
-        }
-    }
-
-    &__copy {
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        color: #e5e5eb;
-        background: rgba(255, 255, 255, 0.06);
-
-        &:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.12);
         }
     }
 
