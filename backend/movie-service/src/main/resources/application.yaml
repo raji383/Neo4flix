@@ -28,3 +28,14 @@ cloudinary:
   api-key: ${CLOUDINARY_API_KEY}
   api-secret: ${CLOUDINARY_API_SECRET}
   upload-prefix: ${CLOUDINARY_UPLOAD_PREFIX:https://api.cloudinary.com}
+tmdb:
+  base-url: https://api.themoviedb.org/3
+  image-base-url: https://image.tmdb.org/t/p/w500
+  access-token: ${TMDB_ACCESS_TOKEN:}
+
+app:
+  seed:
+    movies:
+      enabled: ${MOVIE_SEED_ENABLED:false}
+      count: ${MOVIE_SEED_COUNT:100}
+      owner: ${MOVIE_SEED_OWNER:${ADMIN_USER_ID:}}

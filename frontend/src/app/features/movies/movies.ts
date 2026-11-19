@@ -61,7 +61,7 @@ export class Movies {
       });
 
     this.movieService
-      .getPopular(8)
+      .getPopular(20)
       .pipe(
         catchError((error: unknown) => {
           this.popularError.set(
@@ -158,6 +158,28 @@ export class Movies {
     return rating == null ? '—' : rating.toFixed(1);
   }
 
+  displayRating(movie: Movie): string {
+    return this.formatRating(movie.averageRating);
+  }
+
+  ratingForStars(movie: Movie): number | null {
+    return movie.averageRating ?? null;
+  }
+
+  ratingAriaLabel(movie: Movie): string {
+    if (movie.averageRating != null) {
+      return `${this.formatRating(movie.averageRating)} out of 5 from ${movie.ratingCount ?? 0} app ratings`;
+    }
+    return 'No ratings yet';
+  }
+
+  ratingCountLabel(movie: Movie): string {
+    if (movie.averageRating != null) {
+      return `${movie.ratingCount ?? 0} app ratings`;
+    }
+    return 'No ratings yet';
+  }
+
   onImageError(id: string) {
     this.failedImages.update((images) => new Set(images).add(id));
   }
@@ -166,8 +188,8 @@ export class Movies {
     return !this.failedImages().has(id);
   }
 
-  scrollCarousel(el: HTMLElement) {
-    el.scrollBy({ left: el.clientWidth * 0.8, behavior: 'smooth' });
+  scrollCarousel(el: HTMLElement, direction: -1 | 1) {
+    el.scrollBy({ left: el.clientWidth * 0.8 * direction, behavior: 'smooth' });
   }
 
 }

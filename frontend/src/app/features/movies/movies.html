@@ -25,14 +25,14 @@
         <p class="hero__meta">{{ hero.director }} · {{ hero.releaseYear }}</p>
         <p class="hero__desc">{{ hero.description }}</p>
 
-        <div class="rating-score" [attr.aria-label]="formatRating(hero.averageRating) + ' out of 5'">
-          <span class="rating-score__value">{{ formatRating(hero.averageRating) }}</span>
+        <div class="rating-score" [attr.aria-label]="ratingAriaLabel(hero)">
+          <span class="rating-score__value">{{ displayRating(hero) }}</span>
           <span class="rating-score__stars" aria-hidden="true">
-            @for (star of stars(hero.averageRating); track $index) {
+            @for (star of stars(ratingForStars(hero)); track $index) {
               <span class="star star--{{ star }}">★</span>
             }
           </span>
-          <span class="rating-score__count">{{ hero.ratingCount ?? 0 }} ratings</span>
+          <span class="rating-score__count">{{ ratingCountLabel(hero) }}</span>
         </div>
 
         @if (hero.genres.length) {
@@ -83,6 +83,12 @@
       <p class="status-message">Loading popular movies…</p>
     } @else if (popular().length) {
       <div class="carousel">
+        <button
+          class="carousel__previous"
+          type="button"
+          aria-label="Previous popular movies"
+          (click)="scrollCarousel(track, -1)"
+        >‹</button>
         <div class="carousel__track" #track>
           @for (movie of popular(); track movie.id) {
             <button
@@ -101,12 +107,19 @@
               <span class="poster__shade"></span>
               <span class="poster__info">
                 <span class="poster__title">{{ movie.title }}</span>
-                <span class="poster__rating">★ {{ formatRating(movie.averageRating) }}</span>
+                <span class="poster__rating" [attr.aria-label]="ratingAriaLabel(movie)">
+                  ★ {{ displayRating(movie) }}
+                </span>
               </span>
             </button>
           }
         </div>
-        <button class="carousel__next" type="button" aria-label="Next popular movies" (click)="scrollCarousel(track)">›</button>
+        <button
+          class="carousel__next"
+          type="button"
+          aria-label="Next popular movies"
+          (click)="scrollCarousel(track, 1)"
+        >›</button>
       </div>
     } @else {
       <p class="status-message">No popular movies yet.</p>
@@ -167,8 +180,8 @@
                 loading="lazy"
                 (error)="onImageError(movie.id)"
               />
-              <span class="card__rating" [attr.aria-label]="'Rated ' + formatRating(movie.averageRating) + ' out of 5'">
-                <span aria-hidden="true">★</span> {{ formatRating(movie.averageRating) }}
+              <span class="card__rating" [attr.aria-label]="ratingAriaLabel(movie)">
+                <span aria-hidden="true">★</span> {{ displayRating(movie) }}
               </span>
             </span>
             <span class="card__details">

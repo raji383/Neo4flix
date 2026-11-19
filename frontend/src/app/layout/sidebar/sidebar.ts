@@ -12,7 +12,6 @@ import { UserProfile } from '../../shared/models/user-profile.model';
   templateUrl: './sidebar.html',
 })
 export class Sidebar implements OnInit {
-  private router = inject(Router);
   private userProfileService = inject(UserProfileService);
   private user = signal<UserProfile | null>(null);
   collapsed = signal(false);

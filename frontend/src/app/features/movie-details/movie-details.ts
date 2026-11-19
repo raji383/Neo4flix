@@ -61,6 +61,28 @@ export class MovieDetails {
   formatRating(rating: number | null | undefined): string {
     return rating == null ? '—' : rating.toFixed(1);
   }
+
+  displayRating(movie: Movie): string {
+    return this.formatRating(movie.averageRating);
+  }
+
+  ratingForStars(movie: Movie): number | null {
+    return movie.averageRating ?? null;
+  }
+
+  ratingAriaLabel(movie: Movie): string {
+    if (movie.averageRating != null) {
+      return `${this.formatRating(movie.averageRating)} out of 5 from ${movie.ratingCount ?? 0} app ratings`;
+    }
+    return 'No ratings yet';
+  }
+
+  ratingCountLabel(movie: Movie): string {
+    if (movie.averageRating != null) {
+      return `${movie.ratingCount ?? 0} app ratings`;
+    }
+    return 'No ratings yet';
+  }
   onRatingChanged(): void {
     const currentMovie = this.movie();
 

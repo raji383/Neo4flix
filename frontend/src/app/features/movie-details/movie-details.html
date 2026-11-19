@@ -23,14 +23,14 @@
         <h1 class="film__title">{{ film.title }}</h1>
         <p class="film__meta">{{ film.releaseYear }} <span aria-hidden="true">·</span> Directed by {{ film.director }}</p>
 
-        <div class="rating-score" [attr.aria-label]="formatRating(film.averageRating) + ' out of 5'">
-          <strong>{{ formatRating(film.averageRating) }}</strong>
+        <div class="rating-score" [attr.aria-label]="ratingAriaLabel(film)">
+          <strong>{{ displayRating(film) }}</strong>
           <span class="rating-score__stars" aria-hidden="true">
-            @for (star of stars(film.averageRating); track $index) {
+            @for (star of stars(ratingForStars(film)); track $index) {
               <span class="star star--{{ star }}">★</span>
             }
           </span>
-          <span class="rating-score__count">{{ film.ratingCount }} ratings</span>
+          <span class="rating-score__count">{{ ratingCountLabel(film) }}</span>
         </div>
 
         @if (film.genres.length) {
