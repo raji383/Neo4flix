@@ -5,9 +5,10 @@ import { EMPTY, catchError, finalize, switchMap } from 'rxjs';
 import { ErrorMessageService } from '../../core/services/error-message.service';
 import { MovieService } from '../../core/services/movie.service';
 import { Movie } from '../../shared/models/movie';
+import { RatingComponent } from "../../shared/components/rating/rating";
 
 @Component({
-  imports: [RouterLink],
+  imports: [RouterLink, RatingComponent],
   selector: 'app-movie-details',
   styleUrl: './movie-details.scss',
   templateUrl: './movie-details.html',
@@ -82,4 +83,26 @@ export class MovieDetails {
     }
     return 'No ratings yet';
   }
+  onRatingChanged(): void {
+    const currentMovie = this.movie();
+
+    if (!currentMovie) {
+      return;
+    }
+
+    this.movieService.getById(currentMovie.id)
+      .pipe(takeUntilDestroyed())
+      .subscribe({
+        next: (movie) => this.movie.set(movie),
+        error: (error: unknown) => {
+          this.error.set(
+            this.errorMessageService.getHttpErrorMessage(
+              error,
+              'Could not refresh movie details.',
+            ),
+          );
+        },
+      });
+  }
+
 }

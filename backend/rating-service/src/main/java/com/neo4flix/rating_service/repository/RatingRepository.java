@@ -64,4 +64,14 @@ public interface RatingRepository extends Neo4jRepository<User, String> {
         @Param("movieId") String movieId
     );
 
+    // Get one user's rating for one movie
+    @Query("""
+        MATCH (:User {id: $userId})-[r:RATED]->(:Movie {id: $movieId})
+        RETURN r.value
+        """)
+    Integer getMyRating(
+        @Param("userId") String userId,
+        @Param("movieId") String movieId
+    );
+
 }

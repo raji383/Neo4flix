@@ -71,4 +71,15 @@ public class RatingServiceImpl implements RatingService {
 
         return ratingQueryRepository.findMoviesRatedByUser(userId);
     }
+    @Override
+    @Transactional(readOnly = true)
+    public Integer getMyRating(String userId, String movieId) {
+        Integer rating = ratingRepository.getMyRating(userId, movieId);
+
+        if (rating == null) {
+            throw ApiException.notFound("Rating not found");
+        }
+
+        return rating;
+    }
 }

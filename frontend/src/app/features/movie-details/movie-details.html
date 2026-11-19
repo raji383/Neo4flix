@@ -45,6 +45,7 @@
           <h2>Synopsis</h2>
           <p>{{ film.description || 'No synopsis is available for this movie yet.' }}</p>
         </section>
+        <app-rating [movieId]="film.id" (ratingChanged)="onRatingChanged()"></app-rating>
       </div>
     </article>
   }

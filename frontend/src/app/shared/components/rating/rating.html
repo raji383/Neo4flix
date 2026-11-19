@@ -1,0 +1,38 @@
+<div class="rating-box">
+    <div class="head">
+        <h3>Your rating</h3>
+        @if (myRating() > 0) {
+        <button type="button" class="remove" (click)="remove()" [disabled]="isSaving()">
+            Remove
+        </button>
+        }
+    </div>
+
+    <div class="stars" role="radiogroup" aria-label="Rate this movie" (mouseleave)="hover.set(0)">
+        @for (n of stars; track n) {
+        <button type="button" role="radio" class="star" [class.on]="n <= (hover() || myRating())"
+            [attr.aria-checked]="n === myRating()" [attr.aria-label]="n + (n === 1 ? ' star' : ' stars')"
+            [disabled]="isSaving() || isLoading()" (mouseenter)="hover.set(n)" (click)="rate(n)">
+            ★
+        </button>
+        }
+    </div>
+
+    <p class="hint">
+        @if (isLoading()) {
+        Loading...
+        } @else if (isSaving()) {
+        Saving...
+        } @else if (hover()) {
+        {{ labels[hover()] }}
+        } @else if (myRating()) {
+        You rated this {{ myRating() }}/5 · {{ labels[myRating()] }}
+        } @else {
+        Tap a star to rate
+        }
+    </p>
+
+    @if (errorMessage()) {
+    <div class="error-box" role="alert">{{ errorMessage() }}</div>
+    }
+</div>
