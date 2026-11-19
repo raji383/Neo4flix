@@ -31,7 +31,11 @@ public interface RatingRepository extends Neo4jRepository<User, String> {
         WHERE NOT EXISTS {
             MATCH (u)-[:RATED]->(m)
         }
-        CREATE (u)-[:RATED {value: $value}]->(m)
+        CREATE (u)-[:RATED {
+            value: $value,
+            createdAt: localdatetime(),
+            updatedAt: localdatetime()
+        }]->(m)
         RETURN 1
         """)
     Long createRating(
@@ -43,7 +47,7 @@ public interface RatingRepository extends Neo4jRepository<User, String> {
     // Update Rating
     @Query("""
         MATCH (u:User {id: $userId})-[r:RATED]->(m:Movie {id: $movieId})
-        SET r.value = $value
+        SET r.value = $value, r.updatedAt = localdatetime()
         RETURN 1
         """)
     Long updateRating(

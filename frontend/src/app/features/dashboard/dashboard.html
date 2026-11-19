@@ -52,10 +52,7 @@
             {{ g }}
           </button>
         }
-        <span class="chip-add">
-          <input #custom placeholder="New genre" (keydown.enter)="$event.preventDefault(); addCustomGenre(form, custom)" />
-          <button type="button" (click)="addCustomGenre(form, custom)" aria-label="Add genre">+</button>
-        </span>
+       
       </div>
       @if (invalid(form, 'genres')) { <small>Pick at least one genre.</small> }
     </fieldset>

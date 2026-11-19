@@ -194,3 +194,21 @@ nav a.active {
         display: block;
     }
 }
+
+.icon,
+.logo {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.logo { width: 28px; height: 28px; color: var(--accent, #e50914); }
+
+.collapse-btn svg { width: 16px; height: 16px; }
+
+// optional: active item gets a soft filled icon
+nav a.active .icon {
+  stroke-width: 2.1;
+  fill: currentColor;
+  fill-opacity: 0.14;
+}

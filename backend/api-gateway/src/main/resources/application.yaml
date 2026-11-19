@@ -49,6 +49,10 @@ spring:
               uri: lb://rating-service
               predicates:
                 - Path=/api/ratings/**
+            - id: watchlist-service
+              uri: lb://rating-service
+              predicates:
+                - Path=/api/watchlist/**
 
 server:
   port: ${API_GATEWAY_PORT}

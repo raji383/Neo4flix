@@ -5,70 +5,102 @@
 
   <main class="profile">
     @if (isLoading()) {
-      <div class="profile-card loading" role="status">Loading profile...</div>
+    <div class="profile-card loading" role="status">Loading profile...</div>
     } @else if (user(); as u) {
-      <!-- Profile card -->
-      <section class="profile-card">
-        @if (!isEditing()) {
-        <div class="avatar" [style.background]="avatarGradient()">
-          {{ initials() }}
-        </div>
+    <!-- Profile card -->
+    <section class="profile-card">
+      @if (!isEditing()) {
+      <div class="avatar" [style.background]="avatarGradient()">
+        {{ initials() }}
+      </div>
 
-        <div class="info">
-          <h1>{{ u.username }}</h1>
-          <p class="email">{{ u.email }}</p>
-        </div>
+      <div class="info">
+        <h1>{{ u.username }}</h1>
+        <p class="email">{{ u.email }}</p>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn ghost" (click)="onEdit()">Edit profile</button>
+        <button type="button" class="btn danger" (click)="onLogout()">Logout</button>
+      </div>
+      } @else {
+      <form class="profile-form" [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+        <label for="username">Username</label>
+        <input id="username" type="text" formControlName="username" autocomplete="username" />
+        @if (profileForm.controls.username.touched && profileForm.controls.username.invalid) {
+        <small role="alert">Username is required.</small>
+        }
+
+        <label for="email">Email</label>
+        <input id="email" type="email" formControlName="email" autocomplete="email" />
+        @if (profileForm.controls.email.touched && profileForm.controls.email.invalid) {
+        <small role="alert">Enter a valid email address.</small>
+        }
 
         <div class="actions">
-          <button type="button" class="btn ghost" (click)="onEdit()">Edit profile</button>
-          <button type="button" class="btn danger" (click)="onLogout()">Logout</button>
+          <button type="button" class="btn ghost" (click)="onCancelEdit()" [disabled]="isSaving()">Cancel</button>
+          <button type="submit" class="btn primary" [disabled]="isSaving()">
+            {{ isSaving() ? 'Saving...' : 'Save changes' }}
+          </button>
         </div>
-        } @else {
-        <form class="profile-form" [formGroup]="profileForm" (ngSubmit)="onSubmit()">
-          <label for="username">Username</label>
-          <input id="username" type="text" formControlName="username" autocomplete="username" />
-          @if (profileForm.controls.username.touched && profileForm.controls.username.invalid) {
-          <small role="alert">Username is required.</small>
-          }
+      </form>
+      }
+    </section>
 
-          <label for="email">Email</label>
-          <input id="email" type="email" formControlName="email" autocomplete="email" />
-          @if (profileForm.controls.email.touched && profileForm.controls.email.invalid) {
-          <small role="alert">Enter a valid email address.</small>
-          }
+    @if (errorMessage()) {
+    <p class="message error" role="alert">{{ errorMessage() }}</p>
+    }
+    @if (successMessage()) {
+    <p class="message success" role="status">{{ successMessage() }}</p>
+    }
 
-          <div class="actions">
-            <button type="button" class="btn ghost" (click)="onCancelEdit()" [disabled]="isSaving()">Cancel</button>
-            <button type="submit" class="btn primary" [disabled]="isSaving()">
-              {{ isSaving() ? 'Saving...' : 'Save changes' }}
+
+    } @else {
+    <section class="profile-card load-error">
+      <p>{{ errorMessage() || 'Unable to load your profile.' }}</p>
+      <button type="button" class="btn ghost" (click)="loadProfile()">Retry</button>
+    </section>
+    }
+    <main class="watchlist">
+      <header class="watchlist__header">
+        <h1>My watchlist</h1>
+      </header>
+
+      @if (error()) {
+      <p class="watchlist__message watchlist__message--error" role="alert">{{ error() }}</p>
+      }
+
+      @if (loading()) {
+      <p class="watchlist__message" role="status">Loading your watchlist…</p>
+      } @else if (movies().length) {
+      <section class="watchlist__grid" aria-label="Movies in your watchlist">
+        @for (movie of movies(); track movie.id) {
+        <article class="watchlist-card">
+          <a class="watchlist-card__poster" [routerLink]="['/movies', movie.id]">
+            <img [src]="movie.imageUrl || '/default-movie.svg'" [alt]="movie.title" />
+          </a>
+          <div class="watchlist-card__content">
+            <div>
+              <h2><a [routerLink]="['/movies', movie.id]">{{ movie.title }}</a></h2>
+              <p>{{ movie.releaseYear }}</p>
+            </div>
+            <button type="button" class="watchlist-card__remove" [disabled]="isRemoving(movie.id)"
+              (click)="remove(movie.id)">
+              {{ isRemoving(movie.id) ? 'Removing…' : 'Remove' }}
             </button>
           </div>
-        </form>
+        </article>
         }
       </section>
-
-      @if (errorMessage()) {
-      <p class="message error" role="alert">{{ errorMessage() }}</p>
-      }
-      @if (successMessage()) {
-      <p class="message success" role="status">{{ successMessage() }}</p>
-      }
-
-      <!-- Watchlist section (separate component later) -->
-      <section class="watchlist-section">
-        <h2>My Watchlist</h2>
-
-        <!-- <app-watchlist /> -->
-        <div class="placeholder">
-          <span>🍿</span>
-          <p>Your watchlist will appear here.</p>
-        </div>
+      } @else {
+      <section class="watchlist__empty">
+        <span aria-hidden="true">♥</span>
+        <h2>Your watchlist is empty</h2>
+        <p>Add movies from the movie list or movie details page and they’ll show up here.</p>
+        <a routerLink="/movies">Browse movies</a>
       </section>
-    } @else {
-      <section class="profile-card load-error">
-        <p>{{ errorMessage() || 'Unable to load your profile.' }}</p>
-        <button type="button" class="btn ghost" (click)="loadProfile()">Retry</button>
-      </section>
-    }
+      }
+    </main>
+
   </main>
 </div>

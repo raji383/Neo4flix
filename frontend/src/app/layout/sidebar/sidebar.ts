@@ -13,7 +13,8 @@ import { UserProfile } from '../../shared/models/user-profile.model';
 })
 export class Sidebar implements OnInit {
   private userProfileService = inject(UserProfileService);
-  readonly user = signal<UserProfile | null>(null);
+  private router = inject(Router);
+  private user = signal<UserProfile | null>(null);
   collapsed = signal(false);
   private authService = inject(AuthService);
   private errorMessageService = inject(ErrorMessageService);
