@@ -3,6 +3,7 @@ package com.neo4flix.movie_service.repository;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,30 @@ import com.neo4flix.movie_service.model.Movie;
 import com.neo4flix.movie_service.repository.embded.MovieRepositoryCustom;
 
 public interface MovieRepository extends Neo4jRepository<Movie, String>, MovieRepositoryCustom {
+
+  Optional<Movie> findFirstByTmdbId(Long tmdbId);
+
+  Optional<Movie> findFirstByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedBy(
+      String title, int releaseYear, String director, String createdBy);
+
+  @Query("""
+      MATCH (m:Movie)
+      WHERE m.tmdbVoteAverage IS NOT NULL OR m.tmdbVoteCount IS NOT NULL
+      REMOVE m.tmdbVoteAverage, m.tmdbVoteCount
+      RETURN count(m)
+      """)
+  long removeTmdbRatingMetadata();
+
+  @Query("""
+      MATCH (m:Movie)
+      WHERE m.tmdbId IS NOT NULL
+      OPTIONAL MATCH (m)-[r:HAS_GENRE]->(g:Genre)
+      RETURN m, collect(r), collect(g)
+      ORDER BY coalesce(m.tmdbPopularity, 0.0) DESC,
+               m.title
+      LIMIT $limit
+      """)
+  List<Movie> topTmdbPopular(int limit);
 
   @Query(value = """
       MATCH (m:Movie)

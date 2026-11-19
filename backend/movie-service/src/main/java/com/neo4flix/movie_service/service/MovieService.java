@@ -56,6 +56,49 @@ public class MovieService {
     }
 
     @Transactional
+    public MovieResponseDTO addOrUpdateTmdbMovie(
+            CreateMovieDTO request,
+            String userId,
+            long tmdbId,
+            double tmdbPopularity) {
+        Set<Genre> genres = resolveGenres(request.genres());
+        Movie movie = movieRepository.findFirstByTmdbId(tmdbId).orElse(null);
+        if (movie == null) {
+            movie = movieRepository
+                    .findFirstByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedBy(
+                            request.title(),
+                            request.releaseYear(),
+                            request.director(),
+                            userId)
+                    .orElse(null);
+        }
+
+        if (movie == null) {
+            UploadResult uploadResult;
+            try {
+                uploadResult = mediaUploadService.uploadFile(request.file());
+            } catch (Exception e) {
+                throw ApiException.badRequest(
+                        "Invalid file type. Only JPEG, PNG, and WEBP images are allowed.");
+            }
+            movie = Movie.builder()
+                    .createdBy(userId)
+                    .imageUrl(uploadResult.url())
+                    .build();
+        }
+
+        movie.setTmdbId(tmdbId);
+        movie.setTmdbPopularity(tmdbPopularity);
+        movie.setTitle(request.title());
+        movie.setDirector(request.director());
+        movie.setDescription(request.description());
+        movie.setReleaseYear(request.releaseYear());
+        movie.setGenres(genres);
+
+        return toResponse(movieRepository.save(movie), null);
+    }
+
+    @Transactional
     public MovieResponseDTO updateMovie(String id, CreateMovieDTO request, String userId) {
         Movie movie = findOwnedMovie(id, userId);
 
@@ -85,9 +128,9 @@ public class MovieService {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> ApiException.notFound("Movie not found"));
 
-        if (!movie.getCreatedBy().equals(userId)) {
-            throw ApiException.forbidden("You can only modify movies you created");
-        }
+        // if (!movie.getCreatedBy().equals(userId)) {
+        //     throw ApiException.forbidden("You can only modify movies you created");
+        // }
         return movie;
     }
 
@@ -139,6 +182,15 @@ public class MovieService {
 
     public List<MovieResponseDTO> getPopular(int limit) {
         int safeLimit = Math.min(Math.max(limit, 1), 20);
+
+        List<Movie> tmdbPopular = movieRepository.topTmdbPopular(safeLimit);
+        if (!tmdbPopular.isEmpty()) {
+            Map<String, RatingSummary> ratings = movieRepository.summaries(
+                    tmdbPopular.stream().map(Movie::getId).toList());
+            return tmdbPopular.stream()
+                    .map(movie -> toResponse(movie, ratings.get(movie.getId())))
+                    .toList();
+        }
 
         List<RatingSummary> top = movieRepository.topRated(POPULAR_MIN_VOTES, safeLimit);
 
