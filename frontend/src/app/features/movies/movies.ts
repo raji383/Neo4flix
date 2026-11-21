@@ -24,8 +24,15 @@ export class Movies {
   readonly movies = signal<Movie[]>([]);
   readonly popular = signal<Movie[]>([]);
   readonly genreList = signal<string[]>([]);
+  readonly selectedGenres = signal<string[]>([]);
+  readonly selectedReleaseYear = signal('');
+  readonly searchQuery = signal('');
   readonly pageResponse = signal<PageResponse<Movie> | null>(null);
-  readonly params = signal<MovieSearchParams>({ q: '', page: 0, size: 12, genres: [] });
+  readonly filterParams = signal<MovieSearchParams>({ page: 0, size: 12, genres: [] });
+  readonly requestParams = computed<MovieSearchParams>(() => ({
+    ...this.filterParams(),
+    q: this.searchQuery(),
+  }));
   readonly featuredId = signal<string | null>(null);
   readonly failedImages = signal<Set<string>>(new Set());
   readonly loadingMovies = signal(true);
@@ -57,7 +64,7 @@ export class Movies {
       )
       .subscribe((items) => this.watchlistMovieIds.set(new Set(items.map((item) => item.id))));
 
-    toObservable(this.params)
+    toObservable(this.requestParams)
       .pipe(
         switchMap((params) => {
           this.loadingMovies.set(true);
@@ -112,20 +119,28 @@ export class Movies {
   }
 
   onSearch(value: string) {
-    this.params.update((params) => ({ ...params, q: value, page: 0 }));
+    this.searchQuery.set(value);
+    this.filterParams.update((params) => ({ ...params, page: 0 }));
   }
 
   onReleaseYear(value: string) {
-    const releaseYear = value ? Number(value) : undefined;
+    this.selectedReleaseYear.set(value);
+  }
+
+  applyFilters() {
+    const releaseYear = this.selectedReleaseYear()
+      ? Number(this.selectedReleaseYear())
+      : undefined;
     const validReleaseYear =
       releaseYear !== undefined &&
         Number.isInteger(releaseYear) &&
-        releaseYear >= 1888 &&
-        releaseYear <= 2100
+        releaseYear >= 1888
         ? releaseYear
         : undefined;
-    this.params.update((params) => ({
+
+    this.filterParams.update((params) => ({
       ...params,
+      genres: [...this.selectedGenres()],
       releaseYear: validReleaseYear,
       page: 0,
     }));
@@ -140,30 +155,26 @@ export class Movies {
   }
 
   toggleGenre(genre: string) {
-    this.params.update((params) => {
-      const current = params.genres ?? [];
-      const genres = current.includes(genre)
-        ? current.filter((value) => value !== genre)
-        : [...current, genre];
-      return { ...params, genres, page: 0 };
-    });
+    this.selectedGenres.update((genres) =>
+      genres.includes(genre) ? genres.filter((value) => value !== genre) : [...genres, genre],
+    );
   }
 
   isGenreActive(genre: string) {
-    return this.params().genres?.includes(genre) ?? false;
+    return this.selectedGenres().includes(genre);
   }
 
   previousPage() {
     const response = this.pageResponse();
     if (response && response.page > 0) {
-      this.params.update((params) => ({ ...params, page: response.page - 1 }));
+      this.filterParams.update((params) => ({ ...params, page: response.page - 1 }));
     }
   }
 
   nextPage() {
     const response = this.pageResponse();
     if (response && response.page + 1 < response.totalPages) {
-      this.params.update((params) => ({ ...params, page: response.page + 1 }));
+      this.filterParams.update((params) => ({ ...params, page: response.page + 1 }));
     }
   }
 
