@@ -53,14 +53,17 @@ export class Login {
                 this.isLoading.set(false);
 
                 if (response.requiresTwoFactor) {
-                    this.challengeId.set(response.challengeId);
+                    this.challengeId.set(response.challengeId ?? '');
                     this.isOtpStep.set(true);
                     return;
                 }
 
-                this.errorMessage.set(
-                    'Two-factor authentication is required.'
-                );
+                if (response.jwtToken) {
+                    void this.router.navigate(['/movies']);
+                    return;
+                }
+
+                this.errorMessage.set('Unable to complete sign in. Please try again.');
             },
             error: (error) => {
                 this.isLoading.set(false);

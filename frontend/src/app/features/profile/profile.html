@@ -54,6 +54,37 @@
     <p class="message success" role="status">{{ successMessage() }}</p>
     }
 
+    <section class="security-card" aria-labelledby="two-factor-heading">
+      <div class="security-card__copy">
+        <h2 id="two-factor-heading">Two-factor authentication</h2>
+        <p>{{ u.twoFactorEnabled ? 'An email code is required when you sign in.' : 'Add an email code to protect your sign-ins.' }}</p>
+      </div>
+
+      @if (twoFactorChallengeId()) {
+      <app-otp-verification
+        heading="Confirm your email"
+        [subtitle]="'Enter the code sent to ' + u.email + ' to enable two-factor authentication.'"
+        submitText="Enable 2FA"
+        loadingText="Enabling..."
+        [errorMessage]="twoFactorError()"
+        [isLoading]="isTwoFactorLoading()"
+        (codeSubmitted)="verifyTwoFactorSetup($event)" />
+      } @else {
+      @if (twoFactorError()) {
+      <p class="security-card__error" role="alert">{{ twoFactorError() }}</p>
+      }
+      <button type="button" class="btn" [class.primary]="!u.twoFactorEnabled" [class.danger]="u.twoFactorEnabled"
+        [disabled]="isTwoFactorLoading()"
+        (click)="u.twoFactorEnabled ? disableTwoFactor() : startTwoFactorSetup()">
+        @if (isTwoFactorLoading()) {
+        Updating...
+        } @else {
+        {{ u.twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA' }}
+        }
+      </button>
+      }
+    </section>
+
 
     } @else {
     <section class="profile-card load-error">

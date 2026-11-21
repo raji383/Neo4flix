@@ -11,8 +11,9 @@ export interface RegisterRequest {
 }
 
 export interface LoginChallengeResponse {
-    challengeId: string;
+    challengeId: string | null;
     requiresTwoFactor: boolean;
+    jwtToken?: string | null;
 }
 
 export interface VerifyTwoFactorRequest {
@@ -31,7 +32,11 @@ export interface RegistrationResponse {
     email: string;
     role: string | null;
     message: string;
+}
+
+export interface TwoFactorSetupResponse {
     challengeId: string;
+    message: string;
 }
 
 export interface AuthResponse {

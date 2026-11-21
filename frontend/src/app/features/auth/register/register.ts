@@ -11,7 +11,6 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ErrorMessageService } from '../../../core/services/error-message.service';
-import { OtpVerificationComponent } from '../../../shared/components/otp-verification/otp-verification';
 
 const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,72}$/;
 
@@ -29,7 +28,7 @@ const passwordMatchValidator: ValidatorFn = (
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, OtpVerificationComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './register.html',
   styleUrl: './register.scss'
 })
@@ -41,10 +40,6 @@ export class REGISTER {
 
   isLoading = signal(false);
   errorMessage = signal('');
-  isEmailVerificationStep = signal(false);
-  emailVerified = signal(false);
-  challengeId = signal('');
-  registeredEmail = signal('');
   router = inject(Router);
 
   registerForm = this.fb.nonNullable.group({
@@ -92,9 +87,7 @@ export class REGISTER {
     }).subscribe({
       next: (response) => {
         this.isLoading.set(false);
-        this.challengeId.set(response.challengeId);
-        this.registeredEmail.set(response.email || email);
-        this.isEmailVerificationStep.set(true);
+        void this.router.navigate(['/login']);
       },
       error: (error) => {
         this.isLoading.set(false);
@@ -107,31 +100,6 @@ export class REGISTER {
               : error.status === 400
                 ? 'Please check the information you entered.'
                 : 'Something went wrong. Please try again.'
-          )
-        );
-      }
-    });
-  }
-
-  verifyEmail(otp: string): void {
-    if (this.isLoading()) return;
-    this.isLoading.set(true);
-    this.errorMessage.set('');
-
-    this.authService.verifyEmail({
-      challengeId: this.challengeId(),
-      otp
-    }).subscribe({
-      next: () => {
-        this.isLoading.set(false);
-        this.emailVerified.set(true);
-      },
-      error: (error) => {
-        this.isLoading.set(false);
-        this.errorMessage.set(
-          this.errorMessageService.getHttpErrorMessage(
-            error,
-            'Invalid or expired email verification code.'
           )
         );
       }

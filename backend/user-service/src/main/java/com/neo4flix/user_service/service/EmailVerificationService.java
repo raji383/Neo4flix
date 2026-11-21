@@ -18,6 +18,7 @@ import com.neo4flix.user_service.repository.UserRepository;
 @Service
 public class EmailVerificationService {
 
+        private static final String TWO_FACTOR_ACTIVATION = "TWO_FACTOR_ACTIVATION";
     private static final int OTP_LENGTH = 6;
     private static final int MAX_ATTEMPTS = 5;
     private static final long OTP_VALIDITY_SECONDS = 900;
@@ -41,7 +42,22 @@ public class EmailVerificationService {
         this.emailService = emailService;
     }
 
-    public String createEmailVerificationChallenge(User user) {
+        public String createTwoFactorActivationChallenge(User user) {
+
+                if (user.isTwoFactorEnabled()) {
+                        throw ApiException.conflict("Two-factor authentication is already enabled");
+                }
+
+                return createChallenge(user, TWO_FACTOR_ACTIVATION);
+        }
+
+        public void cancelPendingTwoFactorActivation(String userId) {
+                List<EmailVerificationChallenge> pendingChallenges = challengeRepository
+                                .findAllByUserIdAndConsumedFalse(userId);
+                challengeRepository.deleteAll(pendingChallenges);
+        }
+
+        private String createChallenge(User user, String purpose) {
 
         // Invalidate previous unused challenges
         List<EmailVerificationChallenge> oldChallenges = challengeRepository.findAllByUserIdAndConsumedFalse(
@@ -60,6 +76,7 @@ public class EmailVerificationService {
 
         challenge.setId(UUID.randomUUID().toString());
         challenge.setUserId(user.getId());
+        challenge.setPurpose(purpose);
         challenge.setOtpHash(passwordEncoder.encode(otp));
         challenge.setCreatedAt(now);
         challenge.setExpiresAt(
@@ -122,6 +139,9 @@ public class EmailVerificationService {
 
         // Mark the email as verified
         user.setEmailVerified(true);
+        if (TWO_FACTOR_ACTIVATION.equals(challenge.getPurpose())) {
+            user.setTwoFactorEnabled(true);
+        }
         userRepository.save(user);
 
         // OTP is single-use

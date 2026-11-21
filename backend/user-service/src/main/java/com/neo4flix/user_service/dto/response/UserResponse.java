@@ -8,6 +8,7 @@ public class UserResponse {
     private String username;
     private String email;
     private String role;
+    private boolean twoFactorEnabled;
     // private boolean enabled;
     private String jwtToken;
     

@@ -19,6 +19,8 @@ public class EmailVerificationChallenge {
 
     private String userId;
 
+    private String purpose;
+
     private String otpHash;
 
     private Instant createdAt;

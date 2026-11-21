@@ -20,6 +20,7 @@ import com.neo4flix.user_service.dto.request.RegisterRequest;
 import com.neo4flix.user_service.dto.request.VerifyTwoFactorRequest;
 import com.neo4flix.user_service.dto.response.LoginChallengeResponse;
 import com.neo4flix.user_service.dto.response.RegistrationResponse;
+import com.neo4flix.user_service.dto.response.TwoFactorSetupResponse;
 import com.neo4flix.user_service.dto.response.UserResponse;
 import com.neo4flix.user_service.exception.ApiException;
 import com.neo4flix.user_service.model.User;
@@ -61,9 +62,7 @@ public class AuthService {
 
         User savedUser = userRepository.save(createUser(request));
 
-        String challengeId = emailVerificationService.createEmailVerificationChallenge(savedUser);
-
-        return createRegistrationResponse(savedUser, challengeId);
+        return createRegistrationResponse(savedUser);
     }
 
     // Login: validate credentials and send OTP
@@ -71,10 +70,6 @@ public class AuthService {
 
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> ApiException.unauthorized("Invalid username or password"));
-        if (!user.isEmailVerified()) {
-            throw ApiException.forbidden(
-                    "Please verify your email before logging in.");
-        }
         if (!passwordEncoder.matches(
                 request.getPassword(),
                 user.getPasswordHash())) {
@@ -83,9 +78,31 @@ public class AuthService {
                     "Invalid username or password");
         }
 
-        String challengeId = twoFactorService.createLoginChallenge(user);
+        if (user.isTwoFactorEnabled()) {
+            String challengeId = twoFactorService.createLoginChallenge(user);
+            return new LoginChallengeResponse(challengeId);
+        }
 
-        return new LoginChallengeResponse(challengeId);
+        return new LoginChallengeResponse(createUserResponse(user));
+    }
+
+    public TwoFactorSetupResponse enableTwoFactor(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+
+        String challengeId = emailVerificationService.createTwoFactorActivationChallenge(user);
+        return new TwoFactorSetupResponse(
+                challengeId,
+                "A verification code has been sent to your email.");
+    }
+
+    public void disableTwoFactor(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+
+        emailVerificationService.cancelPendingTwoFactorActivation(userId);
+        user.setTwoFactorEnabled(false);
+        userRepository.save(user);
     }
 
     // Verify OTP: issue JWT only after successful verification
@@ -139,8 +156,7 @@ public class AuthService {
     }
 
     private RegistrationResponse createRegistrationResponse(
-            User user,
-            String challengeId) {
+            User user) {
 
         RegistrationResponse response = new RegistrationResponse();
 
@@ -148,9 +164,7 @@ public class AuthService {
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
-        response.setMessage(
-                "Registration successful. Please verify your email.");
-        response.setChallengeId(challengeId);
+        response.setMessage("Registration successful. You can now sign in.");
 
         return response;
     }
@@ -164,6 +178,7 @@ public class AuthService {
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
+        response.setTwoFactorEnabled(user.isTwoFactorEnabled());
 
         Instant issuedAt = Instant.now();
 

@@ -12,6 +12,7 @@ import { UserProfileService } from '../../core/services/user-profile.service';
 import { UserProfile } from '../../shared/models/user-profile.model';
 import { WatchlistItem } from '../../shared/models/whatchlist';
 import { WatchlistService } from '../../core/services/watchlist.service';
+import { OtpVerificationComponent } from '../../shared/components/otp-verification/otp-verification';
 import { catchError } from 'rxjs/internal/operators/catchError';
 import { EMPTY } from 'rxjs/internal/observable/empty';
 import { finalize } from 'rxjs/internal/operators/finalize';
@@ -21,7 +22,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, OtpVerificationComponent],
   templateUrl: './profile.html',
   styleUrl: './profile.scss'
 })
@@ -43,6 +44,9 @@ export class Profile implements OnInit {
   isEditing = signal(false);
   errorMessage = signal('');
   successMessage = signal('');
+  twoFactorChallengeId = signal('');
+  twoFactorError = signal('');
+  isTwoFactorLoading = signal(false);
 
   profileForm = this.fb.nonNullable.group({
     username: ['', Validators.required],
@@ -156,6 +160,75 @@ export class Profile implements OnInit {
           ),
         );
       }
+    });
+  }
+
+  startTwoFactorSetup(): void {
+    if (this.isTwoFactorLoading()) return;
+
+    this.isTwoFactorLoading.set(true);
+    this.twoFactorError.set('');
+    this.successMessage.set('');
+
+    this.authService.enableTwoFactor().subscribe({
+      next: (response) => {
+        this.twoFactorChallengeId.set(response.challengeId);
+        this.successMessage.set(response.message);
+        this.isTwoFactorLoading.set(false);
+      },
+      error: (error) => {
+        this.twoFactorError.set(
+          this.errorMessageService.getHttpErrorMessage(error, 'Could not start two-factor setup.'),
+        );
+        this.isTwoFactorLoading.set(false);
+      },
+    });
+  }
+
+  verifyTwoFactorSetup(otp: string): void {
+    if (this.isTwoFactorLoading()) return;
+
+    this.isTwoFactorLoading.set(true);
+    this.twoFactorError.set('');
+
+    this.authService.verifyEmail({
+      challengeId: this.twoFactorChallengeId(),
+      otp,
+    }).subscribe({
+      next: () => {
+        this.user.update(user => user ? { ...user, twoFactorEnabled: true } : user);
+        this.twoFactorChallengeId.set('');
+        this.successMessage.set('Two-factor authentication is enabled.');
+        this.isTwoFactorLoading.set(false);
+      },
+      error: (error) => {
+        this.twoFactorError.set(
+          this.errorMessageService.getHttpErrorMessage(error, 'Invalid or expired verification code.'),
+        );
+        this.isTwoFactorLoading.set(false);
+      },
+    });
+  }
+
+  disableTwoFactor(): void {
+    if (this.isTwoFactorLoading()) return;
+
+    this.isTwoFactorLoading.set(true);
+    this.twoFactorError.set('');
+    this.successMessage.set('');
+
+    this.authService.disableTwoFactor().subscribe({
+      next: () => {
+        this.user.update(user => user ? { ...user, twoFactorEnabled: false } : user);
+        this.successMessage.set('Two-factor authentication is disabled.');
+        this.isTwoFactorLoading.set(false);
+      },
+      error: (error) => {
+        this.twoFactorError.set(
+          this.errorMessageService.getHttpErrorMessage(error, 'Could not disable two-factor authentication.'),
+        );
+        this.isTwoFactorLoading.set(false);
+      },
     });
   }
 

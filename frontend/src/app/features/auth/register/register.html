@@ -6,7 +6,6 @@
     <main class="auth-card">
         <div class="brand">🎬 Neo<span>4</span>flix</div>
 
-        @if (!isEmailVerificationStep()) {
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
             <h1>Create account</h1>
             <p class="subtitle">Join Neo4flix and discover movies you'll love</p>
@@ -91,22 +90,5 @@
                 Already have an account? <a routerLink="/login">Login</a>
             </p>
         </form>
-        } @else if (emailVerified()) {
-        <section aria-labelledby="email-verified-title">
-            <h1 id="email-verified-title">Email verified</h1>
-            <p class="subtitle">Your Neo4flix account is ready. Sign in to start discovering movies.</p>
-            <div class="success-box" role="status">{{ registeredEmail() }} has been verified.</div>
-            <a class="submit submit-link" routerLink="/login">Continue to login</a>
-        </section>
-        } @else {
-        <app-otp-verification
-            heading="Verify your email"
-            [subtitle]="'Enter the 6-digit code sent to ' + registeredEmail() + '.'"
-            submitText="Verify email"
-            loadingText="Verifying..."
-            [errorMessage]="errorMessage()"
-            [isLoading]="isLoading()"
-            (codeSubmitted)="verifyEmail($event)" />
-        }
     </main>
 </div>

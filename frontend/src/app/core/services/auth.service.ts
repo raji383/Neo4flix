@@ -11,6 +11,7 @@ import {
     LoginRequest,
     RegisterRequest,
     RegistrationResponse,
+    TwoFactorSetupResponse,
     VerifyEmailRequest,
     VerifyTwoFactorRequest
 } from '../../shared/models/auth';
@@ -33,6 +34,12 @@ export class AuthService {
         return this.http.post<LoginChallengeResponse>(
             `${this.apiUrl}/login`,
             credentials
+        ).pipe(
+            tap(response => {
+                if (response.jwtToken) {
+                    this.tokenStorage?.setItem('jwtToken', response.jwtToken);
+                }
+            })
         );
     }
 
@@ -60,6 +67,20 @@ export class AuthService {
         return this.http.post<void>(
             `${this.apiUrl}/2fa/email/verify`,
             request
+        );
+    }
+
+    enableTwoFactor(): Observable<TwoFactorSetupResponse> {
+        return this.http.post<TwoFactorSetupResponse>(
+            `${this.apiUrl}/2fa/enable`,
+            {}
+        );
+    }
+
+    disableTwoFactor(): Observable<void> {
+        return this.http.post<void>(
+            `${this.apiUrl}/2fa/disable`,
+            {}
         );
     }
 

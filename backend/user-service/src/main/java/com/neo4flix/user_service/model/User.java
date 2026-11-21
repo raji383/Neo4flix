@@ -24,5 +24,6 @@ public class User {
 
     // private Instant createdAt;
     private boolean emailVerified = false;
+    private boolean twoFactorEnabled = false;
 
 }

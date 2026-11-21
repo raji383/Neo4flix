@@ -9,12 +9,10 @@ describe('REGISTER', () => {
   let fixture: ComponentFixture<REGISTER>;
   const authService = {
     register: vi.fn(),
-    verifyEmail: vi.fn(),
   };
 
   beforeEach(async () => {
     authService.register.mockReset();
-    authService.verifyEmail.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [REGISTER],
@@ -33,15 +31,15 @@ describe('REGISTER', () => {
     expect(component).toBeTruthy();
   });
 
-  it('moves to email verification after registration returns a challenge', () => {
+  it('registers the account and continues to login without email verification', () => {
     authService.register.mockReturnValue(of({
       id: 'user-id',
       username: 'filmfan',
       email: 'filmfan@example.com',
       role: 'USER',
-      message: 'Verify your email',
-      challengeId: 'email-challenge',
+      message: 'Registration successful.',
     }));
+    const navigate = vi.spyOn(component.router, 'navigate');
     component.registerForm.setValue({
       username: 'filmfan',
       email: 'filmfan@example.com',
@@ -51,20 +49,6 @@ describe('REGISTER', () => {
 
     component.onSubmit();
 
-    expect(component.isEmailVerificationStep()).toBe(true);
-    expect(component.challengeId()).toBe('email-challenge');
-    expect(component.registeredEmail()).toBe('filmfan@example.com');
-  });
-
-  it('verifies the email challenge before showing the sign-in state', () => {
-    authService.verifyEmail.mockReturnValue(of(void 0));
-    component.challengeId.set('email-challenge');
-    component.verifyEmail('123456');
-
-    expect(authService.verifyEmail).toHaveBeenCalledWith({
-      challengeId: 'email-challenge',
-      otp: '123456',
-    });
-    expect(component.emailVerified()).toBe(true);
+    expect(navigate).toHaveBeenCalledWith(['/login']);
   });
 });

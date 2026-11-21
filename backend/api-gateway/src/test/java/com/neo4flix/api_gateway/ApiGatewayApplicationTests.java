@@ -76,6 +76,14 @@ class ApiGatewayApplicationTests {
 				.expectHeader().valueEquals("Access-Control-Allow-Origin", "https://localhost:4200");
 	}
 
+	@Test
+	void twoFactorSettingsRequireAuthentication() {
+		testClient().post()
+				.uri("/api/auth/2fa/enable")
+				.exchange()
+				.expectStatus().isUnauthorized();
+	}
+
 	private WebTestClient testClient() {
 		return WebTestClient.bindToServer()
 				.baseUrl("http://localhost:" + port)
@@ -90,8 +98,9 @@ class ApiGatewayApplicationTests {
 				.signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(JWT_SECRET)))
 				.compact();
 		ServerWebExchange exchange = MockServerWebExchange.from(
-				MockServerHttpRequest.get("/api/movies")
+				MockServerHttpRequest.post("/api/auth/2fa/enable")
 						.header("Authorization", "Bearer " + token)
+						.header("X-Authenticated-User-Id", "spoofed-user")
 						.build());
 		AtomicReference<ServerWebExchange> forwardedExchange = new AtomicReference<>();
 		Filter filter = new Filter(new jwtUtil(JWT_SECRET));
@@ -103,6 +112,6 @@ class ApiGatewayApplicationTests {
 
 		assertNotNull(forwardedExchange.get());
 		assertEquals("user-123", forwardedExchange.get().getRequest()
-				.getHeaders().getFirst("X-Authenticated-UserID"));
+				.getHeaders().getFirst("X-Authenticated-User-Id"));
 	}
 }
