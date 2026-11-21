@@ -1,4 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { REGISTER } from './register';
 
 describe('REGISTER', () => {
@@ -7,12 +11,21 @@ describe('REGISTER', () => {
   const authService = {
     register: vi.fn(),
   };
+  const notificationService = {
+    showSuccess: vi.fn(),
+    showHttpError: vi.fn(),
+  };
 
   beforeEach(async () => {
     authService.register.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [REGISTER],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: authService },
+        { provide: NotificationService, useValue: notificationService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(REGISTER);

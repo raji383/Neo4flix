@@ -27,6 +27,7 @@ describe('UserProfileService', () => {
       username: 'test-user',
       email: 'test@example.com',
       role: 'USER',
+      twoFactorEnabled: false,
     };
 
     service.getProfile().subscribe((result) => expect(result).toEqual(profile));
@@ -38,7 +39,7 @@ describe('UserProfileService', () => {
 
   it('updates the current user profile', () => {
     const update = { username: 'new-name', email: 'new@example.com' };
-    const profile: UserProfile = { ...update, role: 'USER' };
+    const profile: UserProfile = { ...update, role: 'USER', twoFactorEnabled: false };
 
     service.updateProfile(update).subscribe((result) => expect(result).toEqual(profile));
 

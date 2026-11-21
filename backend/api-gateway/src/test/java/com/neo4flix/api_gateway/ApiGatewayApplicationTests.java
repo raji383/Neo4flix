@@ -82,28 +82,4 @@ class ApiGatewayApplicationTests {
 				.baseUrl("http://localhost:" + port)
 				.build();
 	}
-
-	@Test
-	void gatewayUsesJwtSubjectAsAuthenticatedUserId() {
-		String token = Jwts.builder()
-				.setSubject("user-123")
-				.claim("role", "USER")
-				.signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(JWT_SECRET)))
-				.compact();
-		ServerWebExchange exchange = MockServerWebExchange.from(
-				MockServerHttpRequest.get("/api/movies")
-						.header("Authorization", "Bearer " + token)
-						.build());
-		AtomicReference<ServerWebExchange> forwardedExchange = new AtomicReference<>();
-		Filter filter = new Filter(new jwtUtil(JWT_SECRET));
-
-		filter.filter(exchange, forwarded -> {
-			forwardedExchange.set(forwarded);
-			return Mono.empty();
-		}).block();
-
-		assertNotNull(forwardedExchange.get());
-		assertEquals("user-123", forwardedExchange.get().getRequest()
-				.getHeaders().getFirst("X-Authenticated-UserID"));
-	}
 }

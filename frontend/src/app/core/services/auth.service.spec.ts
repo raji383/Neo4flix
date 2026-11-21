@@ -46,7 +46,7 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBe(true);
   });
 
-  it('registers a user and stores the returned token', () => {
+  it('registers a user without storing an authentication token', () => {
     const registration = {
       username: 'test-user',
       email: 'test@example.com',
@@ -59,9 +59,16 @@ describe('AuthService', () => {
     const request = http.expectOne(`${environment.apiUrl}/api/auth/register`);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(registration);
-    request.flush(response);
+    request.flush({
+      id: 'user-123',
+      username: 'test-user',
+      email: 'test@example.com',
+      role: 'USER',
+      message: 'Registration successful. You can now sign in.',
+    });
 
-    expect(service.getToken()).toBe('sample-token');
+    expect(service.getToken()).toBeNull();
+    expect(service.isAuthenticated()).toBe(false);
   });
 
   it('clears the stored token on logout', () => {
