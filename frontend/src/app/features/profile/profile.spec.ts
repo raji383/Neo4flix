@@ -1,10 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
-import { AuthService } from '../../core/services/auth.service';
-import { ErrorMessageService } from '../../core/services/error-message.service';
-import { UserProfileService } from '../../core/services/user-profile.service';
-import { WatchlistService } from '../../core/services/watchlist.service';
 import { Profile } from './profile';
 
 describe('Profile', () => {
@@ -40,13 +34,6 @@ describe('Profile', () => {
 
     await TestBed.configureTestingModule({
       imports: [Profile],
-      providers: [
-        provideRouter([]),
-        { provide: UserProfileService, useValue: profileService },
-        { provide: AuthService, useValue: authService },
-        { provide: WatchlistService, useValue: watchlistService },
-        { provide: ErrorMessageService, useValue: errorMessageService },
-      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Profile);

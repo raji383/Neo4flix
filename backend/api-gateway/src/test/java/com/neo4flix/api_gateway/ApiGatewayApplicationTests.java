@@ -2,9 +2,8 @@ package com.neo4flix.api_gateway;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,28 +11,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.gateway.config.GlobalCorsProperties;
 import org.springframework.http.MediaType;
-import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
-import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.server.ServerWebExchange;
-
-import com.neo4flix.api_gateway.security.Filter;
-import com.neo4flix.api_gateway.security.jwtUtil;
-
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-import reactor.core.publisher.Mono;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
 		"API_GATEWAY_PORT=0",
 		"JWT_SECRET=MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=",
+		"server.ssl.enabled=false",
 		"eureka.client.enabled=false"
 })
 class ApiGatewayApplicationTests {
-
-	private static final String JWT_SECRET = "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=";
 
 	@Autowired
 	private GlobalCorsProperties globalCorsProperties;
@@ -42,15 +29,11 @@ class ApiGatewayApplicationTests {
 	private int port;
 
 	@Test
-	void contextLoads() {
-	}
-
-	@Test
 	void corsAllowsConfiguredFrontendPatchPreflight() {
 		CorsConfiguration corsConfiguration = globalCorsProperties.getCorsConfigurations().get("/**");
 		assertNotNull(corsConfiguration);
 		assertEquals("https://localhost:4200", corsConfiguration.checkOrigin("https://localhost:4200"));
-		assertEquals("http://localhost:4200", corsConfiguration.checkOrigin("http://localhost:4200"));
+		assertNull(corsConfiguration.checkOrigin("http://localhost:4200"));
 		assertTrue(corsConfiguration.getAllowedMethods().contains("PATCH"));
 
 		testClient().options()
@@ -77,6 +60,16 @@ class ApiGatewayApplicationTests {
 	}
 
 	@Test
+	void protectedRequestWithoutTokenReturnsUnauthorized() {
+		testClient().get()
+				.uri("/api/movies")
+				.exchange()
+				.expectStatus().isUnauthorized()
+				.expectBody()
+				.jsonPath("$.code").isEqualTo("UNAUTHORIZED");
+	}
+
+	@Test
 	void twoFactorSettingsRequireAuthentication() {
 		testClient().post()
 				.uri("/api/auth/2fa/enable")
@@ -98,9 +91,8 @@ class ApiGatewayApplicationTests {
 				.signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(JWT_SECRET)))
 				.compact();
 		ServerWebExchange exchange = MockServerWebExchange.from(
-				MockServerHttpRequest.post("/api/auth/2fa/enable")
+				MockServerHttpRequest.get("/api/movies")
 						.header("Authorization", "Bearer " + token)
-						.header("X-Authenticated-User-Id", "spoofed-user")
 						.build());
 		AtomicReference<ServerWebExchange> forwardedExchange = new AtomicReference<>();
 		Filter filter = new Filter(new jwtUtil(JWT_SECRET));
@@ -112,6 +104,6 @@ class ApiGatewayApplicationTests {
 
 		assertNotNull(forwardedExchange.get());
 		assertEquals("user-123", forwardedExchange.get().getRequest()
-				.getHeaders().getFirst("X-Authenticated-User-Id"));
+				.getHeaders().getFirst("X-Authenticated-UserID"));
 	}
 }

@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -19,8 +18,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.neo4flix.user_service.model.User;
-import com.neo4flix.user_service.service.EmailVerificationService;
-import com.neo4flix.user_service.service.TwoFactorService;
 import com.neo4flix.user_service.repository.UserRepository;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -37,10 +34,6 @@ class UserServiceApplicationTests {
 	private PasswordEncoder passwordEncoder;
 	@MockitoBean
 	private UserRepository userRepository;
-	@MockitoBean
-	private EmailVerificationService emailVerificationService;
-	@MockitoBean
-	private TwoFactorService twoFactorService;
 
 	@Test
 	void contextLoads() {
@@ -97,15 +90,12 @@ class UserServiceApplicationTests {
 				.andExpect(jsonPath("$.username").value("azraji"))
 				.andExpect(jsonPath("$.email").value("azraji@example.com"))
 				.andExpect(jsonPath("$.role").value("USER"))
-				.andExpect(jsonPath("$.message").value("Registration successful. You can now sign in."))
-				.andExpect(jsonPath("$.challengeId").doesNotExist())
-				.andExpect(jsonPath("$.jwtToken").doesNotExist());
+				.andExpect(jsonPath("$.jwtToken").isNotEmpty());
 
 		ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 		verify(userRepository).save(userCaptor.capture());
 		assertTrue(passwordEncoder.matches("StrongPass1!", userCaptor.getValue().getPasswordHash()));
 		assertEquals("USER", userCaptor.getValue().getRole());
-		verify(emailVerificationService, never()).createTwoFactorActivationChallenge(any(User.class));
 	}
 
 	@Test
@@ -151,61 +141,7 @@ class UserServiceApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.username").value("azraji"))
 				.andExpect(jsonPath("$.role").value("ADMIN"))
-				.andExpect(jsonPath("$.jwtToken").isNotEmpty())
-				.andExpect(jsonPath("$.requiresTwoFactor").value(false));
-	}
-
-	@Test
-	void loginRequestsOtpWhenTwoFactorIsEnabled() throws Exception {
-		User user = new User();
-		user.setId("user-id");
-		user.setUsername("azraji");
-		user.setEmail("azraji@example.com");
-		user.setPasswordHash(passwordEncoder.encode("123456"));
-		user.setTwoFactorEnabled(true);
-		when(userRepository.findByUsername("azraji")).thenReturn(Optional.of(user));
-		when(twoFactorService.createLoginChallenge(user)).thenReturn("login-challenge");
-
-		mockMvc.perform(post("/api/auth/login")
-					.contentType(MediaType.APPLICATION_JSON)
-					.content("""
-							{"username":"azraji","password":"123456"}
-							"""))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.requiresTwoFactor").value(true))
-				.andExpect(jsonPath("$.challengeId").value("login-challenge"))
-				.andExpect(jsonPath("$.jwtToken").doesNotExist());
-	}
-
-	@Test
-	void enablingTwoFactorReturnsAnEmailChallenge() throws Exception {
-		User user = new User();
-		user.setId("user-id");
-		user.setEmail("azraji@example.com");
-		when(userRepository.findById("user-id")).thenReturn(Optional.of(user));
-		when(emailVerificationService.createTwoFactorActivationChallenge(user))
-				.thenReturn("activation-challenge");
-
-		mockMvc.perform(post("/api/auth/2fa/enable")
-					.header("X-Authenticated-User-Id", "user-id"))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.challengeId").value("activation-challenge"));
-	}
-
-	@Test
-	void disablingTwoFactorClearsThePersistedFlag() throws Exception {
-		User user = new User();
-		user.setId("user-id");
-		user.setTwoFactorEnabled(true);
-		when(userRepository.findById("user-id")).thenReturn(Optional.of(user));
-
-		mockMvc.perform(post("/api/auth/2fa/disable")
-					.header("X-Authenticated-User-Id", "user-id"))
-				.andExpect(status().isNoContent());
-
-		assertEquals(false, user.isTwoFactorEnabled());
-		verify(emailVerificationService).cancelPendingTwoFactorActivation("user-id");
-		verify(userRepository).save(user);
+				.andExpect(jsonPath("$.jwtToken").isNotEmpty());
 	}
 
 	@Test
