@@ -203,6 +203,35 @@ Authorization: Bearer <jwt>
 Movie browsing accepts `q`, `page`, `size`, `genre` (repeatable), and
 `releaseYear` query parameters.
 
+### Generate demo users and ratings
+
+For local recommendation testing, the repository includes a standalone script
+that registers 100 synthetic users and rates movies through the API Gateway.
+Each generated user gets two or three favorite genres, rates 8–40 distinct
+movies, and tends to rate popular movies more often. Ratings favor 3–5, with
+favorite genres receiving higher scores. The random seed defaults to `42`, so
+the same inputs produce the same profiles and ratings. Re-running with the same
+username prefix reuses those accounts and updates their ratings.
+
+Start Neo4j and the backend services, import or create a movie catalogue, then
+run from the repository root:
+
+```sh
+node generate_demo_users.mjs --allow-self-signed
+```
+
+The password is used for all generated accounts and must satisfy the
+registration rules; do not use a real user's password. To choose another
+catalogue, seed, or account prefix, use options such as:
+
+```sh
+node scripts/generate_demo_users.mjs --count 100 --seed 123 --prefix test-viewer
+```
+
+The script defaults to `https://localhost:8443`. If the local gateway's
+development certificate is not trusted by Node, add `--allow-self-signed`.
+Use that option only for a trusted local development gateway.
+
 ## Development and tests
 
 Build the frontend:
