@@ -14,9 +14,9 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
-import com.neo4flix.user_service.dto.LoginRequest;
-import com.neo4flix.user_service.dto.RegisterRequest;
-import com.neo4flix.user_service.dto.UserResponse;
+import com.neo4flix.user_service.dto.request.LoginRequest;
+import com.neo4flix.user_service.dto.request.RegisterRequest;
+import com.neo4flix.user_service.dto.response.UserResponse;
 import com.neo4flix.user_service.exception.ApiException;
 import com.neo4flix.user_service.model.User;
 import com.neo4flix.user_service.repository.UserRepository;

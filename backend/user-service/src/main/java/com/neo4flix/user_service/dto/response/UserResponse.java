@@ -1,4 +1,4 @@
-package com.neo4flix.user_service.dto;
+package com.neo4flix.user_service.dto.response;
 
 import lombok.Data;
 

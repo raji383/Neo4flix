@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.neo4flix.user_service.dto.LoginRequest;
-import com.neo4flix.user_service.dto.RegisterRequest;
-import com.neo4flix.user_service.dto.UserResponse;
+import com.neo4flix.user_service.dto.request.LoginRequest;
+import com.neo4flix.user_service.dto.request.RegisterRequest;
+import com.neo4flix.user_service.dto.response.UserResponse;
 import com.neo4flix.user_service.service.AuthService;
 import org.springframework.http.HttpStatus;
 

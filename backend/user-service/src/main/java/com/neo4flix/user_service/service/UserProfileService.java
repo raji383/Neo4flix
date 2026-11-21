@@ -5,8 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.neo4flix.user_service.dto.UpdateProfileRequest;
-import com.neo4flix.user_service.dto.UserResponse;
+import com.neo4flix.user_service.dto.request.UpdateProfileRequest;
+import com.neo4flix.user_service.dto.response.UserResponse;
 import com.neo4flix.user_service.model.User;
 import com.neo4flix.user_service.repository.UserRepository;
 
