@@ -1,18 +1,17 @@
 import { inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { CanActivateFn, Router } from '@angular/router';
+import { NotificationService } from '../services/notification.service';
 
 export const authGuard: CanActivateFn = (route, state) => {
- const router = inject(Router);
-  const snackbar = inject(MatSnackBar);
-  
+  const router = inject(Router);
+  const notifications = inject(NotificationService);
+
   const token = localStorage.getItem('jwtToken');
   if (token) {
-    
-    return true; 
-  } else {
-    snackbar.open('You must be logged in to view this page!', 'Close', { duration: 3000 });
-    router.navigate(['/login']);
-    return false;
+    return true;
   }
+
+  notifications.showError('You must be logged in to view this page.');
+  router.navigate(['/login']);
+  return false;
 };

@@ -32,9 +32,16 @@ public class MovieService {
     private final MediaUploadService mediaUploadService;
     private static final int POPULAR_MIN_VOTES = 3;
 
-
     @Transactional
     public MovieResponseDTO addMovie(CreateMovieDTO request, String userId) {
+        if (movieRepository.existsByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedBy(
+                request.title(),
+                request.releaseYear(),
+                request.director(),
+                userId)) {
+            throw ApiException.conflict("You have already added this movie");
+        }
+
         Set<Genre> genres = resolveGenres(request.genres());
         UploadResult uploadResult;
         try {
@@ -61,7 +68,6 @@ public class MovieService {
             String userId,
             long tmdbId,
             double tmdbPopularity) {
-        Set<Genre> genres = resolveGenres(request.genres());
         Movie movie = movieRepository.findFirstByTmdbId(tmdbId).orElse(null);
         if (movie == null) {
             movie = movieRepository
@@ -73,6 +79,23 @@ public class MovieService {
                     .orElse(null);
         }
 
+        boolean duplicate = movie == null
+                ? movieRepository.existsByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedBy(
+                        request.title(),
+                        request.releaseYear(),
+                        request.director(),
+                        userId)
+                : movieRepository.existsByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedByAndIdNot(
+                        request.title(),
+                        request.releaseYear(),
+                        request.director(),
+                        userId,
+                        movie.getId());
+        if (duplicate) {
+            throw ApiException.conflict("You have already added this movie");
+        }
+
+        Set<Genre> genres = resolveGenres(request.genres());
         if (movie == null) {
             UploadResult uploadResult;
             try {
@@ -98,27 +121,42 @@ public class MovieService {
         return toResponse(movieRepository.save(movie), null);
     }
 
-    @Transactional
-    public MovieResponseDTO updateMovie(String id, CreateMovieDTO request, String userId) {
-        Movie movie = findOwnedMovie(id, userId);
+  @Transactional
+public MovieResponseDTO updateMovie(String id, CreateMovieDTO request, String userId) {
 
-        movie.setTitle(request.title());
-        movie.setDescription(request.description());
-        movie.setDirector(request.director());
-        movie.setReleaseYear(request.releaseYear());
-        movie.setGenres(resolveGenres(request.genres()));
+    Movie movie = findOwnedMovie(id, userId);
 
-        if (request.file() != null && !request.file().isEmpty()) {
-            try {
-                movie.setImageUrl(mediaUploadService.uploadFile(request.file()).url());
-            } catch (Exception e) {
-                throw ApiException.badRequest("Invalid file type. Only JPEG, PNG, and WEBP images are allowed.");
-            }
-        }
+    boolean duplicate = movieRepository
+            .existsByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedByAndIdNot(
+                    request.title(),
+                    request.releaseYear(),
+                    request.director(),
+                    userId,
+                    id
+            );
 
-        return toResponse(movieRepository.save(movie), null);
+    if (duplicate) {
+        throw ApiException.conflict("You have already added this movie");
     }
 
+    movie.setTitle(request.title());
+    movie.setDescription(request.description());
+    movie.setDirector(request.director());
+    movie.setReleaseYear(request.releaseYear());
+    movie.setGenres(resolveGenres(request.genres()));
+
+    if (request.file() != null && !request.file().isEmpty()) {
+        try {
+            movie.setImageUrl(mediaUploadService.uploadFile(request.file()).url());
+        } catch (Exception e) {
+            throw ApiException.badRequest(
+                    "Invalid file type. Only JPEG, PNG, and WEBP images are allowed."
+            );
+        }
+    }
+
+    return toResponse(movieRepository.save(movie), null);
+}
     @Transactional
     public void deleteMovie(String id, String userId) {
         movieRepository.delete(findOwnedMovie(id, userId));
@@ -129,7 +167,7 @@ public class MovieService {
                 .orElseThrow(() -> ApiException.notFound("Movie not found"));
 
         // if (!movie.getCreatedBy().equals(userId)) {
-        //     throw ApiException.forbidden("You can only modify movies you created");
+        // throw ApiException.forbidden("You can only modify movies you created");
         // }
         return movie;
     }
@@ -178,7 +216,6 @@ public class MovieService {
                 .orElseThrow(() -> ApiException.notFound("Movie not found"));
         return toResponse(movie, movieRepository.summaries(List.of(id)).get(id));
     }
-
 
     public List<MovieResponseDTO> getPopular(int limit) {
         int safeLimit = Math.min(Math.max(limit, 1), 20);

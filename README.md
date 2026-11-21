@@ -120,9 +120,26 @@ To stop backend services, run `./run-services.sh stop all` from the repository
 root. Individual services can be started, stopped, or checked with the same
 script, for example `./run-services.sh start movie-service`.
 
-> The current Compose configuration starts Neo4j; the other service
-> definitions are commented out. Use the launcher above to run the backend
-> services locally.
+Each backend service has a sample multi-stage Dockerfile. Build an image from
+the repository root using the service directory as the build context:
+
+```sh
+docker build -t user-service -f backend/user-service/Dockerfile backend/user-service
+```
+
+Replace `user-service` with the desired service directory and image tag. The
+container exposes that service's configured port; provide its other required
+settings (such as database credentials and service-discovery URLs) at runtime.
+The API Gateway uses its bundled PKCS#12 keystore and needs
+`API_GATEWAY_SSL_PASS`. The frontend serves HTTPS on container port 443 and
+proxies `/api/` to `https://api-gateway:8443`; Compose publishes it on
+`https://localhost:8444` to avoid requiring privileged host ports. The
+checked-in certificates are for development, so use a trusted certificate for
+production.
+
+The Compose stack supplies the service environment, starts Neo4j and all six
+backend services, and waits for their health checks before starting dependents.
+Run it with `docker compose up --build`.
 
 ## Environment configuration
 
@@ -185,6 +202,35 @@ Authorization: Bearer <jwt>
 
 Movie browsing accepts `q`, `page`, `size`, `genre` (repeatable), and
 `releaseYear` query parameters.
+
+### Generate demo users and ratings
+
+For local recommendation testing, the repository includes a standalone script
+that registers 100 synthetic users and rates movies through the API Gateway.
+Each generated user gets two or three favorite genres, rates 8–40 distinct
+movies, and tends to rate popular movies more often. Ratings favor 3–5, with
+favorite genres receiving higher scores. The random seed defaults to `42`, so
+the same inputs produce the same profiles and ratings. Re-running with the same
+username prefix reuses those accounts and updates their ratings.
+
+Start Neo4j and the backend services, import or create a movie catalogue, then
+run from the repository root:
+
+```sh
+node generate_demo_users.mjs --allow-self-signed
+```
+
+The password is used for all generated accounts and must satisfy the
+registration rules; do not use a real user's password. To choose another
+catalogue, seed, or account prefix, use options such as:
+
+```sh
+node scripts/generate_demo_users.mjs --count 100 --seed 123 --prefix test-viewer
+```
+
+The script defaults to `https://localhost:8443`. If the local gateway's
+development certificate is not trusted by Node, add `--allow-self-signed`.
+Use that option only for a trusted local development gateway.
 
 ## Development and tests
 

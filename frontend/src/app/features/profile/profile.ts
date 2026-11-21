@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
@@ -7,6 +8,7 @@ import { UserProfileService } from '../../core/services/user-profile.service';
 import { UserProfile } from '../../shared/models/user-profile.model';
 import { WatchlistItem } from '../../shared/models/whatchlist';
 import { WatchlistService } from '../../core/services/watchlist.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { catchError } from 'rxjs/internal/operators/catchError';
 import { EMPTY } from 'rxjs/internal/observable/empty';
 import { finalize } from 'rxjs/internal/operators/finalize';
@@ -23,6 +25,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class Profile implements OnInit {
   private readonly watchlistService = inject(WatchlistService);
   private readonly errorMessageService = inject(ErrorMessageService);
+  private readonly notifications = inject(NotificationService);
 
   readonly movies = signal<WatchlistItem[]>([]);
   readonly loading = signal(true);
@@ -124,11 +127,12 @@ export class Profile implements OnInit {
         });
       }))
       .subscribe({
-        next: () => this.movies.update((movies) => movies.filter((movie) => movie.id !== movieId)),
+        next: () => {
+          this.movies.update((movies) => movies.filter((movie) => movie.id !== movieId));
+          this.notifications.showSuccess('Movie removed from your watchlist.');
+        },
         error: (error: unknown) => {
-          this.error.set(
-            this.errorMessageService.getHttpErrorMessage(error, 'Could not remove this movie.'),
-          );
+          this.notifications.showHttpError(error, 'Could not remove this movie.');
         },
       });
   }

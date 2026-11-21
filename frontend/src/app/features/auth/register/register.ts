@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { ErrorMessageService } from '../../../core/services/error-message.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,72}$/;
 
@@ -36,7 +36,7 @@ export class REGISTER {
 
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
-  private errorMessageService = inject(ErrorMessageService);
+  private notifications = inject(NotificationService);
 
   isLoading = signal(false);
   errorMessage = signal('');

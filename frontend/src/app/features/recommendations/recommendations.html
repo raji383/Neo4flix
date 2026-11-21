@@ -15,10 +15,10 @@
     </div>
     }
 
-    @else if (error()) {
+    @else if (error(); as message) {
     <div class="state-container">
         <h2>Something went wrong</h2>
-        <p>We couldn't load your recommendations.</p>
+        <p>{{ message }}</p>
         <button (click)="loadRecommendations()">Try Again</button>
     </div>
     }

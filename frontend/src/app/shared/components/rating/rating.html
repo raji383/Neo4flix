@@ -32,7 +32,8 @@
         }
     </p>
 
-    @if (errorMessage()) {
-    <div class="error-box" role="alert">{{ errorMessage() }}</div>
+    @if (loadError(); as message) {
+    <p class="rating-error" role="alert">{{ message }}</p>
     }
+
 </div>

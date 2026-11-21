@@ -7,6 +7,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ErrorMessageService } from '../../../core/services/error-message.service';
 import { OtpVerificationComponent } from '../../../shared/components/otp-verification/otp-verification';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
     selector: 'app-login',

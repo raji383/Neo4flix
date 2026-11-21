@@ -61,11 +61,7 @@ public class Filter implements GlobalFilter, Ordered {
             Object rolesObj = claims.get("role");
             String roles = rolesObj != null ? rolesObj.toString() : "";
 
-            System.out.println("---------------------------------------------");
-
-            System.out.println("User ID: " + userId);
-            System.out.println("Role: " + roles);
-            System.out.println("---------------------------------------------");
+          
             ServerWebExchange authenticatedExchange = sanitizedExchange.mutate()
                     .request(r -> r.headers(headers -> {
                         headers.set("X-Authenticated-User-Id", userId);

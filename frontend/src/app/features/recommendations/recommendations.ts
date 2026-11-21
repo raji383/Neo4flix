@@ -4,6 +4,7 @@ import { RecommendationService } from '../../core/services/recommendation.servic
 import { MovieRecommendation } from '../../shared/models/movie';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from "@angular/router";
+import { ErrorMessageService } from '../../core/services/error-message.service';
 
 
 @Component({
@@ -15,10 +16,11 @@ import { RouterLink } from "@angular/router";
 export class Recommendations {
 
   private recommendationService = inject(RecommendationService);
+  private readonly errorMessageService = inject(ErrorMessageService);
 
   movies = signal<MovieRecommendation[]>([]);
   loading = signal(true);
-  error = signal(false);
+  error = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadRecommendations();
@@ -26,16 +28,17 @@ export class Recommendations {
 
   loadRecommendations(): void {
     this.loading.set(true);
-    this.error.set(false);
+    this.error.set(null);
 
     this.recommendationService.getRecommendations().subscribe({
       next: (data) => {
         this.movies.set(data);
         this.loading.set(false);
       },
-      error: (err) => {
-        console.error('Failed to load recommendations:', err);
-        this.error.set(true);
+      error: (error: unknown) => {
+        this.error.set(
+          this.errorMessageService.getHttpErrorMessage(error, 'Could not load your recommendations.'),
+        );
         this.loading.set(false);
       }
     });

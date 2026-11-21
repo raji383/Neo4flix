@@ -1,6 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, effect, inject, input, output, signal } from '@angular/core';
+import { ErrorMessageService } from '../../../core/services/error-message.service';
 import { RatingService } from '../../../core/services/rating.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-rating',
@@ -9,7 +11,9 @@ import { RatingService } from '../../../core/services/rating.service';
   styleUrl: './rating.scss',
 })
 export class RatingComponent {
-  private ratingService = inject(RatingService);
+  private readonly ratingService = inject(RatingService);
+  private readonly errorMessageService = inject(ErrorMessageService);
+  private readonly notifications = inject(NotificationService);
 
   movieId = input.required<string>();
   ratingChanged = output<void>();
@@ -20,8 +24,8 @@ export class RatingComponent {
   hover = signal(0);
   isLoading = signal(false);
   isSaving = signal(false);
-  errorMessage = signal('');
   hasRating = signal(false);
+  loadError = signal<string | null>(null);
 
   constructor() {
     // reload whenever the movie changes
@@ -32,7 +36,7 @@ export class RatingComponent {
 
   private loadMyRating(id: string) {
     this.isLoading.set(true);
-    this.errorMessage.set('');
+    this.loadError.set(null);
 
     this.ratingService.getMyRatingToMovie(id).subscribe({
       next: value => {
@@ -40,11 +44,13 @@ export class RatingComponent {
         this.hasRating.set(true);
         this.isLoading.set(false);
       },
-      error: () => {
+      error: (error: unknown) => {
         this.myRating.set(0);
         this.hasRating.set(false);
-
         this.isLoading.set(false);
+        this.loadError.set(
+          this.errorMessageService.getHttpErrorMessage(error, 'Could not load your rating.'),
+        );
       },
     });
   }
@@ -55,7 +61,7 @@ export class RatingComponent {
     const previous = this.myRating();
     this.myRating.set(value); // optimistic update
     this.isSaving.set(true);
-    this.errorMessage.set('');
+    this.loadError.set(null);
 
     this.saveRating(value, previous, this.hasRating());
   }
@@ -69,6 +75,7 @@ export class RatingComponent {
       next: () => {
         this.hasRating.set(true);
         this.isSaving.set(false);
+        this.notifications.showSuccess('Your rating has been saved.');
         this.ratingChanged.emit();
       },
       error: (error: unknown) => {
@@ -87,7 +94,7 @@ export class RatingComponent {
 
         this.myRating.set(previous); // rollback
         this.isSaving.set(false);
-        this.errorMessage.set('Could not save your rating. Please try again.');
+        this.notifications.showHttpError(error, 'Could not save your rating. Please try again.');
       },
     });
   }
@@ -97,19 +104,19 @@ export class RatingComponent {
     const previous = this.myRating();
     this.myRating.set(0);
     this.isSaving.set(true);
-    this.errorMessage.set('');
+    this.loadError.set(null);
 
     this.ratingService.deleteRating(this.movieId()).subscribe({
       next: () => {
         this.isSaving.set(false);
         this.ratingChanged.emit();
         this.hasRating.set(false);
-
+        this.notifications.showSuccess('Your rating has been removed.');
       },
-      error: () => {
+      error: (error: unknown) => {
         this.myRating.set(previous);
         this.isSaving.set(false);
-        this.errorMessage.set('Could not remove your rating. Please try again.');
+        this.notifications.showHttpError(error, 'Could not remove your rating. Please try again.');
       },
     });
   }

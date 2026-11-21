@@ -92,6 +92,19 @@ nav {
     flex: 1;
 }
 
+.sidebar-error {
+    overflow: hidden;
+    margin: 0 8px 8px;
+    color: #ff9298;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+}
+
+.sidebar.collapsed .sidebar-error {
+    white-space: nowrap;
+}
+
 nav a,
 .logout {
     position: relative;
