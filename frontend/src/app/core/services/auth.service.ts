@@ -11,6 +11,7 @@ import {
     LoginRequest,
     RegisterRequest,
     RegistrationResponse,
+    VerifyEmailRequest,
     VerifyTwoFactorRequest
 } from '../../shared/models/auth';
 
@@ -52,6 +53,13 @@ export class AuthService {
         return this.http.post<RegistrationResponse>(
             `${this.apiUrl}/register`,
             data
+        );
+    }
+
+    verifyEmail(request: VerifyEmailRequest): Observable<void> {
+        return this.http.post<void>(
+            `${this.apiUrl}/2fa/email/verify`,
+            request
         );
     }
 

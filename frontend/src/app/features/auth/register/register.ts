@@ -40,7 +40,10 @@ export class REGISTER {
 
   isLoading = signal(false);
   errorMessage = signal('');
-  successMessage = signal('');
+  isEmailVerificationStep = signal(false);
+  emailVerified = signal(false);
+  challengeId = signal('');
+  registeredEmail = signal('');
   router = inject(Router);
 
   registerForm = this.fb.nonNullable.group({
@@ -50,6 +53,9 @@ export class REGISTER {
     confirmPassword: ['', Validators.required]
   }, {
     validators: passwordMatchValidator
+  });
+  verificationForm = this.fb.nonNullable.group({
+    otp: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]]
   });
   showPassword = signal(false);
   showConfirm = signal(false);
@@ -76,7 +82,6 @@ export class REGISTER {
 
     this.isLoading.set(true);
     this.errorMessage.set('');
-    this.successMessage.set('');
 
     const { username, email, password, confirmPassword } =
       this.registerForm.getRawValue();
@@ -89,12 +94,9 @@ export class REGISTER {
     }).subscribe({
       next: (response) => {
         this.isLoading.set(false);
-
-        this.successMessage.set(
-          `Account created successfully. Welcome ${response.username}!`
-        );
-
-        this.router.navigate(['/login']);
+        this.challengeId.set(response.challengeId);
+        this.registeredEmail.set(response.email || email);
+        this.isEmailVerificationStep.set(true);
       },
       error: (error) => {
         this.isLoading.set(false);
@@ -107,6 +109,35 @@ export class REGISTER {
               : error.status === 400
                 ? 'Please check the information you entered.'
                 : 'Something went wrong. Please try again.'
+          )
+        );
+      }
+    });
+  }
+
+  verifyEmail(): void {
+    if (this.verificationForm.invalid || this.isLoading()) {
+      this.verificationForm.markAllAsTouched();
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    this.authService.verifyEmail({
+      challengeId: this.challengeId(),
+      otp: this.verificationForm.controls.otp.value
+    }).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.emailVerified.set(true);
+      },
+      error: (error) => {
+        this.isLoading.set(false);
+        this.errorMessage.set(
+          this.errorMessageService.getHttpErrorMessage(
+            error,
+            'Invalid or expired email verification code.'
           )
         );
       }

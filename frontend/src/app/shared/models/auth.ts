@@ -20,11 +20,18 @@ export interface VerifyTwoFactorRequest {
     otp: string;
 }
 
+export interface VerifyEmailRequest {
+    challengeId: string;
+    otp: string;
+}
+
 export interface RegistrationResponse {
     id: string;
     username: string;
     email: string;
     role: string | null;
+    message: string;
+    challengeId: string;
 }
 
 export interface AuthResponse {
