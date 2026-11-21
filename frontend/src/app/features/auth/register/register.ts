@@ -11,6 +11,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ErrorMessageService } from '../../../core/services/error-message.service';
+import { OtpVerificationComponent } from '../../../shared/components/otp-verification/otp-verification';
 
 const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,72}$/;
 
@@ -28,7 +29,7 @@ const passwordMatchValidator: ValidatorFn = (
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, OtpVerificationComponent],
   templateUrl: './register.html',
   styleUrl: './register.scss'
 })
@@ -53,9 +54,6 @@ export class REGISTER {
     confirmPassword: ['', Validators.required]
   }, {
     validators: passwordMatchValidator
-  });
-  verificationForm = this.fb.nonNullable.group({
-    otp: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]]
   });
   showPassword = signal(false);
   showConfirm = signal(false);
@@ -115,18 +113,14 @@ export class REGISTER {
     });
   }
 
-  verifyEmail(): void {
-    if (this.verificationForm.invalid || this.isLoading()) {
-      this.verificationForm.markAllAsTouched();
-      return;
-    }
-
+  verifyEmail(otp: string): void {
+    if (this.isLoading()) return;
     this.isLoading.set(true);
     this.errorMessage.set('');
 
     this.authService.verifyEmail({
       challengeId: this.challengeId(),
-      otp: this.verificationForm.controls.otp.value
+      otp
     }).subscribe({
       next: () => {
         this.isLoading.set(false);

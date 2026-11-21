@@ -1,0 +1,28 @@
+<form [formGroup]="otpForm" (ngSubmit)="submitCode()" novalidate>
+  <h1>{{ heading() }}</h1>
+  <p class="subtitle">{{ subtitle() }}</p>
+
+  <div class="form-group">
+    <label for="verificationOtp">Verification code</label>
+    <input id="verificationOtp" type="text" formControlName="otp" placeholder="Enter 6-digit code"
+      maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
+    @if (otpForm.controls.otp.touched && otpForm.controls.otp.hasError('required')) {
+    <small>Verification code is required.</small>
+    }
+    @if (otpForm.controls.otp.touched && otpForm.controls.otp.hasError('pattern')) {
+    <small>Enter a valid 6-digit code.</small>
+    }
+  </div>
+
+  @if (errorMessage()) {
+  <div class="error-box" role="alert">{{ errorMessage() }}</div>
+  }
+
+  <button type="submit" class="submit" [disabled]="isLoading() || otpForm.invalid">
+    @if (isLoading()) {
+    <span class="spinner" aria-hidden="true"></span> {{ loadingText() }}
+    } @else {
+    {{ submitText() }}
+    }
+  </button>
+</form>

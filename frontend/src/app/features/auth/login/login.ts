@@ -6,11 +6,12 @@ import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { ErrorMessageService } from '../../../core/services/error-message.service';
+import { OtpVerificationComponent } from '../../../shared/components/otp-verification/otp-verification';
 
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, OtpVerificationComponent],
     templateUrl: './login.html',
     styleUrl: './login.scss'
 })
@@ -32,13 +33,6 @@ export class Login {
     loginForm = this.fb.nonNullable.group({
         username: ['', Validators.required],
         password: ['', Validators.required]
-    });
-
-    otpForm = this.fb.nonNullable.group({
-        otp: ['', [
-            Validators.required,
-            Validators.pattern(/^\d{6}$/)
-        ]]
     });
 
     togglePassword(): void {
@@ -81,18 +75,14 @@ export class Login {
         });
     }
 
-    verifyOtp(): void {
-        if (this.otpForm.invalid || this.isLoading()) {
-            this.otpForm.markAllAsTouched();
-            return;
-        }
-
+    verifyOtp(otp: string): void {
+        if (this.isLoading()) return;
         this.isLoading.set(true);
         this.errorMessage.set('');
 
         this.authService.verifyTwoFactor({
             challengeId: this.challengeId(),
-            otp: this.otpForm.controls.otp.value
+            otp
         }).subscribe({
             next: (response) => {
                 this.isLoading.set(false);
@@ -115,7 +105,6 @@ export class Login {
     backToLogin(): void {
         this.isOtpStep.set(false);
         this.challengeId.set('');
-        this.otpForm.reset();
         this.errorMessage.set('');
     }
 }

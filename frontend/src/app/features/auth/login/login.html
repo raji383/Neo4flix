@@ -66,52 +66,20 @@
 
         } @else {
 
-        <form [formGroup]="otpForm" (ngSubmit)="verifyOtp()" novalidate>
-            <h1>Verify your identity</h1>
-
-            <p class="subtitle">
-                We sent a 6-digit verification code to your email.
-                Enter the code to complete your login.
-            </p>
-
-            <div class="form-group">
-                <label for="otp">Verification code</label>
-
-                <input id="otp" type="text" formControlName="otp" placeholder="Enter 6-digit code" maxlength="6"
-                    inputmode="numeric" autocomplete="one-time-code" />
-
-                @if (otpForm.controls.otp.touched &&
-                otpForm.controls.otp.hasError('required')) {
-                <small>Verification code is required.</small>
-                }
-
-                @if (otpForm.controls.otp.touched &&
-                otpForm.controls.otp.hasError('pattern')) {
-                <small>Enter a valid 6-digit code.</small>
-                }
-            </div>
-
-            @if (errorMessage()) {
-            <div class="error-box" role="alert">
-                {{ errorMessage() }}
-            </div>
-            }
-
-            <button type="submit" class="submit" [disabled]="isLoading() || otpForm.invalid">
-
-                @if (isLoading()) {
-                <span class="spinner"></span> Verifying...
-                } @else {
-                Verify code
-                }
-            </button>
+        <app-otp-verification
+            heading="Verify your identity"
+            subtitle="We sent a 6-digit verification code to your email. Enter the code to complete your login."
+            submitText="Verify code"
+            loadingText="Verifying..."
+            [errorMessage]="errorMessage()"
+            [isLoading]="isLoading()"
+            (codeSubmitted)="verifyOtp($event)" />
 
             <p class="footer-text">
                 <a href="#" (click)="$event.preventDefault(); backToLogin()">
                     Back to login
                 </a>
             </p>
-        </form>
         }
     </main>
 </div>

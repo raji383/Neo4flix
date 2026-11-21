@@ -59,9 +59,7 @@ describe('REGISTER', () => {
   it('verifies the email challenge before showing the sign-in state', () => {
     authService.verifyEmail.mockReturnValue(of(void 0));
     component.challengeId.set('email-challenge');
-    component.verificationForm.controls.otp.setValue('123456');
-
-    component.verifyEmail();
+    component.verifyEmail('123456');
 
     expect(authService.verifyEmail).toHaveBeenCalledWith({
       challengeId: 'email-challenge',
