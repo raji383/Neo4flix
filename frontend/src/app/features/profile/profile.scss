@@ -168,39 +168,6 @@ h1, h2, p { margin: 0; }
   }
 }
 
-/* ================= EDIT FORM ================= */
-.profile-form {
-  display: grid;
-  gap: 8px;
-  width: 100%;
-  text-align: left;
-
-  label {
-    margin-top: 8px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--muted);
-  }
-
-  input {
-    width: 100%;
-    padding: 12px 16px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--line);
-    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
-
-    &::placeholder { color: #666674; }
-    &:focus { outline: none; border-color: var(--accent); background: rgba(255, 255, 255, 0.09); box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.18); }
-    &.ng-touched.ng-invalid { border-color: var(--danger); }
-    &:disabled { opacity: 0.6; }
-  }
-
-  small { color: var(--danger); font-size: 0.78rem; }
-
-  .actions { margin-top: 18px; justify-content: flex-end; }
-}
-
 /* ================= FEEDBACK MESSAGES ================= */
 .message {
   max-width: min(460px, 100%);
@@ -213,37 +180,6 @@ h1, h2, p { margin: 0; }
 
   &.error { color: var(--danger); border-color: rgba(255, 77, 90, 0.4); background: rgba(255, 77, 90, 0.08); }
   &.success { color: var(--ok); border-color: rgba(62, 207, 142, 0.4); background: rgba(62, 207, 142, 0.08); }
-}
-
-/* ================= SECURITY SETTINGS ================= */
-.security-card {
-  display: grid;
-  width: 100%;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 20px;
-  padding: 24px 28px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--panel);
-  text-align: left;
-
-  &__copy {
-    display: grid;
-    gap: 6px;
-    min-width: 0;
-
-    h2 { font-size: 1rem; }
-    p { color: var(--muted); font-size: 0.85rem; line-height: 1.5; }
-  }
-
-  &__error {
-    grid-column: 1 / -1;
-    color: var(--danger);
-    font-size: 0.85rem;
-  }
-
-  app-otp-verification { grid-column: 1 / -1; width: min(100%, 440px); }
 }
 
 /* ================= WATCHLIST ================= */
@@ -377,7 +313,6 @@ h1, h2, p { margin: 0; }
 @media (max-width: 700px) {
   .profile { padding: 40px 16px 72px; }
   .profile-card { padding: 28px 20px 24px; border-radius: 20px; }
-  .security-card { grid-template-columns: minmax(0, 1fr); padding: 22px 20px; }
   .profile-form .actions { justify-content: stretch; .btn { flex: 1; } }
   .watchlist { margin-top: 24px; padding-top: 32px; }
   .watchlist__grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 22px 14px; }

@@ -5,6 +5,7 @@ import { Movies } from './features/movies/movies';
 import { MovieDetails } from './features/movie-details/movie-details';
 import { Notfound } from './features/notfound/notfound';
 import { Profile } from './features/profile/profile';
+import { Settings } from './features/settings/settings';
 import { Page } from './layout/page/page';
 import { Recommendations } from './features/recommendations/recommendations';
 import { Ratings } from './features/rating-history/ratings';
@@ -25,6 +26,7 @@ export const routes: Routes = [
             { path: 'movies', component: Movies },
             { path: 'movies/:id', component: MovieDetails },
             { path: 'profile', component: Profile },
+            { path: 'settings', component: Settings },
             { path: 'recommendations', component: Recommendations },
             { path: 'rating', component: Ratings },
             { path: 'dashboard', component: Dashboard, canActivate: [roleGuard(['ADMIN'])] },

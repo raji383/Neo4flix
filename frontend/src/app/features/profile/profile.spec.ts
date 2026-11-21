@@ -15,9 +15,6 @@ describe('Profile', () => {
     updateProfile: vi.fn(),
   };
   const authService = {
-    enableTwoFactor: vi.fn(),
-    disableTwoFactor: vi.fn(),
-    verifyEmail: vi.fn(),
     logout: vi.fn(),
   };
   const watchlistService = {
@@ -37,9 +34,6 @@ describe('Profile', () => {
       twoFactorEnabled: false,
     }));
     profileService.updateProfile.mockReset();
-    authService.enableTwoFactor.mockReset();
-    authService.disableTwoFactor.mockReset();
-    authService.verifyEmail.mockReset();
     authService.logout.mockReset();
     watchlistService.getWatchlist.mockReset().mockReturnValue(of([]));
     watchlistService.delete.mockReset();
@@ -64,33 +58,4 @@ describe('Profile', () => {
     expect(component).toBeTruthy();
   });
 
-  it('starts email verification before enabling two-factor authentication', () => {
-    authService.enableTwoFactor.mockReturnValue(of({
-      challengeId: 'activation-challenge',
-      message: 'A verification code has been sent to your email.',
-    }));
-
-    component.startTwoFactorSetup();
-
-    expect(component.twoFactorChallengeId()).toBe('activation-challenge');
-    expect(component.user()?.twoFactorEnabled).toBe(false);
-  });
-
-  it('enables two-factor authentication after verification and can disable it', () => {
-    authService.verifyEmail.mockReturnValue(of(void 0));
-    authService.disableTwoFactor.mockReturnValue(of(void 0));
-    component.twoFactorChallengeId.set('activation-challenge');
-
-    component.verifyTwoFactorSetup('123456');
-
-    expect(authService.verifyEmail).toHaveBeenCalledWith({
-      challengeId: 'activation-challenge',
-      otp: '123456',
-    });
-    expect(component.user()?.twoFactorEnabled).toBe(true);
-
-    component.disableTwoFactor();
-
-    expect(component.user()?.twoFactorEnabled).toBe(false);
-  });
 });

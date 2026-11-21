@@ -1,0 +1,94 @@
+<main class="settings-page">
+  <header class="settings-header">
+    <p class="eyebrow">Account</p>
+    <h1>Settings</h1>
+    <p>Manage your profile and sign-in security.</p>
+  </header>
+
+  @if (isLoading()) {
+  <p class="settings-message" role="status">Loading settings...</p>
+  } @else if (settings(); as account) {
+  @if (errorMessage()) {
+  <p class="feedback feedback--error" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (successMessage()) {
+  <p class="feedback feedback--success" role="status">{{ successMessage() }}</p>
+  }
+
+  <section class="settings-section" aria-labelledby="profile-heading">
+    <header class="section-heading">
+      <div>
+        <h2 id="profile-heading">Profile information</h2>
+        <p>Update the name and email address associated with your account.</p>
+      </div>
+    </header>
+
+    <form class="profile-form" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+      <div class="field">
+        <label for="settings-username">Username</label>
+        <input id="settings-username" type="text" formControlName="username" autocomplete="username" />
+        @if (profileForm.controls.username.touched && profileForm.controls.username.invalid) {
+        <small>Username is required.</small>
+        }
+      </div>
+
+      <div class="field">
+        <label for="settings-email">Email</label>
+        <input id="settings-email" type="email" formControlName="email" autocomplete="email"
+          [readonly]="account.twoFactorEnabled" />
+        @if (profileForm.controls.email.touched && profileForm.controls.email.invalid) {
+        <small>Enter a valid email address.</small>
+        }
+        @if (account.twoFactorEnabled) {
+        <small class="field-note">Disable two-factor authentication before changing your email.</small>
+        }
+      </div>
+
+      <button type="submit" class="button button--primary" [disabled]="isSaving() || profileForm.invalid">
+        {{ isSaving() ? 'Saving...' : 'Save changes' }}
+      </button>
+    </form>
+  </section>
+
+  <section class="settings-section" aria-labelledby="security-heading">
+    <header class="section-heading section-heading--security">
+      <div>
+        <h2 id="security-heading">Two-factor authentication</h2>
+        <p>{{ account.twoFactorEnabled ? 'An email code is required when you sign in.' : 'Add an email code to protect your sign-ins.' }}</p>
+      </div>
+      <span class="status" [class.status--enabled]="account.twoFactorEnabled">
+        {{ account.twoFactorEnabled ? 'Enabled' : 'Disabled' }}
+      </span>
+    </header>
+
+    @if (twoFactorChallengeId()) {
+    <app-otp-verification
+      heading="Confirm your email"
+      [subtitle]="'Enter the code sent to ' + account.email + ' to enable two-factor authentication.'"
+      submitText="Enable 2FA"
+      loadingText="Enabling..."
+      [errorMessage]="twoFactorError()"
+      [isLoading]="isTwoFactorLoading()"
+      (codeSubmitted)="verifyTwoFactorSetup($event)" />
+    } @else {
+    @if (twoFactorError()) {
+    <p class="feedback feedback--error" role="alert">{{ twoFactorError() }}</p>
+    }
+    <button type="button" class="button" [class.button--primary]="!account.twoFactorEnabled"
+      [class.button--danger]="account.twoFactorEnabled" [disabled]="isTwoFactorLoading()"
+      (click)="account.twoFactorEnabled ? disableTwoFactor() : startTwoFactorSetup()">
+      @if (isTwoFactorLoading()) {
+      Updating...
+      } @else {
+      {{ account.twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA' }}
+      }
+    </button>
+    }
+  </section>
+  } @else {
+  <section class="settings-section settings-section--error" role="alert">
+    <p>{{ errorMessage() || 'Unable to load your settings.' }}</p>
+    <button type="button" class="button" (click)="loadSettings()">Retry</button>
+  </section>
+  }
+</main>

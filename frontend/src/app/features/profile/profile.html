@@ -9,7 +9,6 @@
     } @else if (user(); as u) {
     <!-- Profile card -->
     <section class="profile-card">
-      @if (!isEditing()) {
       <div class="avatar" [style.background]="avatarGradient()">
         {{ initials() }}
       </div>
@@ -20,71 +19,14 @@
       </div>
 
       <div class="actions">
-        <button type="button" class="btn ghost" (click)="onEdit()">Edit profile</button>
+        <a class="btn ghost" routerLink="/settings">Settings</a>
         <button type="button" class="btn danger" (click)="onLogout()">Logout</button>
       </div>
-      } @else {
-      <form class="profile-form" [formGroup]="profileForm" (ngSubmit)="onSubmit()">
-        <label for="username">Username</label>
-        <input id="username" type="text" formControlName="username" autocomplete="username" />
-        @if (profileForm.controls.username.touched && profileForm.controls.username.invalid) {
-        <small role="alert">Username is required.</small>
-        }
-
-        <label for="email">Email</label>
-        <input id="email" type="email" formControlName="email" autocomplete="email" />
-        @if (profileForm.controls.email.touched && profileForm.controls.email.invalid) {
-        <small role="alert">Enter a valid email address.</small>
-        }
-
-        <div class="actions">
-          <button type="button" class="btn ghost" (click)="onCancelEdit()" [disabled]="isSaving()">Cancel</button>
-          <button type="submit" class="btn primary" [disabled]="isSaving()">
-            {{ isSaving() ? 'Saving...' : 'Save changes' }}
-          </button>
-        </div>
-      </form>
-      }
     </section>
 
     @if (errorMessage()) {
     <p class="message error" role="alert">{{ errorMessage() }}</p>
     }
-    @if (successMessage()) {
-    <p class="message success" role="status">{{ successMessage() }}</p>
-    }
-
-    <section class="security-card" aria-labelledby="two-factor-heading">
-      <div class="security-card__copy">
-        <h2 id="two-factor-heading">Two-factor authentication</h2>
-        <p>{{ u.twoFactorEnabled ? 'An email code is required when you sign in.' : 'Add an email code to protect your sign-ins.' }}</p>
-      </div>
-
-      @if (twoFactorChallengeId()) {
-      <app-otp-verification
-        heading="Confirm your email"
-        [subtitle]="'Enter the code sent to ' + u.email + ' to enable two-factor authentication.'"
-        submitText="Enable 2FA"
-        loadingText="Enabling..."
-        [errorMessage]="twoFactorError()"
-        [isLoading]="isTwoFactorLoading()"
-        (codeSubmitted)="verifyTwoFactorSetup($event)" />
-      } @else {
-      @if (twoFactorError()) {
-      <p class="security-card__error" role="alert">{{ twoFactorError() }}</p>
-      }
-      <button type="button" class="btn" [class.primary]="!u.twoFactorEnabled" [class.danger]="u.twoFactorEnabled"
-        [disabled]="isTwoFactorLoading()"
-        (click)="u.twoFactorEnabled ? disableTwoFactor() : startTwoFactorSetup()">
-        @if (isTwoFactorLoading()) {
-        Updating...
-        } @else {
-        {{ u.twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA' }}
-        }
-      </button>
-      }
-    </section>
-
 
     } @else {
     <section class="profile-card load-error">
