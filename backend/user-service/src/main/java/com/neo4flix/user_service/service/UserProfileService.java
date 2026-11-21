@@ -5,18 +5,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.neo4flix.user_service.dto.UpdateProfileRequest;
-import com.neo4flix.user_service.dto.UserResponse;
+import com.neo4flix.user_service.dto.request.UpdateProfileRequest;
+import com.neo4flix.user_service.dto.response.UserResponse;
 import com.neo4flix.user_service.model.User;
+import com.neo4flix.user_service.repository.EmailVerificationRepository;
 import com.neo4flix.user_service.repository.UserRepository;
 
 @Service
 public class UserProfileService {
 
     private final UserRepository userRepository;
+    private final EmailVerificationRepository challengeRepository;
 
-    public UserProfileService(UserRepository userRepository) {
+    public UserProfileService(
+            UserRepository userRepository,
+            EmailVerificationRepository challengeRepository) {
         this.userRepository = userRepository;
+        this.challengeRepository = challengeRepository;
     }
 
     public UserResponse getProfile(String userId) {
@@ -49,6 +54,18 @@ public class UserProfileService {
                     "Email is already registered");
         }
 
+        if (emailChanged && user.isTwoFactorEnabled()) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Disable two-factor authentication before changing your email");
+        }
+
+        if (emailChanged) {
+            user.setEmailVerified(false);
+            challengeRepository.deleteAll(
+                challengeRepository.findAllByUserIdAndConsumedFalse(userId));
+        }
+
         user.setUsername(request.username());
         user.setEmail(request.email());
 
@@ -72,10 +89,11 @@ public class UserProfileService {
 
     private UserResponse toResponse(User user) {
         UserResponse response = new UserResponse();
-        // response.setId(user.getId());
+        response.setId(user.getId());
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
+        response.setTwoFactorEnabled(user.isTwoFactorEnabled());
         // response.setEnabled(user.isEnabled());
         return response;
     }

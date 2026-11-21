@@ -23,4 +23,7 @@ public class User {
     // private boolean enabled;
 
     // private Instant createdAt;
+    private boolean emailVerified = false;
+    private boolean twoFactorEnabled = false;
+
 }

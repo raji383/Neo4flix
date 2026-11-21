@@ -1,4 +1,4 @@
-package com.neo4flix.user_service.dto;
+package com.neo4flix.user_service.dto.response;
 
 import lombok.Data;
 
@@ -8,6 +8,7 @@ public class UserResponse {
     private String username;
     private String email;
     private String role;
+    private boolean twoFactorEnabled;
     // private boolean enabled;
     private String jwtToken;
     

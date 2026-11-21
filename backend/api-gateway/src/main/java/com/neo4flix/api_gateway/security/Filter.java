@@ -82,7 +82,10 @@ public class Filter implements GlobalFilter, Ordered {
             return true;
         }
 
-        if (path.startsWith("/api/auth/")) {
+        if (method == HttpMethod.POST && (path.equals("/api/auth/login")
+            || path.equals("/api/auth/register")
+            || path.equals("/api/auth/2fa/verify")
+            || path.equals("/api/auth/2fa/email/verify"))) {
             return true;
         }
 

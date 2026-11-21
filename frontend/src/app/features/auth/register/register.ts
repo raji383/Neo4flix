@@ -39,6 +39,7 @@ export class REGISTER {
   private notifications = inject(NotificationService);
 
   isLoading = signal(false);
+  errorMessage = signal('');
   router = inject(Router);
 
   registerForm = this.fb.nonNullable.group({
@@ -65,6 +66,7 @@ export class REGISTER {
   strengthLabel(): string {
     return ['', 'Weak', 'Fair', 'Good', 'Strong'][this.passwordStrength()];
   }
+
   onSubmit(): void {
     if (this.registerForm.invalid || this.isLoading()) {
       this.registerForm.markAllAsTouched();
@@ -72,6 +74,7 @@ export class REGISTER {
     }
 
     this.isLoading.set(true);
+    this.errorMessage.set('');
 
     const { username, email, password, confirmPassword } =
       this.registerForm.getRawValue();
@@ -80,24 +83,27 @@ export class REGISTER {
       username,
       email,
       password,
-      confirmPassword,
+      confirmPassword
     }).subscribe({
       next: (response) => {
         this.isLoading.set(false);
-        this.notifications.showSuccess(`Account created successfully. Welcome ${response.username}!`);
-        this.router.navigate(['/login']);
+        void this.router.navigate(['/login']);
       },
       error: (error) => {
         this.isLoading.set(false);
-        this.notifications.showHttpError(
-          error,
-          error.status === 409
-            ? 'Username or email is already registered.'
-            : error.status === 400
-              ? 'Please check the information you entered.'
-              : 'Something went wrong. Please try again.',
+
+        this.errorMessage.set(
+          this.errorMessageService.getHttpErrorMessage(
+            error,
+            error.status === 409
+              ? 'Username or email is already registered.'
+              : error.status === 400
+                ? 'Please check the information you entered.'
+                : 'Something went wrong. Please try again.'
+          )
         );
       }
     });
   }
+
 }

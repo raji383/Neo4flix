@@ -1,3 +1,4 @@
+
 package com.neo4flix.user_service.service;
 
 import java.time.Instant;
@@ -14,51 +15,117 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
-import com.neo4flix.user_service.dto.LoginRequest;
-import com.neo4flix.user_service.dto.RegisterRequest;
-import com.neo4flix.user_service.dto.UserResponse;
+import com.neo4flix.user_service.dto.request.LoginRequest;
+import com.neo4flix.user_service.dto.request.RegisterRequest;
+import com.neo4flix.user_service.dto.request.VerifyTwoFactorRequest;
+import com.neo4flix.user_service.dto.response.LoginChallengeResponse;
+import com.neo4flix.user_service.dto.response.RegistrationResponse;
+import com.neo4flix.user_service.dto.response.TwoFactorSetupResponse;
+import com.neo4flix.user_service.dto.response.UserResponse;
 import com.neo4flix.user_service.exception.ApiException;
 import com.neo4flix.user_service.model.User;
 import com.neo4flix.user_service.repository.UserRepository;
 
 @Service
 public class AuthService {
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TwoFactorService twoFactorService;
     private final SecretKey signingKey;
     private final long tokenExpirationMs;
+    private final EmailVerificationService emailVerificationService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+    public AuthService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            TwoFactorService twoFactorService,
+            EmailVerificationService emailVerificationService,
             @Value("${jwt.secret}") String jwtSecret,
             @Value("${jwt.expiration:3600000}") long tokenExpirationMs) {
+
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.twoFactorService = twoFactorService;
+        this.emailVerificationService = emailVerificationService;
         this.signingKey = Keys.hmacShaKeyFor(
                 Decoders.BASE64.decode(jwtSecret));
+
         this.tokenExpirationMs = tokenExpirationMs;
     }
 
-    // Service methods
-    public UserResponse register(RegisterRequest request) {
+    // Registration: create account without issuing JWT
+    public RegistrationResponse register(RegisterRequest request) {
+
         ensurePasswordsMatch(request);
         ensureUserIsAvailable(request);
+
         User savedUser = userRepository.save(createUser(request));
-        return createUserResponse(savedUser);
+
+        return createRegistrationResponse(savedUser);
     }
 
-    public UserResponse login(LoginRequest request) {
+    // Login: validate credentials and send OTP
+    public LoginChallengeResponse login(LoginRequest request) {
+
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> ApiException.unauthorized("Invalid username or password"));
+        if (!passwordEncoder.matches(
+                request.getPassword(),
+                user.getPasswordHash())) {
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw ApiException.unauthorized("Invalid username or password");
+            throw ApiException.unauthorized(
+                    "Invalid username or password");
         }
+
+        if (user.isTwoFactorEnabled()) {
+            String challengeId = twoFactorService.createLoginChallenge(user);
+            return new LoginChallengeResponse(challengeId);
+        }
+
+        return new LoginChallengeResponse(createUserResponse(user));
+    }
+
+    public TwoFactorSetupResponse enableTwoFactor(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+
+        String challengeId = emailVerificationService.createTwoFactorActivationChallenge(user);
+        return new TwoFactorSetupResponse(
+                challengeId,
+                "A verification code has been sent to your email.");
+    }
+
+    public void disableTwoFactor(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+
+        emailVerificationService.cancelPendingTwoFactorActivation(userId);
+        user.setTwoFactorEnabled(false);
+        userRepository.save(user);
+    }
+
+    // Verify OTP: issue JWT only after successful verification
+    public UserResponse verifyTwoFactor(
+            VerifyTwoFactorRequest request) {
+
+        String userId = twoFactorService.verifyLoginChallenge(
+                request.getChallengeId(),
+                request.getOtp());
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.unauthorized("User not found"));
+
         return createUserResponse(user);
     }
 
     // Helper methods
     private void ensurePasswordsMatch(RegisterRequest request) {
-        if (request.getPassword() == null || !request.getPassword().equals(request.getConfirmPassword())) {
+
+        if (request.getPassword() == null
+                || !request.getPassword().equals(
+                        request.getConfirmPassword())) {
+
             throw ApiException.badRequest("Passwords do not match");
         }
     }
@@ -68,35 +135,63 @@ public class AuthService {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw ApiException.conflict("Username already exists");
         }
+
         if (userRepository.existsByEmail(request.getEmail())) {
             throw ApiException.conflict("Email already exists");
         }
     }
 
     private User createUser(RegisterRequest request) {
+
         User user = new User();
+
         user.setId(UUID.randomUUID().toString());
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setPasswordHash(
+                passwordEncoder.encode(request.getPassword()));
         user.setRole("USER");
+
         return user;
     }
 
-    private UserResponse createUserResponse(User user) {
-        UserResponse response = new UserResponse();
+    private RegistrationResponse createRegistrationResponse(
+            User user) {
+
+        RegistrationResponse response = new RegistrationResponse();
+
         response.setId(user.getId());
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
+        response.setMessage("Registration successful. You can now sign in.");
+
+        return response;
+    }
+
+    // JWT is generated only after OTP verification
+    private UserResponse createUserResponse(User user) {
+
+        UserResponse response = new UserResponse();
+
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole());
+        response.setTwoFactorEnabled(user.isTwoFactorEnabled());
+
         Instant issuedAt = Instant.now();
-        response.setJwtToken(Jwts.builder()
-                .subject(user.getId())
-                .claim("role", user.getRole())
-                .issuedAt(Date.from(issuedAt))
-                .expiration(Date.from(issuedAt.plusMillis(tokenExpirationMs)))
-                .signWith(signingKey)
-                .compact());
+
+        response.setJwtToken(
+                Jwts.builder()
+                        .subject(user.getId())
+                        .claim("role", user.getRole())
+                        .issuedAt(Date.from(issuedAt))
+                        .expiration(Date.from(
+                                issuedAt.plusMillis(tokenExpirationMs)))
+                        .signWith(signingKey)
+                        .compact());
+
         return response;
     }
 }

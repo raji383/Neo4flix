@@ -1,12 +1,20 @@
+
 import { isPlatformBrowser } from '@angular/common';
-import { Injectable } from '@angular/core';
-import { inject, PLATFORM_ID } from '@angular/core';
+import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginRequest, RegisterRequest } from '../../shared/models/auth';
-
-
+import {
+    AuthResponse,
+    LoginChallengeResponse,
+    LoginRequest,
+    RegisterRequest,
+    RegistrationResponse,
+    TwoFactorSetupResponse,
+    VerifyEmailRequest,
+    VerifyTwoFactorRequest
+} from '../../shared/models/auth';
 
 @Injectable({
     providedIn: 'root'
@@ -22,26 +30,57 @@ export class AuthService {
 
     constructor(private http: HttpClient) { }
 
-    login(credentials: LoginRequest): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(
+    login(credentials: LoginRequest): Observable<LoginChallengeResponse> {
+        return this.http.post<LoginChallengeResponse>(
             `${this.apiUrl}/login`,
             credentials
         ).pipe(
             tap(response => {
-                this.tokenStorage?.setItem('jwtToken', response.jwtToken);
-                console.log(response);
-                
+                if (response.jwtToken) {
+                    this.tokenStorage?.setItem('jwtToken', response.jwtToken);
+                }
             })
         );
     }
-    register(data: RegisterRequest): Observable<AuthResponse> {
+
+    verifyTwoFactor(
+        request: VerifyTwoFactorRequest
+    ): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(
-            `${this.apiUrl}/register`,
-            data
+            `${this.apiUrl}/2fa/verify`,
+            request
         ).pipe(
             tap(response => {
                 this.tokenStorage?.setItem('jwtToken', response.jwtToken);
             })
+        );
+    }
+
+    register(data: RegisterRequest): Observable<RegistrationResponse> {
+        return this.http.post<RegistrationResponse>(
+            `${this.apiUrl}/register`,
+            data
+        );
+    }
+
+    verifyEmail(request: VerifyEmailRequest): Observable<void> {
+        return this.http.post<void>(
+            `${this.apiUrl}/2fa/email/verify`,
+            request
+        );
+    }
+
+    enableTwoFactor(): Observable<TwoFactorSetupResponse> {
+        return this.http.post<TwoFactorSetupResponse>(
+            `${this.apiUrl}/2fa/enable`,
+            {}
+        );
+    }
+
+    disableTwoFactor(): Observable<void> {
+        return this.http.post<void>(
+            `${this.apiUrl}/2fa/disable`,
+            {}
         );
     }
 

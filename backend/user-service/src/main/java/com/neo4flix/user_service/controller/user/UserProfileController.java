@@ -3,8 +3,8 @@ package com.neo4flix.user_service.controller.user;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
-import com.neo4flix.user_service.dto.UpdateProfileRequest;
-import com.neo4flix.user_service.dto.UserResponse;
+import com.neo4flix.user_service.dto.request.UpdateProfileRequest;
+import com.neo4flix.user_service.dto.response.UserResponse;
 import com.neo4flix.user_service.service.UserProfileService;
 
 @RestController

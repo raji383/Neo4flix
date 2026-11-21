@@ -15,10 +15,11 @@ export class Sidebar implements OnInit {
   private userProfileService = inject(UserProfileService);
   private errorMessageService = inject(ErrorMessageService);
   private router = inject(Router);
-  private user = signal<UserProfile | null>(null);
+  readonly user = signal<UserProfile | null>(null);
   collapsed = signal(false);
   profileError = signal<string | null>(null);
   private authService = inject(AuthService);
+  private errorMessageService = inject(ErrorMessageService);
 
   toggle() {
     this.collapsed.update(v => !v);
