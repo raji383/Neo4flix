@@ -19,6 +19,29 @@ public class EmailService {
         this.from = from;
     }
 
+    public void sendEmailVerificationOtp(
+            String recipient,
+            String username,
+            String otp) {
+
+        SimpleMailMessage message = new SimpleMailMessage();
+
+        message.setFrom(from);
+        message.setTo(recipient);
+        message.setSubject("Neo4flix - Verify Your Email");
+
+        message.setText(
+                "Hello " + username + ",\n\n"
+                        + "Welcome to Neo4flix!\n\n"
+                        + "Your email verification code is: " + otp + "\n\n"
+                        + "This code expires in 15 minutes.\n"
+                        + "You have a maximum of 5 attempts.\n\n"
+                        + "If you did not create this account, please ignore this email.\n\n"
+                        + "Neo4flix Security Team");
+
+        mailSender.send(message);
+    }
+
     public void sendLoginOtp(String recipient, String username, String otp) {
 
         SimpleMailMessage message = new SimpleMailMessage();
@@ -29,12 +52,11 @@ public class EmailService {
 
         message.setText(
                 "Hello " + username + ",\n\n"
-                + "Your Neo4flix verification code is: " + otp + "\n\n"
-                + "This code expires in 5 minutes.\n"
-                + "You have a maximum of 5 attempts.\n\n"
-                + "If you did not try to log in, please ignore this email.\n\n"
-                + "Neo4flix Security Team"
-        );
+                        + "Your Neo4flix verification code is: " + otp + "\n\n"
+                        + "This code expires in 5 minutes.\n"
+                        + "You have a maximum of 5 attempts.\n\n"
+                        + "If you did not try to log in, please ignore this email.\n\n"
+                        + "Neo4flix Security Team");
 
         mailSender.send(message);
     }

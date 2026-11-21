@@ -8,4 +8,6 @@ public class RegistrationResponse {
     private String username;
     private String email;
     private String role;
+    private String message;
+    private String challengeId;
 }

@@ -33,18 +33,20 @@ public class AuthService {
     private final TwoFactorService twoFactorService;
     private final SecretKey signingKey;
     private final long tokenExpirationMs;
+    private final EmailVerificationService emailVerificationService;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             TwoFactorService twoFactorService,
+            EmailVerificationService emailVerificationService,
             @Value("${jwt.secret}") String jwtSecret,
             @Value("${jwt.expiration:3600000}") long tokenExpirationMs) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.twoFactorService = twoFactorService;
-
+        this.emailVerificationService = emailVerificationService;
         this.signingKey = Keys.hmacShaKeyFor(
                 Decoders.BASE64.decode(jwtSecret));
 
@@ -59,16 +61,20 @@ public class AuthService {
 
         User savedUser = userRepository.save(createUser(request));
 
-        return createRegistrationResponse(savedUser);
+        String challengeId = emailVerificationService.createEmailVerificationChallenge(savedUser);
+
+        return createRegistrationResponse(savedUser, challengeId);
     }
 
     // Login: validate credentials and send OTP
     public LoginChallengeResponse login(LoginRequest request) {
 
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() ->
-                        ApiException.unauthorized("Invalid username or password"));
-
+                .orElseThrow(() -> ApiException.unauthorized("Invalid username or password"));
+        if (!user.isEmailVerified()) {
+            throw ApiException.forbidden(
+                    "Please verify your email before logging in.");
+        }
         if (!passwordEncoder.matches(
                 request.getPassword(),
                 user.getPasswordHash())) {
@@ -77,8 +83,7 @@ public class AuthService {
                     "Invalid username or password");
         }
 
-        String challengeId =
-                twoFactorService.createLoginChallenge(user);
+        String challengeId = twoFactorService.createLoginChallenge(user);
 
         return new LoginChallengeResponse(challengeId);
     }
@@ -92,8 +97,7 @@ public class AuthService {
                 request.getOtp());
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        ApiException.unauthorized("User not found"));
+                .orElseThrow(() -> ApiException.unauthorized("User not found"));
 
         return createUserResponse(user);
     }
@@ -134,7 +138,9 @@ public class AuthService {
         return user;
     }
 
-    private RegistrationResponse createRegistrationResponse(User user) {
+    private RegistrationResponse createRegistrationResponse(
+            User user,
+            String challengeId) {
 
         RegistrationResponse response = new RegistrationResponse();
 
@@ -142,6 +148,9 @@ public class AuthService {
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
+        response.setMessage(
+                "Registration successful. Please verify your email.");
+        response.setChallengeId(challengeId);
 
         return response;
     }
