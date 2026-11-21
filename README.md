@@ -131,9 +131,11 @@ Replace `user-service` with the desired service directory and image tag. The
 container exposes that service's configured port; provide its other required
 settings (such as database credentials and service-discovery URLs) at runtime.
 The API Gateway uses its bundled PKCS#12 keystore and needs
-`API_GATEWAY_SSL_PASS`. The frontend serves HTTPS on port 443 and proxies
-`/api/` to `https://api-gateway:8443`; the checked-in certificates are for
-development, so use a trusted certificate for production.
+`API_GATEWAY_SSL_PASS`. The frontend serves HTTPS on container port 443 and
+proxies `/api/` to `https://api-gateway:8443`; Compose publishes it on
+`https://localhost:8444` to avoid requiring privileged host ports. The
+checked-in certificates are for development, so use a trusted certificate for
+production.
 
 The Compose stack supplies the service environment, starts Neo4j and all six
 backend services, and waits for their health checks before starting dependents.

@@ -199,7 +199,7 @@ services:
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-4200}:80"
-      - "443:443"
+      - "8444:443"
     depends_on:
       api-gateway:
         condition: service_healthy

@@ -86,7 +86,8 @@ interceptors, services, models, or pipes.
 The Docker image serves the production Angular build through NGINX. NGINX
 redirects HTTP to HTTPS, uses the frontend PEM certificate, and proxies API
 requests to the gateway over HTTPS. Compose publishes the HTTP listener on
-`FRONTEND_PORT` (default `4200`) and the HTTPS listener on port `443`.
+`FRONTEND_PORT` (default `4200`) and the HTTPS listener on host port `8444`
+(container port `443`).
 Development mode uses the Angular CLI on port `4200`.
 
 ## Backend request and discovery flow
@@ -134,7 +135,7 @@ Backend applications optionally import `../../.env`, or the file selected by
 | Process | Port setting | Example value |
 | --- | --- | ---: |
 | Frontend Compose HTTP host | `FRONTEND_PORT` | `4200` |
-| Frontend Compose HTTPS host | Docker port mapping | `443` |
+| Frontend Compose HTTPS host | Docker port mapping | `8444` |
 | API Gateway | `API_GATEWAY_PORT` | `8443` |
 | Movie Service | `MOVIE_SERVICE_PORT` | `8080` |
 | Rating Service | `RATING_SERVICE_PORT` | `8081` |
