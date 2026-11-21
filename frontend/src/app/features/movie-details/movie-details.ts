@@ -8,6 +8,7 @@ import { Movie } from '../../shared/models/movie';
 import { RatingComponent } from "../../shared/components/rating/rating";
 import { WatchlistService } from '../../core/services/watchlist.service';
 import { ShareMovie } from '../../shared/components/share-movie/share-movie';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   imports: [RouterLink, RatingComponent,ShareMovie],
@@ -20,6 +21,7 @@ export class MovieDetails {
   private readonly movieService = inject(MovieService);
   private readonly watchlistService = inject(WatchlistService);
   private readonly errorMessageService = inject(ErrorMessageService);
+  private readonly notifications = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly movie = signal<Movie | null>(null);
@@ -92,11 +94,14 @@ export class MovieDetails {
       : this.watchlistService.create(movieId);
 
     request.pipe(finalize(() => this.watchlistPending.set(false))).subscribe({
-      next: () => this.inWatchlist.set(!wasInWatchlist),
-      error: (error: unknown) => {
-        this.watchlistError.set(
-          this.errorMessageService.getHttpErrorMessage(error, 'Could not update your watchlist.'),
+      next: () => {
+        this.inWatchlist.set(!wasInWatchlist);
+        this.notifications.showSuccess(
+          wasInWatchlist ? 'Removed from your watchlist.' : 'Added to your watchlist.',
         );
+      },
+      error: (error: unknown) => {
+        this.notifications.showHttpError(error, 'Could not update your watchlist.');
       },
     });
   }

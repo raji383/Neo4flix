@@ -109,7 +109,19 @@
         </div>
       </div>
 
-      @if (view().content.length) {
+      @if (genresError(); as message) {
+        <div class="load-error" role="alert">
+          <span>{{ message }}</span>
+          <button type="button" (click)="loadGenres()">Retry genres</button>
+        </div>
+      }
+
+      @if (moviesError(); as message) {
+        <div class="load-error" role="alert">
+          <span>{{ message }}</span>
+          <button type="button" (click)="retryMovieSearch()">Retry movies</button>
+        </div>
+      } @else if (view().content.length) {
         <ul class="rows">
           @for (m of view().content; track m.id) {
             <li class="row-item">
@@ -192,7 +204,4 @@
     </div>
   }
 
-  @if (toast(); as t) {
-    <div class="toast toast--{{ t.tone }}" role="status">{{ t.text }}</div>
-  }
 </section>

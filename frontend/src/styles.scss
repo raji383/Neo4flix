@@ -1,8 +1,4 @@
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+
 @use '@angular/material' as mat;
 
 html {
@@ -20,23 +16,17 @@ html {
 }
 
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
+
   color-scheme: light;
 
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
+
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
 
-  // Reset the user agent margin.
   margin: 0;
   height: 100%;
 }
-/* You can add global styles to this file, and also import other style files */
 :root {
   --bg: #0b0b0f;
   --red: #e50914;
@@ -44,8 +34,129 @@ body {
   --muted: #9a9aa5;
 }
 
+
+
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+
+:root { color-scheme: dark; }   
+
+* {
+  &::-webkit-scrollbar { width: 10px; height: 10px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-corner { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    border: 2px solid #0b0b10;         
+    background-clip: padding-box;
+    transition: background 0.15s;
+  }
+  &::-webkit-scrollbar-thumb:hover { background: #e50914; }
+  &::-webkit-scrollbar-thumb:active { background: #ff1f2b; }
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+  }
+}
+
+
+// Neo4flix snackbar: put this in your GLOBAL styles.scss
+// (snackbars render in the CDK overlay, so component styles can't reach them).
+
+$snack-icon-success: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E");
+$snack-icon-error: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M12 16h.01'/%3E%3C/svg%3E");
+$snack-icon-info: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
+
+@mixin snack-variant($accent, $tint, $icon) {
+  --mat-snack-bar-button-color: #{$accent};
+
+  .mat-mdc-snackbar-surface {
+    background-image: linear-gradient(90deg, #{$tint} 0%, transparent 55%);
+    box-shadow:
+      inset 3px 0 0 #{$accent},
+      0 18px 44px rgba(0, 0, 0, 0.55);
+
+    &::before {
+      -webkit-mask: #{$icon} center / contain no-repeat;
+      mask: #{$icon} center / contain no-repeat;
+      background-color: #{$accent};
+    }
+  }
+}
+
+.mat-mdc-snack-bar-container.app-snackbar {
+  --mat-snack-bar-container-color: #14141b;
+  --mat-snack-bar-container-shape: 14px;
+  --mat-snack-bar-supporting-text-color: #f4f4f6;
+  --mat-snack-bar-supporting-text-font: 'Poppins', 'Inter', system-ui, sans-serif;
+  --mat-snack-bar-supporting-text-size: 0.875rem;
+  --mat-snack-bar-supporting-text-weight: 500;
+  --mat-snack-bar-supporting-text-line-height: 1.45;
+  --mat-snack-bar-button-color: #a78bff;
+
+  margin-bottom: 24px;
+
+  .mat-mdc-snackbar-surface {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: min(320px, 90vw);
+    padding: 4px 8px 4px 20px;
+    background-color: #14141b;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 14px;
+    font-family: 'Poppins', 'Inter', system-ui, sans-serif;
+
+    // status icon, coloured per variant below
+    &::before {
+      content: '';
+      flex: 0 0 20px;
+      width: 20px;
+      height: 20px;
+      background-color: #a78bff;
+      -webkit-mask: #{$snack-icon-info} center / contain no-repeat;
+      mask: #{$snack-icon-info} center / contain no-repeat;
+    }
+  }
+
+  .mdc-snackbar__label {
+    padding: 14px 0;
+    color: #f4f4f6;
+  }
+
+  // action button (e.g. "Undo", "Close") becomes a quiet pill
+  .mat-mdc-snack-bar-actions { margin-left: 4px; }
+
+  .mat-mdc-snack-bar-action.mat-mdc-button {
+    min-width: 0;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+
+    &:hover { background: rgba(255, 255, 255, 0.08); }
+    &:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  }
+
+  // ---- variants ----
+  &.app-snackbar--success { @include snack-variant(#008f3b, rgba(255, 180, 84, 0.16), $snack-icon-success); }
+  &.app-snackbar--error   { @include snack-variant(#ff4d5a, rgba(229, 9, 20, 0.2), $snack-icon-error); }
+  &.app-snackbar--info    { @include snack-variant(#a78bff, rgba(110, 60, 220, 0.24), $snack-icon-info); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mat-mdc-snack-bar-container.app-snackbar { animation: none !important; transition: none !important; }
 }

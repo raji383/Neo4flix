@@ -1,13 +1,12 @@
 import { inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { CanActivateFn, Router } from '@angular/router';
+import { NotificationService } from '../services/notification.service';
 
 export const guestGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   const token = localStorage.getItem('jwtToken');
-  const snackbar = inject(MatSnackBar);
   if (token) {
-    snackbar.open('You are already logged in!', 'Close', { duration: 3000 });
+    inject(NotificationService).showInfo('You are already logged in.');
     return router.createUrlTree(['/movies']);
   }
   return true;

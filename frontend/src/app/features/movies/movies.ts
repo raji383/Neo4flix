@@ -7,6 +7,7 @@ import { MovieService } from '../../core/services/movie.service';
 import { Movie, MovieSearchParams } from '../../shared/models/movie';
 import { PageResponse } from '../../shared/models/pageResponse';
 import { WatchlistService } from '../../core/services/watchlist.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   imports: [RouterLink],
@@ -20,6 +21,7 @@ export class Movies {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly movieService = inject(MovieService);
   private readonly errorMessageService = inject(ErrorMessageService);
+  private readonly notifications = inject(NotificationService);
 
   readonly movies = signal<Movie[]>([]);
   readonly popular = signal<Movie[]>([]);
@@ -260,11 +262,12 @@ export class Movies {
           }
           return next;
         });
+        this.notifications.showSuccess(
+          wasInWatchlist ? 'Removed from your watchlist.' : 'Added to your watchlist.',
+        );
       },
       error: (error: unknown) => {
-        this.watchlistError.set(
-          this.errorMessageService.getHttpErrorMessage(error, 'Could not update your watchlist.'),
-        );
+        this.notifications.showHttpError(error, 'Could not update your watchlist.');
       },
     });
   }

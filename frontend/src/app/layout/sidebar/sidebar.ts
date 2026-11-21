@@ -13,9 +13,11 @@ import { UserProfile } from '../../shared/models/user-profile.model';
 })
 export class Sidebar implements OnInit {
   private userProfileService = inject(UserProfileService);
+  private errorMessageService = inject(ErrorMessageService);
   private router = inject(Router);
   private user = signal<UserProfile | null>(null);
   collapsed = signal(false);
+  profileError = signal<string | null>(null);
   private authService = inject(AuthService);
 
   toggle() {
@@ -26,8 +28,10 @@ export class Sidebar implements OnInit {
       next: (profile) => {
         this.user.set(profile);
       },
-      error: (error) => {
-        console.error('Error fetching user profile:', error);
+      error: (error: unknown) => {
+        this.profileError.set(
+          this.errorMessageService.getHttpErrorMessage(error, 'Could not load your profile.'),
+        );
       }
     });
   }

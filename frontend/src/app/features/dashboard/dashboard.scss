@@ -212,17 +212,23 @@ select {
 }
 .close { width: 34px; height: 34px; border-radius: 50%; color: var(--muted); &:hover { background: rgba(255, 255, 255, .08); color: var(--text); } }
 
-.toast {
-  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 60;
-  padding: 12px 22px; border-radius: 999px; font-size: .88rem; font-weight: 500;
-  background: var(--panel-2); border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(0, 0, 0, .5);
-  animation: pop .2s ease-out;
-  &--ok { border-color: var(--ok); }
-  &--danger { border-color: var(--danger); }
+.load-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 77, 90, 0.3);
+  border-radius: 10px;
+  color: #ff9298;
+  background: rgba(255, 77, 90, 0.08);
+  font-size: 0.84rem;
+
+  button { color: #fff; font-weight: 650; text-decoration: underline; }
 }
 
 @keyframes fade { from { opacity: 0; } }
-@keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } }
 
 /* ---------- responsive ---------- */
 @media (max-width: 1100px) {
