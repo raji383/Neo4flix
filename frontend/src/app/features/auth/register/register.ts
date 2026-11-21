@@ -87,20 +87,19 @@ export class REGISTER {
     }).subscribe({
       next: (response) => {
         this.isLoading.set(false);
+        this.notifications.showSuccess(`Account created successfully. Welcome, ${response.username}!`);
         void this.router.navigate(['/login']);
       },
       error: (error) => {
         this.isLoading.set(false);
 
-        this.errorMessage.set(
-          this.errorMessageService.getHttpErrorMessage(
-            error,
-            error.status === 409
-              ? 'Username or email is already registered.'
-              : error.status === 400
-                ? 'Please check the information you entered.'
-                : 'Something went wrong. Please try again.'
-          )
+        this.notifications.showHttpError(
+          error,
+          error.status === 409
+            ? 'Username or email is already registered.'
+            : error.status === 400
+              ? 'Please check the information you entered.'
+              : 'Something went wrong. Please try again.',
         );
       }
     });

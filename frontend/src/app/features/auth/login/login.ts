@@ -20,7 +20,7 @@ export class Login {
 
     private fb = inject(FormBuilder);
     private authService = inject(AuthService);
-    private errorMessageService = inject(ErrorMessageService);
+    private notifications = inject(NotificationService);
 
     router = inject(Router);
 
@@ -64,17 +64,10 @@ export class Login {
                     return;
                 }
 
-                this.errorMessage.set('Unable to complete sign in. Please try again.');
             },
             error: (error) => {
                 this.isLoading.set(false);
-
-                this.errorMessage.set(
-                    this.errorMessageService.getHttpErrorMessage(
-                        error,
-                        'An error occurred during login.'
-                    )
-                );
+                this.notifications.showHttpError(error, 'An error occurred during login.');
             }
         });
     }
@@ -90,17 +83,16 @@ export class Login {
         }).subscribe({
             next: (response) => {
                 this.isLoading.set(false);
-                console.log('Authentication successful:', response.username);
                 this.router.navigate(['/profile']);
+                this.notifications.showSuccess(`Welcome back ${response.username}!`);
+
             },
             error: (error) => {
                 this.isLoading.set(false);
 
-                this.errorMessage.set(
-                    this.errorMessageService.getHttpErrorMessage(
-                        error,
-                        'Invalid or expired verification code.'
-                    )
+                this.notifications.showHttpError(
+                    error,
+                    'Invalid or expired verification code.'
                 );
             }
         });
