@@ -1,12 +1,18 @@
+
 import { isPlatformBrowser } from '@angular/common';
-import { Injectable } from '@angular/core';
-import { inject, PLATFORM_ID } from '@angular/core';
+import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginRequest, RegisterRequest } from '../../shared/models/auth';
-
-
+import {
+    AuthResponse,
+    LoginChallengeResponse,
+    LoginRequest,
+    RegisterRequest,
+    RegistrationResponse,
+    VerifyTwoFactorRequest
+} from '../../shared/models/auth';
 
 @Injectable({
     providedIn: 'root'
@@ -22,26 +28,30 @@ export class AuthService {
 
     constructor(private http: HttpClient) { }
 
-    login(credentials: LoginRequest): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(
+    login(credentials: LoginRequest): Observable<LoginChallengeResponse> {
+        return this.http.post<LoginChallengeResponse>(
             `${this.apiUrl}/login`,
             credentials
+        );
+    }
+
+    verifyTwoFactor(
+        request: VerifyTwoFactorRequest
+    ): Observable<AuthResponse> {
+        return this.http.post<AuthResponse>(
+            `${this.apiUrl}/2fa/verify`,
+            request
         ).pipe(
             tap(response => {
                 this.tokenStorage?.setItem('jwtToken', response.jwtToken);
-                console.log(response);
-                
             })
         );
     }
-    register(data: RegisterRequest): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(
+
+    register(data: RegisterRequest): Observable<RegistrationResponse> {
+        return this.http.post<RegistrationResponse>(
             `${this.apiUrl}/register`,
             data
-        ).pipe(
-            tap(response => {
-                this.tokenStorage?.setItem('jwtToken', response.jwtToken);
-            })
         );
     }
 

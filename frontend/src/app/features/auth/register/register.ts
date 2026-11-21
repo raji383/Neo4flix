@@ -67,6 +67,7 @@ export class REGISTER {
   strengthLabel(): string {
     return ['', 'Weak', 'Fair', 'Good', 'Strong'][this.passwordStrength()];
   }
+
   onSubmit(): void {
     if (this.registerForm.invalid || this.isLoading()) {
       this.registerForm.markAllAsTouched();
@@ -84,17 +85,20 @@ export class REGISTER {
       username,
       email,
       password,
-      confirmPassword,
+      confirmPassword
     }).subscribe({
       next: (response) => {
         this.isLoading.set(false);
+
         this.successMessage.set(
           `Account created successfully. Welcome ${response.username}!`
         );
+
         this.router.navigate(['/login']);
       },
       error: (error) => {
         this.isLoading.set(false);
+
         this.errorMessage.set(
           this.errorMessageService.getHttpErrorMessage(
             error,
@@ -102,10 +106,11 @@ export class REGISTER {
               ? 'Username or email is already registered.'
               : error.status === 400
                 ? 'Please check the information you entered.'
-                : 'Something went wrong. Please try again.',
-          ),
+                : 'Something went wrong. Please try again.'
+          )
         );
       }
     });
   }
+
 }

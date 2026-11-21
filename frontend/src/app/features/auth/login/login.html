@@ -6,38 +6,51 @@
     <main class="login-card">
         <div class="brand">🎬 Neo<span>4</span>flix</div>
 
+        @if (!isOtpStep()) {
+
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
             <h1>Welcome back</h1>
-            <p class="subtitle">Sign in to get movies picked just for you</p>
+            <p class="subtitle">
+                Sign in to get movies picked just for you
+            </p>
 
             <div class="form-group">
                 <label for="username">Username</label>
                 <input id="username" type="text" formControlName="username" placeholder="Enter your username"
                     autocomplete="username" />
-                @if (loginForm.controls.username.touched && loginForm.controls.username.invalid) {
+
+                @if (loginForm.controls.username.touched &&
+                loginForm.controls.username.invalid) {
                 <small>Username is required.</small>
                 }
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
+
                 <div class="password-wrapper">
                     <input id="password" [type]="showPassword() ? 'text' : 'password'" formControlName="password"
                         placeholder="Enter your password" autocomplete="current-password" />
+
                     <button type="button" class="toggle" (click)="togglePassword()">
                         {{ showPassword() ? 'Hide' : 'Show' }}
                     </button>
                 </div>
-                @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
+
+                @if (loginForm.controls.password.touched &&
+                loginForm.controls.password.invalid) {
                 <small>Password is required.</small>
                 }
             </div>
 
-            @if (errorMessage) {
-            <div class="error-box" role="alert">{{ errorMessage }}</div>
+            @if (errorMessage()) {
+            <div class="error-box" role="alert">
+                {{ errorMessage() }}
+            </div>
             }
 
             <button type="submit" class="submit" [disabled]="isLoading() || loginForm.invalid">
+
                 @if (isLoading()) {
                 <span class="spinner"></span> Signing in...
                 } @else {
@@ -46,8 +59,59 @@
             </button>
 
             <p class="footer-text">
-                New to Neo4flix? <a routerLink="/register">Create an account</a>
+                New to Neo4flix?
+                <a routerLink="/register">Create an account</a>
             </p>
         </form>
+
+        } @else {
+
+        <form [formGroup]="otpForm" (ngSubmit)="verifyOtp()" novalidate>
+            <h1>Verify your identity</h1>
+
+            <p class="subtitle">
+                We sent a 6-digit verification code to your email.
+                Enter the code to complete your login.
+            </p>
+
+            <div class="form-group">
+                <label for="otp">Verification code</label>
+
+                <input id="otp" type="text" formControlName="otp" placeholder="Enter 6-digit code" maxlength="6"
+                    inputmode="numeric" autocomplete="one-time-code" />
+
+                @if (otpForm.controls.otp.touched &&
+                otpForm.controls.otp.hasError('required')) {
+                <small>Verification code is required.</small>
+                }
+
+                @if (otpForm.controls.otp.touched &&
+                otpForm.controls.otp.hasError('pattern')) {
+                <small>Enter a valid 6-digit code.</small>
+                }
+            </div>
+
+            @if (errorMessage()) {
+            <div class="error-box" role="alert">
+                {{ errorMessage() }}
+            </div>
+            }
+
+            <button type="submit" class="submit" [disabled]="isLoading() || otpForm.invalid">
+
+                @if (isLoading()) {
+                <span class="spinner"></span> Verifying...
+                } @else {
+                Verify code
+                }
+            </button>
+
+            <p class="footer-text">
+                <a href="#" (click)="$event.preventDefault(); backToLogin()">
+                    Back to login
+                </a>
+            </p>
+        </form>
+        }
     </main>
 </div>

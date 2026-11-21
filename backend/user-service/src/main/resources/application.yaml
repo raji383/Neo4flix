@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:${ENV_FILE:../../.env}[.properties]
   mail:
     host: smtp.gmail.com
     port: 587
@@ -10,15 +12,13 @@ spring:
           auth: true
           starttls:
             enable: true
-  config:
-    import: optional:file:${ENV_FILE:../../.env}[.properties]
   application:
     name: user-service
   neo4j:
     uri: ${NEO4J_URI:bolt://localhost:7687}
     authentication:
-      username: ${NEO4J_USERNAME}
-      password: ${NEO4J_PASSWORD}
+      username: ${NEO4J_USERNAME:neo4j}
+      password: ${NEO4J_PASSWORD:neo4j_dev_password}
   data:
     neo4j:
       database: neo4j

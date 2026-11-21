@@ -1,1 +1,23 @@
-<p>notfound works!</p>
+<main class="not-found" aria-labelledby="not-found-title">
+	<div class="not-found__texture" aria-hidden="true"></div>
+
+	<section class="not-found__content">
+		<p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span> Out of frame</p>
+		<h1 id="not-found-title">
+			<span class="not-found__number" aria-hidden="true">4<span>0</span>4</span>
+			<span class="visually-hidden">Page not found</span>
+		</h1>
+		<p class="not-found__message">This scene isn't in our library.</p>
+		<p class="not-found__detail">The page may have moved, or the address might be out of date.</p>
+		<a class="not-found__button" routerLink="/movies">
+			Browse movies <span aria-hidden="true">→</span>
+		</a>
+		<p class="not-found__code">ERROR 404 <span aria-hidden="true">/</span> NEO4FLIX</p>
+	</section>
+
+	<figure class="not-found__poster" aria-hidden="true">
+		<span class="not-found__filmstrip"></span>
+		<img src="/default-movie.svg" alt="" />
+		<figcaption>Now showing: nowhere</figcaption>
+	</figure>
+</main>
