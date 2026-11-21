@@ -3,6 +3,7 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
+import { NotificationService } from '../services/notification.service';
 
 interface TokenPayload {
   sub: string;
@@ -12,9 +13,11 @@ interface TokenPayload {
 export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
   return (route, state) => {
     const router = inject(Router);
+    const notifications = inject(NotificationService);
     const token = localStorage.getItem('jwtToken');
 
     if (!token) {
+      notifications.showError('You must be logged in to view this page.');
       router.navigate(['/login']);
       return false;
     }
@@ -35,11 +38,12 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
       if (hasRole) {
         return true;
       }
+      notifications.showError('You do not have permission to view this page.');
       router.navigate(['/dashboard']);
       return false;
 
     } catch (error) {
-      console.error('Invalid token', error);
+      notifications.showError('Your session is invalid. Please sign in again.');
       router.navigate(['/login']);
       return false;
     }

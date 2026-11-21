@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { ErrorMessageService } from '../../../core/services/error-message.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,72}$/;
 
@@ -36,11 +36,9 @@ export class REGISTER {
 
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
-  private errorMessageService = inject(ErrorMessageService);
+  private notifications = inject(NotificationService);
 
   isLoading = signal(false);
-  errorMessage = signal('');
-  successMessage = signal('');
   router = inject(Router);
 
   registerForm = this.fb.nonNullable.group({
@@ -74,8 +72,6 @@ export class REGISTER {
     }
 
     this.isLoading.set(true);
-    this.errorMessage.set('');
-    this.successMessage.set('');
 
     const { username, email, password, confirmPassword } =
       this.registerForm.getRawValue();
@@ -88,22 +84,18 @@ export class REGISTER {
     }).subscribe({
       next: (response) => {
         this.isLoading.set(false);
-        this.successMessage.set(
-          `Account created successfully. Welcome ${response.username}!`
-        );
+        this.notifications.showSuccess(`Account created successfully. Welcome ${response.username}!`);
         this.router.navigate(['/login']);
       },
       error: (error) => {
         this.isLoading.set(false);
-        this.errorMessage.set(
-          this.errorMessageService.getHttpErrorMessage(
-            error,
-            error.status === 409
-              ? 'Username or email is already registered.'
-              : error.status === 400
-                ? 'Please check the information you entered.'
-                : 'Something went wrong. Please try again.',
-          ),
+        this.notifications.showHttpError(
+          error,
+          error.status === 409
+            ? 'Username or email is already registered.'
+            : error.status === 400
+              ? 'Please check the information you entered.'
+              : 'Something went wrong. Please try again.',
         );
       }
     });

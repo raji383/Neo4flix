@@ -5,12 +5,6 @@
       [alt]="hero.title" (error)="onImageError(hero.id)" />
     <div class="hero__shade"></div>
 
-    <label class="search">
-      <span class="search__icon" aria-hidden="true">⌕</span>
-      <input type="search" placeholder="Search movies or directors" [value]="params().q ?? ''"
-        (input)="onSearch($any($event.target).value)" />
-    </label>
-
     <div class="hero__content">
       <span class="eyebrow">Featured film</span>
       <h1 class="hero__title">{{ hero.title }}</h1>
@@ -56,11 +50,6 @@
   </header>
   } @else {
   <header class="hero hero--empty">
-    <label class="search">
-      <span class="search__icon" aria-hidden="true">⌕</span>
-      <input type="search" placeholder="Search movies or directors" [value]="params().q ?? ''"
-        (input)="onSearch($any($event.target).value)" />
-    </label>
     <div class="hero__content">
       <span class="eyebrow">Your next favorite</span>
       <h1 class="hero__title">Discover movies</h1>
@@ -115,6 +104,14 @@
     }
   </section>
 
+  <div class="search-area">
+    <label class="search">
+      <span class="search__icon" aria-hidden="true">⌕</span>
+      <input type="search" aria-label="Search movies or directors" placeholder="Search movies or directors"
+        [value]="searchQuery()" (input)="onSearch($any($event.target).value)" />
+    </label>
+  </div>
+
   <section class="browse" aria-labelledby="browse-heading">
     <div class="section-heading section-heading--browse">
       <div>
@@ -123,8 +120,8 @@
       </div>
       <label class="year-filter">
         <span>Release year</span>
-        <input type="number" min="1888" max="2100" inputmode="numeric" placeholder="Any year"
-          [value]="params().releaseYear ?? ''" (input)="onReleaseYear($any($event.target).value)" />
+        <input type="number" min="1888" inputmode="numeric" placeholder="Any year"
+          [value]="selectedReleaseYear()" (input)="onReleaseYear($any($event.target).value)" />
       </label>
     </div>
 
@@ -141,11 +138,25 @@
       }
       }
     </div>
+    <div class="filter-actions">
+      <button type="button" class="apply-filters" [disabled]="loadingMovies()"
+        [attr.aria-busy]="loadingMovies()" (click)="applyFilters()">
+        @if (loadingMovies()) {
+        <span class="movie-spinner" aria-hidden="true"></span>
+        Loading…
+        } @else {
+        Apply filters
+        }
+      </button>
+    </div>
 
     @if (moviesError()) {
     <p class="status-message status-message--error">{{ moviesError() }}</p>
     } @else if (loadingMovies()) {
-    <p class="status-message">Loading movies…</p>
+    <p class="status-message status-message--loading" role="status">
+      <span class="movie-spinner" aria-hidden="true"></span>
+      Loading movies…
+    </p>
     } @else if (movies().length) {
     <div class="grid">
       @for (movie of movies(); track movie.id) {

@@ -11,7 +11,7 @@ spring:
             add-to-simple-url-handler-mapping: true
             cors-configurations:
               "[/**]":
-                allowed-origins: ${CORS_ALLOWED_ORIGINS:https://localhost:4200,http://localhost:4200}
+                allowed-origins: ${CORS_ALLOWED_ORIGINS:https://localhost:8444,https://localhost:4200}
                 allowed-methods:
                   - GET
                   - POST
@@ -56,6 +56,12 @@ spring:
 
 server:
   port: ${API_GATEWAY_PORT}
+  ssl:
+    enabled: true
+    key-store: classpath:gateway-keystore.p12
+    key-store-password: ${API_GATEWAY_SSL_PASS}
+    key-store-type: PKCS12
+    key-alias: gateway
 
 jwt:
   secret: ${JWT_SECRET}

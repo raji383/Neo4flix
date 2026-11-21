@@ -51,7 +51,7 @@ aggregator, shared backend library, or shared application configuration module.
 
 | Component | Intended responsibility | Current implementation |
 | --- | --- | --- |
-| `frontend` | Browser UI and calls to the public API | Standalone Angular application with placeholder pages, routing, hydration, prerendering, and an SSR container image. `HttpClient` is provided but unused. |
+| `frontend` | Browser UI and calls to the public API | Angular application served as static assets by NGINX in the container; NGINX provides HTTPS and proxies `/api/` to the gateway. |
 | `backend/api-gateway` | Public entry point, routing, and edge concerns | Reactive gateway bootstrap configured as a Eureka client with Security and Actuator dependencies. No routes, filters, CORS policy, or custom security configuration exist. |
 | `backend/registry` | Service registration and discovery | Standalone Eureka server enabled with `@EnableEurekaServer`; client registration and registry fetching are disabled. |
 | `backend/user-service` | Accounts, profiles, authentication, and authorization | Spring MVC, Security, Validation, Spring Data Neo4j, Eureka, and JJWT dependencies; no domain or API code. |
@@ -83,11 +83,12 @@ connected to the router or root layout. The similarly named files under
 `core/` and `shared/` are generated components rather than implemented guards,
 interceptors, services, models, or pipes.
 
-Angular SSR is configured with an Express server. All server routes use
-`RenderMode.Prerender`; the Express entry point serves built browser assets and
-delegates other page requests to Angular. Development mode normally uses port
-`4200`, while the built Express server uses `PORT` or falls back to `4000`.
-The container passes `FRONTEND_ALLOWED_HOSTS` to Angular's SSR host allowlist.
+The Docker image serves the production Angular build through NGINX. NGINX
+redirects HTTP to HTTPS, uses the frontend PEM certificate, and proxies API
+requests to the gateway over HTTPS. Compose publishes the HTTP listener on
+`FRONTEND_PORT` (default `4200`) and the HTTPS listener on host port `8444`
+(container port `443`).
+Development mode uses the Angular CLI on port `4200`.
 
 ## Backend request and discovery flow
 
@@ -133,7 +134,8 @@ Backend applications optionally import `../../.env`, or the file selected by
 
 | Process | Port setting | Example value |
 | --- | --- | ---: |
-| Frontend Compose host | `FRONTEND_PORT` | `4200` |
+| Frontend Compose HTTP host | `FRONTEND_PORT` | `4200` |
+| Frontend Compose HTTPS host | Docker port mapping | `8444` |
 | API Gateway | `API_GATEWAY_PORT` | `8443` |
 | Movie Service | `MOVIE_SERVICE_PORT` | `8080` |
 | Rating Service | `RATING_SERVICE_PORT` | `8081` |
@@ -146,8 +148,9 @@ Backend applications optionally import `../../.env`, or the file selected by
 | Neo4j Bolt | Docker port mapping | `7687` |
 
 The backend port placeholders do not have application-level defaults, so each
-must be supplied through the environment, an environment file, or Compose.
-Port `8443` does not imply HTTPS; no TLS configuration is present.
+must be supplied through the environment, an environment file, or Compose. The
+API Gateway serves HTTPS on port `8443` using its PKCS#12 keystore; Compose
+provides its password through `API_GATEWAY_SSL_PASS`.
 
 The domain services use `NEO4J_URI`, `NEO4J_USERNAME`, and `NEO4J_PASSWORD`.
 Compose fixes the bundled database user to `neo4j` and provides a development

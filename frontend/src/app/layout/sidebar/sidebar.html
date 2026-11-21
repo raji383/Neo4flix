@@ -26,6 +26,10 @@
   </div>
 
   <nav aria-label="Main navigation">
+    @if (profileError(); as message) {
+      <p class="sidebar-error" role="alert" [attr.title]="message">{{ message }}</p>
+    }
+
     <!-- Movies: film strip -->
     <a routerLink="/movies" routerLinkActive="active" ariaCurrentWhenActive="page" title="Movies">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"

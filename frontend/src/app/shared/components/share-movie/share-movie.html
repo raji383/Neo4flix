@@ -12,15 +12,4 @@
         }
     </button>
 
-    @if (error()) {
-    <p class="share-movie__error" role="alert">
-        {{ error() }}
-    </p>
-    }
-
-    @if (copied()) {
-    <span class="share-movie__success" role="status">
-        Movie link copied to clipboard.
-    </span>
-    }
 </div>

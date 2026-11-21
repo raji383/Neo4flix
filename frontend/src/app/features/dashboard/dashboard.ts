@@ -7,6 +7,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { EMPTY, catchError, switchMap } from 'rxjs';
 import { ErrorMessageService } from '../../core/services/error-message.service';
 import { MovieService } from '../../core/services/movie.service';
+import { NotificationService } from '../../core/services/notification.service';
 type FormMode = 'create' | 'edit';
 
 @Component({
@@ -20,11 +21,13 @@ export class Dashboard {
   private readonly destroyRef = inject(DestroyRef);
   private readonly movieService = inject(MovieService);
   private readonly errorMessageService = inject(ErrorMessageService);
+  private readonly notifications = inject(NotificationService);
   readonly maxYear = new Date().getFullYear() + 5;
 
   readonly movies = signal<Movie[]>([]);
-
   readonly genreOptions = signal<string[]>([]);
+  readonly moviesError = signal<string | null>(null);
+  readonly genresError = signal<string | null>(null);
 
   readonly params = signal<MovieSearchParams>({ q: '', page: 0, size: 5, genres: [] });
 
@@ -52,11 +55,11 @@ export class Dashboard {
     toObservable(this.params)
       .pipe(
         switchMap((params) => {
+          this.moviesError.set(null);
           return this.movieService.search(params).pipe(
             catchError((error: unknown) => {
-              this.notify(
+              this.moviesError.set(
                 this.errorMessageService.getHttpErrorMessage(error, 'Could not load movies.'),
-                'danger',
               );
               return EMPTY;
             }),
@@ -69,19 +72,27 @@ export class Dashboard {
         this.movies.set(response.content);
       });
 
+    this.loadGenres();
+  }
+
+  loadGenres(): void {
+    this.genresError.set(null);
     this.movieService
       .getGenres()
       .pipe(
         catchError((error: unknown) => {
-          this.notify(
+          this.genresError.set(
             this.errorMessageService.getHttpErrorMessage(error, 'Could not load movie genres.'),
-            'danger',
           );
           return EMPTY;
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((genres) => this.genreOptions.set(genres));
+  }
+
+  retryMovieSearch(): void {
+    this.params.update((params) => ({ ...params }));
   }
 
   buildForm() {
@@ -105,8 +116,6 @@ export class Dashboard {
   // ---------- dialogs / feedback ----------
   readonly editing = signal<Movie | null>(null);
   readonly deleting = signal<Movie | null>(null);
-  readonly toast = signal<{ text: string; tone: 'ok' | 'danger' } | null>(null);
-  private toastTimer?: ReturnType<typeof setTimeout>;
 
   // ---------- list actions ----------
   onSearch(q: string) {
@@ -133,10 +142,7 @@ export class Dashboard {
       .create(payload)
       .pipe(
         catchError((error: unknown) => {
-          this.notify(
-            this.errorMessageService.getHttpErrorMessage(error, 'Could not add the movie.'),
-            'danger',
-          );
+          this.notifications.showHttpError(error, 'Could not add the movie.');
           return EMPTY;
         }),
         takeUntilDestroyed(this.destroyRef),
@@ -144,7 +150,7 @@ export class Dashboard {
       .subscribe((movie) => {
         this.params.update((p) => ({ ...p, page: 0 }));
         this.resetCreate();
-        this.notify(`"${movie.title}" was added.`, 'ok');
+        this.notifications.showSuccess(`"${movie.title}" was added.`);
       });
   }
 
@@ -180,10 +186,7 @@ export class Dashboard {
       .update(current.id, payload)
       .pipe(
         catchError((error: unknown) => {
-          this.notify(
-            this.errorMessageService.getHttpErrorMessage(error, 'Could not update the movie.'),
-            'danger',
-          );
+          this.notifications.showHttpError(error, 'Could not update the movie.');
           return EMPTY;
         }),
         takeUntilDestroyed(this.destroyRef),
@@ -191,7 +194,7 @@ export class Dashboard {
       .subscribe((movie) => {
         this.closeEdit();
         this.params.update((params) => ({ ...params }));
-        this.notify(`"${movie.title}" was updated.`, 'ok');
+        this.notifications.showSuccess(`"${movie.title}" was updated.`);
       });
   }
 
@@ -211,10 +214,7 @@ export class Dashboard {
       .delete(target.id)
       .pipe(
         catchError((error: unknown) => {
-          this.notify(
-            this.errorMessageService.getHttpErrorMessage(error, 'Could not delete the movie.'),
-            'danger',
-          );
+          this.notifications.showHttpError(error, 'Could not delete the movie.');
           return EMPTY;
         }),
         takeUntilDestroyed(this.destroyRef),
@@ -225,7 +225,7 @@ export class Dashboard {
         const lastPage = Math.max(0, Math.ceil(totalAfterDelete / size) - 1);
         this.params.update((params) => ({ ...params, page: Math.min(page, lastPage) }));
         this.deleting.set(null);
-        this.notify(`"${target.title}" was deleted.`, 'ok');
+        this.notifications.showSuccess(`"${target.title}" was deleted.`);
       });
   }
 
@@ -264,10 +264,5 @@ export class Dashboard {
     return Array.from({ length: 5 }, (_, i) => (r >= i + 1 ? 'full' : r >= i + 0.5 ? 'half' : 'empty'));
   }
 
-  private notify(text: string, tone: 'ok' | 'danger') {
-    clearTimeout(this.toastTimer);
-    this.toast.set({ text, tone });
-    this.toastTimer = setTimeout(() => this.toast.set(null), 3200);
-  }
 }
 type MovieForm = Dashboard["createForm"];

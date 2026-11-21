@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -12,6 +13,7 @@ import { UserProfileService } from '../../core/services/user-profile.service';
 import { UserProfile } from '../../shared/models/user-profile.model';
 import { WatchlistItem } from '../../shared/models/whatchlist';
 import { WatchlistService } from '../../core/services/watchlist.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { catchError } from 'rxjs/internal/operators/catchError';
 import { EMPTY } from 'rxjs/internal/observable/empty';
 import { finalize } from 'rxjs/internal/operators/finalize';
@@ -28,6 +30,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class Profile implements OnInit {
   private readonly watchlistService = inject(WatchlistService);
   private readonly errorMessageService = inject(ErrorMessageService);
+  private readonly notifications = inject(NotificationService);
 
   readonly movies = signal<WatchlistItem[]>([]);
   readonly loading = signal(true);
@@ -42,7 +45,6 @@ export class Profile implements OnInit {
   isSaving = signal(false);
   isEditing = signal(false);
   errorMessage = signal('');
-  successMessage = signal('');
 
   profileForm = this.fb.nonNullable.group({
     username: ['', Validators.required],
@@ -105,7 +107,6 @@ export class Profile implements OnInit {
       email: user.email
     });
     this.errorMessage.set('');
-    this.successMessage.set('');
     this.isEditing.set(true);
   }
 
@@ -131,7 +132,6 @@ export class Profile implements OnInit {
 
     this.isSaving.set(true);
     this.errorMessage.set('');
-    this.successMessage.set('');
 
     this.profileService.updateProfile({ username, email }).subscribe({
       next: (updatedProfile) => {
@@ -142,18 +142,16 @@ export class Profile implements OnInit {
         });
         this.isSaving.set(false);
         this.isEditing.set(false);
-        this.successMessage.set('Profile updated successfully!');
+        this.notifications.showSuccess('Profile updated successfully.');
         this.profileForm.markAsPristine();
       },
       error: (error) => {
         this.isSaving.set(false);
-        this.errorMessage.set(
-          this.errorMessageService.getHttpErrorMessage(
-            error,
-            error.status === 409
-              ? 'Username or email is already in use.'
-              : 'Unable to update your profile.',
-          ),
+        this.notifications.showHttpError(
+          error,
+          error instanceof HttpErrorResponse && error.status === 409
+            ? 'Username or email is already in use.'
+            : 'Unable to update your profile.',
         );
       }
     });
@@ -205,11 +203,12 @@ export class Profile implements OnInit {
         });
       }))
       .subscribe({
-        next: () => this.movies.update((movies) => movies.filter((movie) => movie.id !== movieId)),
+        next: () => {
+          this.movies.update((movies) => movies.filter((movie) => movie.id !== movieId));
+          this.notifications.showSuccess('Movie removed from your watchlist.');
+        },
         error: (error: unknown) => {
-          this.error.set(
-            this.errorMessageService.getHttpErrorMessage(error, 'Could not remove this movie.'),
-          );
+          this.notifications.showHttpError(error, 'Could not remove this movie.');
         },
       });
   }

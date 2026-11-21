@@ -3,7 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { ErrorMessageService } from '../../../core/services/error-message.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-login',
@@ -15,12 +15,10 @@ import { ErrorMessageService } from '../../../core/services/error-message.servic
 export class Login {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
-  private errorMessageService = inject(ErrorMessageService);
+  private notifications = inject(NotificationService);
 
   isLoading = signal(false);
   router = inject(Router);
-
-  errorMessage = '';
 
   loginForm = this.fb.nonNullable.group({
     username: ['', Validators.required],
@@ -38,24 +36,16 @@ export class Login {
     }
 
     this.isLoading.set(true);
-    this.errorMessage = '';
 
     this.authService.login(this.loginForm.getRawValue()).subscribe({
       next: (response) => {
-        console.log('Login successful:', response.username);
         this.isLoading.set(false);
+        this.notifications.showSuccess(`Welcome back, ${response.username}.`);
         this.router.navigate(['/profile']);
-
-
-
       },
       error: (error) => {
         this.isLoading.set(false);
-        this.errorMessage = this.errorMessageService.getHttpErrorMessage(
-          error,
-          'An error occurred during login.',
-        );
-
+        this.notifications.showHttpError(error, 'An error occurred during login.');
       }
     });
   }

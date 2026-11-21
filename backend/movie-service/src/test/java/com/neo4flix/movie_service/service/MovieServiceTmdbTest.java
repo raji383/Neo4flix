@@ -78,6 +78,20 @@ class MovieServiceTmdbTest {
                         "Example Director",
                         "admin-id"))
                 .thenReturn(Optional.of(existing));
+        when(movieRepository.existsByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedBy(
+                "Example Film",
+                2020,
+                "Example Director",
+                "admin-id"))
+                .thenReturn(true);
+        when(movieRepository
+                .existsByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedByAndIdNot(
+                        "Example Film",
+                        2020,
+                        "Example Director",
+                        "admin-id",
+                        "movie-id"))
+                .thenReturn(false);
         when(genreRepository.findAllById(Set.of("Drama")))
                 .thenReturn(List.of(new Genre("Drama")));
         when(movieRepository.save(any(Movie.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -102,6 +116,13 @@ class MovieServiceTmdbTest {
         assertEquals(42.5, existing.getTmdbPopularity());
         assertNull(response.averageRating());
         verify(mediaUploadService, never()).uploadFile(any());
+        verify(movieRepository)
+                .existsByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedByAndIdNot(
+                        "Example Film",
+                        2020,
+                        "Example Director",
+                        "admin-id",
+                        "movie-id");
         verify(movieRepository).save(existing);
     }
 }
