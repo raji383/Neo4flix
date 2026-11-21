@@ -82,4 +82,16 @@ public interface MovieRepository extends Neo4jRepository<Movie, String>, MovieRe
 
   List<RatingSummary> topRated(int minVotes, int limit);
 
+
+  boolean existsByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedBy(
+      String title, int releaseYear, String director, String createdBy);
+
+      boolean existsByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedByAndIdNot(
+        String title,
+        Integer releaseYear,
+        String director,
+        String createdBy,
+        String id
+);
+
 }
