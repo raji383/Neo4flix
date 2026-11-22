@@ -1,261 +1,519 @@
-# Neo4flix
+# 🎬 Neo4flix
 
-Neo4flix is a movie discovery and recommendation application. It has an
-Angular frontend and Spring Boot microservices backed by Neo4j. Users can browse
-movies, maintain personal ratings, and receive recommendations based on rating
-and genre signals. Administrators manage the catalogue, and an optional TMDB
-import can populate it.
+**Neo4flix** is a movie discovery and personalized recommendation platform built with Angular, Spring Boot microservices, and Neo4j.
 
-## What is implemented
+The platform allows users to explore movies, search and filter the catalogue, rate movies, manage personal watchlists, and receive personalized movie recommendations using a hybrid recommendation algorithm.
 
-- **Accounts and access:** registration and login return a JWT. The API Gateway
-  validates bearer tokens and forwards the authenticated user ID to downstream
-  services. The frontend has login, registration, profile, and role-aware
-  routes.
-- **Movie catalogue:** browse, search, filter by genre and release year, view
-  details, and see popular movies. Administrators can add, edit, and delete
-  movies; poster uploads use Cloudinary.
-- **TMDB import:** an opt-in movie-service startup seeder imports movie details,
-  supported genres, director, poster, TMDB ID, and popularity. Imported movies
-  are associated with the configured existing admin ID and upserted by TMDB
-  ID. TMDB scores and vote counts are not used or shown.
-- **Personal ratings:** the rating service creates, updates, deletes, and lists
-  a user's own 1–5 ratings. Ratings are represented as person-to-movie
-  relationships in Neo4j and remain separate from TMDB metadata. The frontend
-  ratings page is still a placeholder.
-- **Recommendations:** the recommendation service combines collaborative
-  filtering, genre preferences, and the app's own movie ratings to rank
-  suggestions. It returns up to ten movies.
-- **Admin dashboard:** provides movie catalogue management and catalogue
-  statistics.
+Administrators can manage the movie catalogue, while users can manage their profiles and secure their accounts with optional Two-Factor Authentication (2FA).
 
-The application is under active development; see the frontend and service
-sources for the current behavior of individual screens and APIs.
+---
 
-## Architecture
+## ✨ Features
+
+### 👤 User Management & Authentication
+- User registration and login.
+- JWT-based authentication.
+- User profile management.
+- Role-based access control (USER / ADMIN).
+- Optional Two-Factor Authentication (2FA).
+- Email OTP verification when activating 2FA.
+- OTP-based login verification when 2FA is enabled.
+- Secure password hashing.
+
+### 🎥 Movie Catalogue
+- Browse available movies.
+- Search movies by title.
+- Filter movies by genre and release year.
+- Paginated movie listings.
+- View detailed movie information.
+- Explore popular movies.
+- Admin-only movie creation, updating, and deletion.
+- Movie poster uploads using Cloudinary.
+
+### ⭐ Rating System
+- Rate movies from 1 to 5.
+- Update existing ratings.
+- Delete ratings.
+- Retrieve personal ratings.
+- View rating history.
+- Store ratings as relationships between users and movies in Neo4j.
+
+### 📋 Personal Watchlist
+- Add movies to a personal watchlist.
+- Remove movies from the watchlist.
+- Retrieve saved movies.
+- Check whether a movie is already in the watchlist.
+
+### 🤖 Personalized Recommendations
+
+Neo4flix implements a hybrid recommendation system combining:
+
+1. **Collaborative Filtering:** Finds users with similar rating patterns and uses their ratings to predict preferences.
+2. **Genre-Based Recommendations:** Analyzes the user's rating history to identify genre preferences.
+3. **Global Movie Ratings:** Uses the average rating of movies as an additional ranking signal.
+
+The hybrid scoring model uses the following weights:
+
+| Recommendation Signal | Weight |
+|---|---:|
+| Collaborative Filtering | 45% |
+| Genre Preference | 35% |
+| Global Average Rating | 20% |
+
+The system combines available signals, normalizes the scores, and returns up to 10 recommended movies.
+
+### 🛠️ Admin Dashboard
+- Manage the movie catalogue.
+- Add, update, and delete movies.
+- Access catalogue statistics.
+- Restrict dashboard access to administrators.
+
+---
+
+## 🏗️ Architecture
+
+Neo4flix follows a microservices architecture. Each backend service has its own Spring Boot application and communicates through the API Gateway and Eureka Service Registry.
 
 ```text
-Angular frontend
-      |
-      v
-API Gateway (:8443) ---- JWT validation / service routing
-      |
-      +---- User Service           (:8083)
-      +---- Movie Service          (:8080)
-      +---- Rating Service         (:8081)
-      +---- Recommendation Service (:8082)
-      |
-      +---- Eureka Registry        (:8761)
+                    Angular Frontend
+                           |
+                           |
+                           v
+                    API Gateway
+                     HTTPS :8443
+                           |
+          +----------------+----------------+
+          |                |                |
+          v                v                v
+     User Service     Movie Service    Rating Service
+       :8083             :8080            :8081
+          |                |                |
+          |                |                |
+          +----------------+----------------+
+                           |
+                           v
+                      Neo4j Database
+                        :7687
 
-All domain services use the shared Neo4j database (:7687).
+                    Recommendation Service
+                            :8082
+                              |
+                              v
+                         Neo4j Database
+
+                    Eureka Service Registry
+                            :8761
 ```
 
-| Component | Responsibility |
-| --- | --- |
-| `frontend/` | Angular single-page application |
-| `backend/api-gateway/` | Public API entry point, JWT validation, and routing |
-| `backend/registry/` | Eureka service discovery |
-| `backend/user-service/` | Registration, login, profiles, and optional admin bootstrap |
-| `backend/movie-service/` | Movie and genre APIs, Cloudinary uploads, and optional TMDB import |
-| `backend/rating-service/` | Person-linked movie ratings |
-| `backend/recommendation-service/` | Personalized movie recommendations |
-| Neo4j | Shared graph storage |
+### Microservices
 
-## Requirements
+| Service | Responsibility |
+|---|---|
+| API Gateway | Central API entry point, JWT validation, routing, and HTTPS |
+| User Service | Registration, authentication, profiles, and 2FA |
+| Movie Service | Movie catalogue, genres, search, and movie management |
+| Rating Service | Movie ratings and personal watchlists |
+| Recommendation Service | Personalized movie recommendations |
+| Registry | Service discovery using Netflix Eureka |
+
+All domain services currently connect to a shared Neo4j database.
+
+---
+
+## 🧰 Technology Stack
+
+### Frontend
+- Angular 22
+- TypeScript 6
+- RxJS
+- Angular Material
+- HTML5 / SCSS
+
+### Backend
+- Java 21
+- Spring Boot 4
+- Spring Security
+- Spring Cloud Gateway
+- Spring Cloud Netflix Eureka
+- Spring Data Neo4j
+- Maven
+- JWT (JSON Web Tokens)
+- JavaMail / SMTP
+
+### Database
+- Neo4j 5 Community Edition
+- Cypher Query Language
+
+### External Services
+- Cloudinary – Movie poster storage.
+- TMDB API – Optional movie catalogue import.
+- Gmail SMTP – Email verification and 2FA OTP delivery.
+
+### DevOps & Deployment
+- Docker
+- Docker Compose
+- Maven Wrapper
+- NGINX
+
+---
+
+## 📂 Project Structure
+
+```text
+Neo4flix/
+│
+├── backend/
+│   ├── api-gateway/
+│   ├── registry/
+│   ├── user-service/
+│   ├── movie-service/
+│   ├── rating-service/
+│   └── recommendation-service/
+│
+├── frontend/
+│   ├── src/
+│   │   └── app/
+│   │       ├── core/
+│   │       ├── features/
+│   │       ├── layout/
+│   │       └── shared/
+│   └── package.json
+│
+├── docs/
+│   ├── Architecture.md
+│   └── todo.md
+│
+├── docker-compose.yml
+├── .env.example
+├── run-services.sh
+└── README.md
+```
+
+---
+
+## ⚙️ Prerequisites
+
+Make sure you have installed:
 
 - Java 21
-- Docker with the Compose plugin (for local Neo4j)
-- Node.js and npm (the frontend lockfile is checked in)
-- TMDB API read access token and Cloudinary credentials if importing movies
+- Node.js and npm
+- Docker
+- Docker Compose
+- Git
 
-## Local setup
+External service credentials are required for features such as Cloudinary uploads and email delivery.
 
-1. Copy the example environment file and edit it:
+---
 
-   ```sh
-   cp .env.example .env
-   ```
+## 🚀 Getting Started
 
-2. Set `NEO4J_PASSWORD` and `JWT_SECRET`. `JWT_SECRET` must be a Base64-encoded
-   key of at least 256 bits; for local development it can be generated with:
+### 1. Clone the repository
 
-   ```sh
-   openssl rand -base64 32
-   ```
+```bash
+git clone https://github.com/raji383/Neo4flix.git
 
-   Keep `.env` private and never commit real credentials.
-
-3. Start Neo4j:
-
-   ```sh
-   docker compose up -d neo4j
-   ```
-
-   Neo4j Browser is available at `http://localhost:7474`; the Bolt endpoint is
-   `bolt://localhost:7687`.
-
-4. Start the backend services from the repository root:
-
-   ```sh
-   ./run-services.sh start all
-   ./run-services.sh status
-   ```
-
-   The launcher starts the six Spring Boot services through their Maven
-   wrappers. It does **not** start Neo4j or the frontend. Logs and PID files
-   are written under `docs/logs/`.
-
-5. Install and start the frontend:
-
-   ```sh
-   cd frontend
-   npm ci
-   npm start
-   ```
-
-   Open `https://localhost:4200`. The development frontend uses the API Gateway
-   at `http://localhost:8443`.
-
-To stop backend services, run `./run-services.sh stop all` from the repository
-root. Individual services can be started, stopped, or checked with the same
-script, for example `./run-services.sh start movie-service`.
-
-Each backend service has a sample multi-stage Dockerfile. Build an image from
-the repository root using the service directory as the build context:
-
-```sh
-docker build -t user-service -f backend/user-service/Dockerfile backend/user-service
+cd Neo4flix
 ```
 
-Replace `user-service` with the desired service directory and image tag. The
-container exposes that service's configured port; provide its other required
-settings (such as database credentials and service-discovery URLs) at runtime.
-The API Gateway uses its bundled PKCS#12 keystore and needs
-`API_GATEWAY_SSL_PASS`. The frontend serves HTTPS on container port 443 and
-proxies `/api/` to `https://api-gateway:8443`; Compose publishes it on
-`https://localhost:8444` to avoid requiring privileged host ports. The
-checked-in certificates are for development, so use a trusted certificate for
-production.
+### 2. Configure environment variables
 
-The Compose stack supplies the service environment, starts Neo4j and all six
-backend services, and waits for their health checks before starting dependents.
-Run it with `docker compose up --build`.
+Create your local environment file:
 
-## Environment configuration
+```bash
+cp .env.example .env
+```
 
-The root `.env.example` lists the main local settings. Important values include:
+Configure the required values:
 
-| Variable | Purpose |
-| --- | --- |
-| `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` | Shared Neo4j connection |
-| `JWT_SECRET`, `JWT_EXPIRATION` | JWT signing key and token lifetime in milliseconds |
-| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Movie poster uploads |
-| `TMDB_ACCESS_TOKEN` | TMDB API access for optional movie import |
-| `MOVIE_SEED_ENABLED` | Enables/disables movie import; defaults to `false` |
-| `MOVIE_SEED_COUNT` | Number of movies to process on an enabled startup |
-| `MOVIE_SEED_OWNER` | ID of the existing admin account that owns imported movies; defaults to `ADMIN_USER_ID` |
+```env
+# JWT
+JWT_SECRET=YOUR_BASE64_ENCODED_SECRET
+JWT_EXPIRATION=3600000
 
-The admin account can be created separately. If it already exists, keep admin
-bootstrap disabled and set `MOVIE_SEED_OWNER` (or `ADMIN_USER_ID`) to that
-account's actual user ID. Admin bootstrap is optional and disabled by default;
-if you enable it, also configure `ADMIN_USERNAME`, `ADMIN_EMAIL`, and a strong
-`ADMIN_PASSWORD`.
+# Neo4j
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=YOUR_NEO4J_PASSWORD
 
-### Optional TMDB import
+# API Gateway HTTPS
+API_GATEWAY_SSL_PASS=YOUR_KEYSTORE_PASSWORD
 
-1. Configure a valid `TMDB_ACCESS_TOKEN`, Cloudinary credentials, and the ID of
-   the existing admin account.
-2. Set `MOVIE_SEED_ENABLED=true` and choose `MOVIE_SEED_COUNT`.
-3. Start or restart the movie service. It imports the configured number of
-   qualifying movies and updates existing imports by TMDB ID.
-4. Set `MOVIE_SEED_ENABLED=false` when you do not want the import to run at
-   subsequent startups.
+# Email / Gmail SMTP
+MAIL_USERNAME=YOUR_GMAIL_ADDRESS
+MAIL_APP_PASSWORD=YOUR_GMAIL_APP_PASSWORD
 
-TMDB popularity is used to order imported movies in the Popular section. If no
-TMDB-imported movies are available, Popular falls back to movies ranked by
-Neo4flix user ratings. TMDB vote averages and vote counts are not part of the
-Neo4flix rating system.
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=YOUR_CLOUD_NAME
+CLOUDINARY_API_KEY=YOUR_API_KEY
+CLOUDINARY_API_SECRET=YOUR_API_SECRET
 
-## API overview
+# TMDB (Optional)
+TMDB_ACCESS_TOKEN=YOUR_TMDB_ACCESS_TOKEN
+MOVIE_SEED_ENABLED=false
+MOVIE_SEED_COUNT=100
+```
 
-Call the APIs through `http://localhost:8443`. Protected requests should include
-the JWT returned by login:
+Generate a Base64-encoded JWT secret:
+
+```bash
+openssl rand -base64 32
+```
+
+**Important:**
+- Use a Gmail App Password for SMTP, not your regular Gmail password.
+- Never commit your `.env` file or real credentials.
+- Configure the required environment variables before starting the services.
+
+### 3. Start the complete application with Docker Compose
+
+```bash
+docker compose up --build
+```
+
+Docker Compose starts:
+- Neo4j
+- Eureka Registry
+- All backend microservices
+- API Gateway
+- Angular frontend served through NGINX
+
+The services use health checks to coordinate startup.
+
+### 4. Access the application
+
+| Component | URL |
+|---|---|
+| Frontend (HTTPS) | https://localhost:8444 |
+| API Gateway | https://localhost:8443 |
+| Eureka Dashboard | http://localhost:8761 |
+| Neo4j Browser | http://localhost:7474 |
+
+The included HTTPS certificates are intended for local development. Your browser may display a certificate warning.
+
+---
+
+## 💻 Running Services Individually
+
+You can also run the backend services without Docker Compose.
+
+First, start Neo4j separately.
+
+Then start all backend services:
+
+```bash
+./run-services.sh start all
+```
+
+Check service status:
+
+```bash
+./run-services.sh status
+```
+
+Start an individual service:
+
+```bash
+./run-services.sh start movie-service
+```
+
+Stop an individual service:
+
+```bash
+./run-services.sh stop movie-service
+```
+
+Stop all backend services:
+
+```bash
+./run-services.sh stop all
+```
+
+The script manages the six Spring Boot applications. It does not start Neo4j or the frontend.
+
+### Running the Angular frontend
+
+```bash
+cd frontend
+
+npm ci
+
+npm start
+```
+
+Open:
+
+```text
+http://localhost:4200
+```
+
+---
+
+## 🔌 API Overview
+
+All API requests are routed through the API Gateway.
+
+Base URL:
+
+```text
+https://localhost:8443
+```
+
+Protected endpoints require a JWT:
 
 ```http
-Authorization: Bearer <jwt>
+Authorization: Bearer YOUR_JWT_TOKEN
 ```
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/auth/register` | Register a user |
-| `POST` | `/api/auth/login` | Log in and receive a JWT |
-| `GET`, `PUT` | `/api/users/me` | Read or update the current profile |
-| `GET` | `/api/movies` | Search and page through movies |
-| `GET` | `/api/movies/popular` | List popular movies |
-| `GET` | `/api/movies/{id}` | Get movie details |
-| `POST` | `/api/movies/add` | Add a movie (admin) |
-| `PUT`, `DELETE` | `/api/movies/{id}` | Update or delete a movie (admin) |
-| `GET` | `/api/genres` | List available genres |
-| `POST`, `PUT`, `DELETE` | `/api/ratings/{movieId}` | Create, update, or delete the current user's rating |
-| `GET` | `/api/ratings/me` | List the current user's rated movies |
-| `GET` | `/api/recommendations` | Get personalized recommendations |
+### Authentication
 
-Movie browsing accepts `q`, `page`, `size`, `genre` (repeatable), and
-`releaseYear` query parameters.
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/register` | Register a new user |
+| POST | `/api/auth/login` | Authenticate a user |
+| POST | `/api/auth/2fa/enable` | Start 2FA activation |
+| POST | `/api/auth/2fa/email/verify` | Verify email OTP for 2FA activation |
+| POST | `/api/auth/2fa/verify` | Verify login OTP |
+| POST | `/api/auth/2fa/disable` | Disable 2FA |
 
-### Generate demo users and ratings
+### User Profile
 
-For local recommendation testing, the repository includes a standalone script
-that registers 100 synthetic users and rates movies through the API Gateway.
-Each generated user gets two or three favorite genres, rates 8–40 distinct
-movies, and tends to rate popular movies more often. Ratings favor 3–5, with
-favorite genres receiving higher scores. The random seed defaults to `42`, so
-the same inputs produce the same profiles and ratings. Re-running with the same
-username prefix reuses those accounts and updates their ratings.
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/users/me` | Retrieve current user profile |
+| PUT | `/api/users/me` | Update current user profile |
 
-Start Neo4j and the backend services, import or create a movie catalogue, then
-run from the repository root:
+### Movies & Genres
 
-```sh
-node generate_demo_users.mjs --allow-self-signed
-```
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/movies` | Browse, search, and filter movies |
+| GET | `/api/movies/popular` | Retrieve popular movies |
+| GET | `/api/movies/{id}` | Retrieve movie details |
+| POST | `/api/movies/add` | Add a movie (Admin) |
+| PUT | `/api/movies/{id}` | Update a movie (Admin) |
+| DELETE | `/api/movies/{id}` | Delete a movie (Admin) |
+| GET | `/api/genres` | Retrieve available genres |
 
-The password is used for all generated accounts and must satisfy the
-registration rules; do not use a real user's password. To choose another
-catalogue, seed, or account prefix, use options such as:
+### Ratings
 
-```sh
-node scripts/generate_demo_users.mjs --count 100 --seed 123 --prefix test-viewer
-```
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/ratings/{movieId}` | Create a rating |
+| PUT | `/api/ratings/{movieId}` | Update a rating |
+| DELETE | `/api/ratings/{movieId}` | Delete a rating |
+| GET | `/api/ratings/{movieId}` | Retrieve personal movie rating |
+| GET | `/api/ratings/me` | Retrieve personal rating history |
 
-The script defaults to `https://localhost:8443`. If the local gateway's
-development certificate is not trusted by Node, add `--allow-self-signed`.
-Use that option only for a trusted local development gateway.
+### Watchlist
 
-## Development and tests
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/watchlist/{movieId}` | Add a movie |
+| DELETE | `/api/watchlist/{movieId}` | Remove a movie |
+| GET | `/api/watchlist` | Retrieve watchlist |
+| GET | `/api/watchlist/{movieId}` | Check watchlist membership |
 
-Build the frontend:
+### Recommendations
 
-```sh
-cd frontend
-npm run build -- --configuration development
-```
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/recommendations` | Retrieve personalized recommendations |
 
-Run frontend tests:
+---
 
-```sh
-cd frontend
-npm test
-```
+## 🧪 Testing
 
-Each backend service is an independent Maven project. Run its tests from the
-service directory, for example:
+### Backend tests
 
-```sh
-cd backend/movie-service
+Each backend microservice is an independent Maven project.
+
+For example:
+
+```bash
+cd backend/user-service
+
 ./mvnw test
 ```
 
-## TMDB attribution
+Run the same command inside each service directory to execute its tests.
+
+### Frontend tests
+
+```bash
+cd frontend
+
+npm test
+```
+
+### Frontend development build
+
+```bash
+npm run build -- --configuration development
+```
+
+---
+
+## 🎞️ Optional TMDB Movie Import
+
+Neo4flix supports importing movie information from TMDB.
+
+To enable it:
+
+1. Configure your TMDB access token.
+2. Configure Cloudinary credentials.
+3. Configure the existing administrator ID as the movie owner.
+4. Set the import configuration:
+
+```env
+MOVIE_SEED_ENABLED=true
+MOVIE_SEED_COUNT=100
+MOVIE_SEED_OWNER=YOUR_ADMIN_USER_ID
+```
+
+5. Start or restart the Movie Service.
+
+Imported movie information includes supported metadata such as titles, descriptions, genres, directors, posters, and TMDB identifiers.
+
+TMDB popularity can be used to order the Popular section. TMDB vote averages and vote counts are not used as Neo4flix user ratings.
+
+Disable the importer when you do not want it to run on subsequent startups:
+
+```env
+MOVIE_SEED_ENABLED=false
+```
+
+---
+
+## 🔐 Security Notes
+
+- JWT-based authentication.
+- Password hashing.
+- API Gateway token validation.
+- Role-aware access control.
+- Optional email-based Two-Factor Authentication.
+- Environment-based secret configuration.
+- HTTPS for local development.
+
+The bundled certificates are development certificates. Production deployments should use trusted TLS certificates and production-grade secret management.
+
+---
+
+## 🙌 Acknowledgements
+
+- [Neo4j](https://neo4j.com/) – Graph database.
+- [Spring Boot](https://spring.io/projects/spring-boot) – Backend framework.
+- [Angular](https://angular.dev/) – Frontend framework.
+- [TMDB](https://www.themoviedb.org/) – Movie metadata.
+- [Cloudinary](https://cloudinary.com/) – Media storage.
 
 This product uses the TMDB API but is not endorsed or certified by TMDB.
+
+---
+
+## 👨‍💻 Author
+
+**azraji**
+**ranniz**
+
+- GitHub: [raji383](https://github.com/raji383)
+- Project: [Neo4flix](https://github.com/raji383/Neo4flix)
