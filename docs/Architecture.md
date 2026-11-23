@@ -1,37 +1,42 @@
 # Neo4flix Architecture
 
-Neo4flix is an early-stage, microservice-oriented application. The repository
-contains an Angular client, six independently runnable Spring Boot applications,
-and a shared Neo4j database. Most domain behavior is not implemented yet, so
-this document distinguishes the current system from the intended request flow.
+Neo4flix is a microservice-based movie discovery platform. The repository
+contains an Angular 22 frontend, an HTTPS API gateway, a Eureka service registry,
+four domain Spring Boot services, and Neo4j 5 as the shared graph database.
+
+The application supports registration and JWT login, optional email 2FA,
+movie search and details, ratings, watchlists, recommendations, profile
+management, and account settings.
 
 ## System topology
 
 ```text
 Browser
   |
-  v
-Angular frontend
-  :
-  : intended HTTP API traffic (not implemented)
-  v
-API Gateway
-  :
-  : intended service routes (not configured)
-  +---------------------> User Service -----------+
-  +---------------------> Movie Service ----------+
-  +---------------------> Rating Service ---------+--> shared Neo4j database
-  `---------------------> Recommendation Service -+
-
-Domain services -------- Eureka registration ----> Service Registry
-API Gateway ------ Eureka registration/discovery -> Service Registry
+  +-- HTTP 4200 / HTTPS 8444 --> Angular Frontend
+                                   |
+                                   | HTTPS API requests
+                                   v
+                              API Gateway 8443
+                                   |
+                                   +-- Eureka discovery --> Service Registry 8761
+                                   |
+                   +---------------+---------------+---------------+
+                   v               v               v               v
+             User Service    Movie Service   Rating Service   Recommendation
+               8083            8080            8081             Service 8082
+                   |               |               |               |
+                   +---------------+---------------+---------------+
+                                                   |
+                                                   v
+                                           Neo4j 5 Database
+                                             7474 / 7687
 ```
 
-The diagram labels target request paths explicitly. The domain services have
-Eureka and Neo4j connection settings, while the gateway has a configured Eureka
-client. There is currently no complete browser-to-database request path: the
-frontend makes no API calls, the gateway has no routes, and the domain services
-expose no controllers.
+Every service uses Eureka for registration and discovery. The gateway exposes
+HTTPS routes and forwards authenticated requests to domain services. The
+frontend communicates only with the gateway and never directly with domain
+service ports.
 
 ## Technology stack
 
@@ -49,39 +54,43 @@ aggregator, shared backend library, or shared application configuration module.
 
 ## Components
 
-| Component | Intended responsibility | Current implementation |
-| --- | --- | --- |
-| `frontend` | Browser UI and calls to the public API | Angular application served as static assets by NGINX in the container; NGINX provides HTTPS and proxies `/api/` to the gateway. |
-| `backend/api-gateway` | Public entry point, routing, and edge concerns | Reactive gateway bootstrap configured as a Eureka client with Security and Actuator dependencies. No routes, filters, CORS policy, or custom security configuration exist. |
-| `backend/registry` | Service registration and discovery | Standalone Eureka server enabled with `@EnableEurekaServer`; client registration and registry fetching are disabled. |
-| `backend/user-service` | Accounts, profiles, authentication, and authorization | Spring MVC, Security, Validation, Spring Data Neo4j, Eureka, and JJWT dependencies; no domain or API code. |
-| `backend/movie-service` | Movie catalogue and catalogue relationships | Spring MVC, Security, Validation, Spring Data Neo4j, and Eureka dependencies; no domain or API code. |
-| `backend/rating-service` | Ratings and reviews | Spring MVC, Security, Validation, Spring Data Neo4j, and Eureka dependencies; no domain or API code. |
-| `backend/recommendation-service` | Personalized movie suggestions | Spring MVC, Security, Validation, Spring Data Neo4j, and Eureka dependencies; no recommendation or API code. |
-| `neo4j` | Persistent graph storage | One Neo4j 5 Community container with a named Docker volume. |
+| Component | Responsibility |
+| --- | --- |
+| `frontend` | Angular UI for authentication, settings, movies, ratings, recommendations, watchlists, profile, dashboard, and not-found pages. |
+| `backend/api-gateway` | HTTPS public entry point, Eureka discovery, CORS, JWT validation, and trusted user identity header propagation. |
+| `backend/registry` | Eureka server for service registration and discovery. |
+| `backend/user-service` | Registration, login, JWT issuance, profile operations, optional 2FA, email OTP challenges, and email delivery. |
+| `backend/movie-service` | Movie CRUD, search and filtering, popular movies, genre data, TMDB seeding, and Cloudinary poster uploads. |
+| `backend/rating-service` | User ratings, rating history, popularity summaries, and watchlists. |
+| `backend/recommendation-service` | Hybrid genre/collaborative recommendation calculations using Neo4j rating relationships. |
+| `neo4j` | Shared graph database for users, movies, genres, ratings, and watchlist relationships. |
 
-The four domain services' Java source currently contains only their Spring Boot
-application classes and context-load tests. No controllers, DTOs, entities,
-repositories, Cypher queries, inter-service clients, or background jobs have
-been added.
+Each domain service owns a bounded set of controllers and repositories but
+shares the same physical Neo4j database. Service ownership is expressed through
+application boundaries and API routes, not separate databases.
 
 ## Frontend
 
-The Angular application is under `frontend/` and uses standalone components.
-The active browser routes are:
+The Angular application uses standalone components, signals, reactive forms,
+HTTP interceptors, route guards, and shared UI components.
 
-| Path | Component |
-| --- | --- |
-| `/` | Redirects to `/movies` |
-| `/movies` | `Movies` |
-| `/login` | `Login` |
-| Any other path | `Notfound` |
+| Path | Component | Access |
+| --- | --- | --- |
+| `/login` | Login with optional login OTP | Guest |
+| `/register` | Account registration | Guest |
+| `/movies` | Search, filters, popular movies, and watchlist actions | Authenticated |
+| `/movies/:id` | Movie details and rating/watchlist actions | Authenticated |
+| `/recommendations` | Personalized recommendations | Authenticated |
+| `/rating` | Signed-in user's rating history | Authenticated |
+| `/profile` | Profile summary and watchlist | Authenticated |
+| `/settings` | Profile update and 2FA enable/disable | Authenticated |
+| `/dashboard` | Movie administration and statistics | Admin |
+| `/` | Redirect to `/movies` | Authenticated |
+| `**` | Not-found page | Public |
 
-The repository also contains generated components for registration, ratings,
-recommendations, watchlists, profiles, and layout elements, but they are not
-connected to the router or root layout. The similarly named files under
-`core/` and `shared/` are generated components rather than implemented guards,
-interceptors, services, models, or pipes.
+An HTTP interceptor attaches the stored JWT to outgoing API requests. Route
+guards prevent guest users from opening authenticated pages and non-admin users
+from opening the dashboard.
 
 The Docker image serves the production Angular build through NGINX. NGINX
 redirects HTTP to HTTPS, uses the frontend PEM certificate, and proxies API
@@ -92,40 +101,45 @@ Development mode uses the Angular CLI on port `4200`.
 
 ## Backend request and discovery flow
 
-The intended request flow is:
+1. The browser sends an HTTPS API request to the gateway.
+2. The gateway allows public auth routes or validates the bearer JWT for
+   protected routes.
+3. The gateway removes untrusted identity headers and sets
+   `X-Authenticated-User-Id` and `X-Authenticated-Role` from the JWT claims.
+4. Eureka resolves the target domain service and the gateway forwards the
+   request through Spring Cloud Gateway.
+5. The domain controller validates input and applies the service's business
+   logic.
+6. Neo4j repositories execute Spring Data Neo4j queries or native Cypher and
+   return DTOs or domain models.
 
-1. The browser sends API requests to the API Gateway.
-2. The gateway resolves a domain service through Eureka and forwards the
-   request.
-3. The domain service applies its business rules and accesses Neo4j.
-4. A service calls another service through an explicit HTTP client when it
-   needs behavior owned by that service.
-
-The gateway and four domain services register against `EUREKA_URL`, which
-defaults to `http://localhost:8761/eureka` for host-based development. Compose
-overrides it with `http://registry:8761/eureka`. The gateway does not enable
-discovery-based routes or define explicit routes. There are also no WebClient,
-RestClient, or Feign clients for service-to-service communication.
-
-Service discovery does not itself expose an API. Gateway routes and service
-controllers must both exist before the target request flow is available.
+Public routes include registration, login, login OTP verification, and email
+OTP verification. Profile, settings, 2FA enable/disable, movies, ratings,
+watchlists, and recommendations require a valid JWT.
 
 ## Data architecture
 
 Docker Compose starts one Neo4j 5 Community instance and persists `/data` in
-the `neo4j-data` volume. The User, Movie, Rating, and Recommendation services
-all connect to the same URI and to the same database named `neo4j`.
+the `neo4j-data` volume. The domain services connect to that database using
+Spring Data Neo4j.
 
-Logical ownership is intended to follow the service boundaries: only the
-owning service should mutate its data, and other services should use its API.
-Because all services are configured against one physical database, this
-boundary is currently a convention rather than enforced isolation.
+Primary node types include:
 
-No graph schema is defined yet. In particular, the repository contains no node
-or relationship mappings, constraints, indexes, migrations, seed data, or
-Graph Data Science configuration. Labels and relationships such as users,
-movies, genres, ratings, and watchlists are design candidates, not current
-schema.
+- `User`: username, email, password hash, role, email verification, and 2FA state.
+- `Movie`: title, description, director, release year, image URL, and TMDB metadata.
+- `Genre`: a movie category name.
+- `EmailVerificationChallenge`: challenge ID, user ID, purpose, OTP hash, expiry,
+  attempt count, and consumed state.
+- `LoginChallenge`: login OTP hash, expiry, attempt count, and consumed state.
+
+Primary relationships include:
+
+- `RATED`: a user to a movie, with the rating value.
+- `WATCHLISTED`: a user to a saved movie.
+- `HAS_GENRE`: a movie to its genres.
+
+Cypher is used for rating summaries, user rating history, watchlists, candidate
+ratings, genre preferences, popularity, and hybrid recommendation calculations.
 
 ## Runtime configuration
 
@@ -158,18 +172,27 @@ password fallback. `NEO4J_AUTH` only initializes credentials for a new data
 volume; changing `NEO4J_PASSWORD` later does not rotate an existing database.
 For disposable local data, `docker compose down --volumes` resets the database.
 
-## Security
+## Authentication and 2FA
 
-Security dependencies are present, but application authentication and
-authorization are not implemented. The User Service includes JJWT libraries,
-and the gateway reads `JWT_SECRET` and `JWT_EXPIRATION`, but there is no login
-API, password handling, token issuer, JWT filter, security filter chain, route
-authorization, or frontend token handling. Until custom configuration is
-added, Spring Security's framework defaults apply.
+Registration creates a user without issuing a JWT. Passwords are encoded with
+BCrypt and validated against a complexity pattern. Login first validates the
+password:
 
-Neo4j authentication is separate from application user authentication. Local
-Compose defaults are for loopback-only development and must not be treated as
-production secrets. Override them before using a non-local deployment.
+- If 2FA is disabled, the user-service issues a JWT directly.
+- If 2FA is enabled, it creates a login challenge, sends a six-digit email OTP,
+  and waits for verification before issuing the JWT.
+
+2FA activation is separate from registration:
+
+1. An authenticated user opens Settings and requests Enable 2FA.
+2. The user-service creates a purpose-specific email verification challenge.
+3. The frontend submits the six-digit code to `/api/auth/2fa/email/verify`.
+4. A valid, unexpired, single-use challenge sets `emailVerified` and
+   `twoFactorEnabled` on the user.
+5. Disabling 2FA clears the flag and cancels pending activation challenges.
+
+The gateway is the JWT trust boundary. It strips client-supplied identity
+headers and derives the user ID and role from the signed token.
 
 ## Deployment and operations
 
@@ -205,9 +228,17 @@ include Actuator, but no centralized logging, distributed tracing, metrics
 export, or alerting is configured. The repository has no reverse proxy,
 Kubernetes configuration, infrastructure-as-code, or CI/CD workflow.
 
-## Test boundaries
+## Test coverage
 
-Backend coverage consists of one Spring context-load test per application.
-Frontend specs are generated component-creation tests. There are currently no
-API, security, graph, contract, integration, recommendation, or browser end-to-
-end tests.
+Backend tests cover gateway JWT/header behavior, user registration/login, email
+challenge verification, auth and profile services, movie search and seeding,
+rating and watchlist operations, recommendation scoring and service behavior,
+and Spring application contexts.
+
+Frontend tests cover route guards, auth service requests and token storage,
+movie search and popular requests, rating and watchlist services, profile and
+settings behavior, shared OTP validation, component rendering, and not-found
+routing.
+
+Automated tests complement, but do not replace, live smoke testing, Neo4j graph
+inspection, browser end-to-end testing, security review, and load testing.

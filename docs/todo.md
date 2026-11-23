@@ -1,13 +1,13 @@
 # Neo4flix Audit Checklist
 
 ## Functional
-- [ ] Download the project from its dedicated repository, run Docker to initiate the web application, and navigate via browser or Postman.
-- [ ] Verify the application works properly and core functionalities can be navigated.
+- [x] Download the project from its dedicated repository, run Docker to initiate the web application, and navigate via browser or Postman.
+- [x] Verify the application works properly and core functionalities can be navigated.
 
 ## Data and Design
-- [ ] Ask the auditee to show a graph representation of the database.
-- [ ] Verify nodes and relationships effectively represent movies, users, and ratings.
-- [ ] Verify relationships between nodes are well represented with appropriate data attributes.
+- [x] Ask the auditee to show a graph representation of the database.
+- [x] Verify nodes and relationships effectively represent movies, users, and ratings.
+- [x] Verify relationships between nodes are well represented with appropriate data attributes.
 
 ## Movie Microservice
 - [x] Verify the Movie microservice effectively reads and writes movie data to/from the database.
@@ -25,7 +25,7 @@
 - [x] Check if Neo4j OGM is used to map Java objects to Neo4j nodes and relationships.
 - [x] Check if a Neo4j Graph Algorithms Library approach (content-based, collaborative filtering, etc.) is used for accurate recommendations.
 - [ ] Assess whether the auditee understands Cypher Query Language used to express complex recommendation logic.
-- [ ] Verify the Recommendation microservice generates accurate recommendations based on user ratings and related movies.
+- [x] Verify the Recommendation microservice generates accurate recommendations based on user ratings and related movies.
 
 ## Search Functionality
 - [x] Test searching for movies by criteria such as title, genre, and release date.
@@ -46,7 +46,7 @@
 - [x] Check if users can easily share movie recommendations with friends.
 
 ## User-Friendly Interface
-- [ ] Evaluate whether the Neo4flix web application interface is user-friendly and intuitive.
+- [x] Evaluate whether the Neo4flix web application interface is user-friendly and intuitive.
 
 ## Web Pages
 - [x] Verify essential web pages (login, registration, home, movie details, movie rating, and recommendations) work as expected.
@@ -60,9 +60,9 @@
 - [x] Verify strong password policies, including complexity requirements, are enforced.
 
 ### Data Encryption
-- [ ] Verify sensitive data is protected, HTTPS is used, and a valid SSL certificate is provided.
+- [x] Verify sensitive data is protected, HTTPS is used, and a valid SSL certificate is provided.
 
 ## Testing
-- [ ] Test thoroughly against flaws and edge cases with as many test scenarios as possible.
+- [x] Test thoroughly against flaws and edge cases with as many test scenarios as possible.
 - [x] Verify graceful error handling for unexpected input or malicious use of functionalities.
-- [ ] Run stress tests and verify the application functions gracefully under load.
+- [x] Run stress tests and verify the application functions gracefully under load.
