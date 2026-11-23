@@ -47,7 +47,23 @@ class MovieServiceTmdbTest {
 
         assertEquals(1, popular.size());
         assertEquals("tmdb-movie", popular.get(0).id());
-        verify(movieRepository, never()).topRated(3, 8);
+        verify(movieRepository).topTmdbPopular(8);
+    }
+
+    @Test
+    void popularMoviesDoesNotFallBackToUserRatedMoviesWhenTmdbHasNoResults() {
+        MovieRepository movieRepository = mock(MovieRepository.class);
+        MovieService movieService = new MovieService(
+                movieRepository,
+                mock(GenreRepository.class),
+                mock(MediaUploadService.class)
+        );
+        when(movieRepository.topTmdbPopular(8)).thenReturn(List.of());
+
+        var popular = movieService.getPopular(8);
+
+        assertEquals(List.of(), popular);
+        verify(movieRepository, never()).summaries(any());
     }
 
     @Test

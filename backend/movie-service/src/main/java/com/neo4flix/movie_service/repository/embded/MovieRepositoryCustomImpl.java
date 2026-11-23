@@ -1,8 +1,6 @@
 package com.neo4flix.movie_service.repository.embded;
 
-
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -51,27 +49,4 @@ public class MovieRepositoryCustomImpl implements MovieRepositoryCustom {
                 ));
     }
 
-    @Override 
-    public List<RatingSummary> topRated(int minVotes, int limit) {
-    return neo4jClient.query("""
-            MATCH (:User)-[r0:RATED]->(:Movie)
-            WITH avg(r0.value) AS globalAvg
-            MATCH (m:Movie)<-[r:RATED]-(:User)
-            WITH m, globalAvg, avg(r.value) AS average, count(r) AS cnt
-            WITH m, average, cnt,
-                 (toFloat(cnt) / (cnt + $minVotes)) * average
-               + (toFloat($minVotes) / (cnt + $minVotes)) * globalAvg AS score
-            RETURN m.id AS movieId, average, cnt AS count
-            ORDER BY score DESC, cnt DESC
-            LIMIT $limit
-            """)
-            .bind(minVotes).to("minVotes")
-            .bind(limit).to("limit")
-            .fetchAs(RatingSummary.class)
-            .mappedBy((ts, record) -> new RatingSummary(
-                    record.get("movieId").asString(),
-                    record.get("average").isNull() ? null : record.get("average").asDouble(),
-                    record.get("count").asLong()))
-            .all().stream().toList();
-}
 }

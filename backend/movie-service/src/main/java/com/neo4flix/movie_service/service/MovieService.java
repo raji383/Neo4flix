@@ -30,7 +30,6 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final GenreRepository genreRepository;
     private final MediaUploadService mediaUploadService;
-    private static final int POPULAR_MIN_VOTES = 3;
 
     @Transactional
     public MovieResponseDTO addMovie(CreateMovieDTO request, String userId) {
@@ -221,24 +220,14 @@ public MovieResponseDTO updateMovie(String id, CreateMovieDTO request, String us
         int safeLimit = Math.min(Math.max(limit, 1), 20);
 
         List<Movie> tmdbPopular = movieRepository.topTmdbPopular(safeLimit);
-        if (!tmdbPopular.isEmpty()) {
-            Map<String, RatingSummary> ratings = movieRepository.summaries(
-                    tmdbPopular.stream().map(Movie::getId).toList());
-            return tmdbPopular.stream()
-                    .map(movie -> toResponse(movie, ratings.get(movie.getId())))
-                    .toList();
+        if (tmdbPopular.isEmpty()) {
+            return List.of();
         }
 
-        List<RatingSummary> top = movieRepository.topRated(POPULAR_MIN_VOTES, safeLimit);
-
-        Map<String, Movie> movies = movieRepository
-                .findAllById(top.stream().map(RatingSummary::movieId).toList())
-                .stream().collect(Collectors.toMap(Movie::getId, m -> m));
-
-        // keep the ranking order from the query
-        return top.stream()
-                .filter(s -> movies.containsKey(s.movieId()))
-                .map(s -> toResponse(movies.get(s.movieId()), s))
+        Map<String, RatingSummary> ratings = movieRepository.summaries(
+                tmdbPopular.stream().map(Movie::getId).toList());
+        return tmdbPopular.stream()
+                .map(movie -> toResponse(movie, ratings.get(movie.getId())))
                 .toList();
     }
 
