@@ -62,6 +62,20 @@ The hybrid scoring model uses the following weights:
 
 The system combines available signals, normalizes the scores, and returns up to 10 recommended movies.
 
+```mermaid
+flowchart TD
+    User[User request] --> Collect[Collect recommendation signals]
+    Collect --> Collaborative[Collaborative filtering<br/>45%]
+    Collect --> Genre[Genre preference<br/>35%]
+    Collect --> Global[Global average rating<br/>20%]
+
+    Collaborative --> Normalize[Normalize available scores]
+    Genre --> Normalize
+    Global --> Normalize
+    Normalize --> Rank[Rank candidate movies]
+    Rank --> Top10[Return up to 10 movies]
+```
+
 ### 🛠️ Admin Dashboard
 - Manage the movie catalogue.
 - Add, update, and delete movies.
@@ -74,35 +88,25 @@ The system combines available signals, normalizes the scores, and returns up to 
 
 Neo4flix follows a microservices architecture. Each backend service has its own Spring Boot application and communicates through the API Gateway and Eureka Service Registry.
 
-```text
-                    Angular Frontend
-                           |
-                           |
-                           v
-                    API Gateway
-                     HTTPS :8443
-                           |
-          +----------------+----------------+
-          |                |                |
-          v                v                v
-     User Service     Movie Service    Rating Service
-       :8083             :8080            :8081
-          |                |                |
-          |                |                |
-          +----------------+----------------+
-                           |
-                           v
-                      Neo4j Database
-                        :7687
+```mermaid
+flowchart LR
+    Browser[Angular Frontend] -->|HTTPS :8444| Gateway[API Gateway<br/>HTTPS :8443]
+    Gateway --> Eureka[(Eureka Registry<br/>:8761)]
+    Eureka -. service discovery .-> Gateway
 
-                    Recommendation Service
-                            :8082
-                              |
-                              v
-                         Neo4j Database
+    Gateway --> User[User Service<br/>:8083]
+    Gateway --> Movie[Movie Service<br/>:8080]
+    Gateway --> Rating[Rating Service<br/>:8081]
+    Gateway --> Recommendation[Recommendation Service<br/>:8082]
 
-                    Eureka Service Registry
-                            :8761
+    User --> Neo4j[(Neo4j Database<br/>:7687)]
+    Movie --> Neo4j
+    Rating --> Neo4j
+    Recommendation --> Neo4j
+
+    Movie -. poster upload .-> Cloudinary[Cloudinary]
+    User -. OTP email .-> SMTP[Gmail SMTP]
+    Movie -. optional import .-> TMDB[TMDB API]
 ```
 
 ### Microservices
@@ -117,6 +121,39 @@ Neo4flix follows a microservices architecture. Each backend service has its own 
 | Registry | Service discovery using Netflix Eureka |
 
 All domain services currently connect to a shared Neo4j database.
+
+```mermaid
+erDiagram
+    USER ||--o{ RATED : creates
+    USER ||--o{ WATCHLISTED : saves
+    MOVIE ||--o{ RATED : receives
+    MOVIE ||--o{ WATCHLISTED : appears_in
+    MOVIE }o--o{ GENRE : HAS_GENRE
+
+    USER {
+        string id
+        string username
+        string email
+        string role
+        boolean twoFactorEnabled
+    }
+    MOVIE {
+        string id
+        string title
+        string description
+        integer releaseYear
+        string imageUrl
+    }
+    RATED {
+        integer rating
+    }
+    WATCHLISTED {
+        datetime addedAt
+    }
+    GENRE {
+        string name
+    }
+```
 
 ---
 
@@ -279,6 +316,26 @@ Docker Compose starts:
 
 The services use health checks to coordinate startup.
 
+```mermaid
+sequenceDiagram
+    participant Compose as Docker Compose
+    participant Neo4j
+    participant Registry as Eureka
+    participant Services as Backend Services
+    participant Gateway as API Gateway
+    participant Frontend
+
+    Compose->>Neo4j: Start and health check
+    Compose->>Registry: Start and health check
+    Registry-->>Services: Accept registrations
+    Compose->>Services: Start domain microservices
+    Services->>Registry: Register with Eureka
+    Compose->>Gateway: Start after dependencies are ready
+    Gateway->>Registry: Discover service instances
+    Compose->>Frontend: Build and serve Angular with NGINX
+    Frontend->>Gateway: HTTPS API requests
+```
+
 ### 4. Access the application
 
 | Component | URL |
@@ -362,6 +419,22 @@ Protected endpoints require a JWT:
 
 ```http
 Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Frontend as Angular
+    participant Gateway as API Gateway
+    participant Service as Backend Microservice
+
+    User->>Frontend: Perform an application action
+    Frontend->>Gateway: HTTPS request + Bearer JWT
+    Gateway->>Gateway: Validate JWT and extract identity
+    Gateway->>Service: Route request + trusted identity headers
+    Service->>Gateway: JSON response
+    Gateway->>Frontend: JSON response
+    Frontend->>User: Render the result
 ```
 
 ### Authentication

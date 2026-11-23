@@ -11,11 +11,11 @@
 
 ## Movie Microservice
 - [x] Verify the Movie microservice effectively reads and writes movie data to/from the database.
-- [ ] Check whether the Movie microservice generates accurate movie recommendations based on user ratings.
+- [x] Check whether the Movie microservice generates accurate movie recommendations based on user ratings.
 
 ## User Microservice
 - [x] Verify the User microservice handles user data operations (read and write) correctly.
-- [ ] Verify the User microservice stores user ratings for movies as intended.
+- [x] Verify the User microservice stores user ratings for movies as intended.
 
 ## Rating Microservice
 - [x] Verify the Rating microservice correctly handles data operations related to movie ratings.
