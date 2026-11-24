@@ -159,9 +159,9 @@ public MovieResponseDTO updateMovie(String id, CreateMovieDTO request, String us
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> ApiException.notFound("Movie not found"));
 
-        // if (!movie.getCreatedBy().equals(userId)) {
-        // throw ApiException.forbidden("You can only modify movies you created");
-        // }
+        if (!movie.getCreatedBy().equals(userId)) {
+        throw ApiException.forbidden("You can only modify movies you created");
+        }
         return movie;
     }
 
