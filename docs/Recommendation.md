@@ -70,13 +70,20 @@ The query identifies the common movies and returns the rating pairs needed to ca
 
 After retrieving common ratings, Java calculates the similarity between users using the **Pearson Correlation Coefficient**.
 
-The formula is:
+**Pearson similarity formula**
 
-\[
-r_{xy} =
-\frac{\sum (x_i-\bar{x})(y_i-\bar{y})}
-{\sqrt{\sum(x_i-\bar{x})^2\sum(y_i-\bar{y})^2}}
-\]
+```math
+r_{xy}
+=
+\frac{
+\displaystyle\sum_{i=1}^{n}(x_i-\bar{x})(y_i-\bar{y})
+}{
+\sqrt{
+\displaystyle\sum_{i=1}^{n}(x_i-\bar{x})^2
+\displaystyle\sum_{i=1}^{n}(y_i-\bar{y})^2
+}
+}
+```
 
 Where:
 
@@ -144,11 +151,18 @@ The query returns Dune and Joker, but excludes Titanic.
 
 Java calculates a predicted rating using the similarity scores of the users who rated the movie.
 
-\[
-PredictedRating(m)=
-\frac{\sum_{u \in U_m} similarity(u)\times rating(u,m)}
-{\sum_{u \in U_m} similarity(u)}
-\]
+**Weighted predicted rating**
+
+```math
+\operatorname{PredictedRating}(m)
+=
+\frac{
+\displaystyle\sum_{u \in U_m}
+\operatorname{similarity}(u)\times\operatorname{rating}(u,m)
+}{
+\displaystyle\sum_{u \in U_m}\operatorname{similarity}(u)
+}
+```
 
 Where:
 
@@ -165,12 +179,20 @@ For a movie rated by two similar users:
 | User A | 0.90 | 5 |
 | User B | 0.70 | 4 |
 
-\[
-PredictedRating =
-\frac{(0.90\times5)+(0.70\times4)}
-{0.90+0.70}
-=4.56
-\]
+```math
+\begin{aligned}
+\operatorname{PredictedRating}
+&=
+\frac{
+(0.90\times5)+(0.70\times4)
+}{
+0.90+0.70
+}\\
+&=
+\frac{7.30}{1.60}
+\approx 4.56
+\end{aligned}
+```
 
 The predicted rating is approximately **4.56/5**.
 
@@ -181,6 +203,40 @@ Genre-based recommendation analyzes the genres of movies the current user has ra
 The idea is simple: if a user consistently gives high ratings to Science Fiction movies, the system should prioritize other movies belonging to that genre.
 
 #### 3.1 Calculate Genre Preferences
+
+The preference for a genre is the user's average rating for movies in that
+genre, normalized to the range from 0 to 1:
+
+```math
+\operatorname{Preference}(g)
+=
+\frac{
+\displaystyle\operatorname{avg}
+\left(
+\{\,r(u,m)\mid m\in M_g\,\}
+\right)
+}{5}
+=
+\frac{\displaystyle\sum_{m\in M_g}r(u,m)}
+{5\left|M_g\right|}
+```
+
+Where \(M_g\) is the set of movies rated by the user that belong to genre
+\(g\), and \(r(u,m)\) is the user's rating for movie \(m\).
+
+For a candidate movie that belongs to several genres, the final genre score
+is the average of those genre preferences:
+
+```math
+\operatorname{GenreScore}(m)
+=
+\operatorname{avg}
+\left(
+\{\,\operatorname{Preference}(g)\mid g\in G_m\,\}
+\right)
+```
+
+Where \(G_m\) is the set of genres associated with movie \(m\).
 
 ```cypher
 MATCH (u:User {id: $userId})-[r:RATED]->(ratedMovie:Movie)
@@ -323,16 +379,21 @@ The weights used by the implementation are:
 | Genre-Based Recommendation | 35% |
 | Global Average Rating | 20% |
 
-The formula is:
+**Normalized hybrid score**
 
-\[
-HybridScore(m)=
+```math
+\operatorname{HybridScore}(m)
+=
 \frac{
-0.45C + 0.35G + 0.20R
+0.45\,C(m)
++
+0.35\,G(m)
++
+0.20\,R(m)
 }{
-W
+W(m)
 }
-\]
+```
 
 Where:
 
@@ -353,16 +414,30 @@ Suppose a candidate movie has:
 
 All three signals are available, so:
 
-\[
-HybridScore =
-(0.45\times0.90)+
-(0.35\times0.80)+
-(0.20\times0.80)
-\]
+```math
+\begin{aligned}
+C(m) &= 4.5/5 = 0.90\\
+G(m) &= 0.80\\
+R(m) &= 4.0/5 = 0.80\\
+W(m) &= 0.45+0.35+0.20 = 1.00
+\end{aligned}
+```
 
-\[
-HybridScore=0.845
-\]
+```math
+\begin{aligned}
+\operatorname{HybridScore}(m)
+&=
+(0.45\times0.90)
++
+(0.35\times0.80)
++
+(0.20\times0.80)\\
+&=
+0.405+0.280+0.160\\
+&=
+\boxed{0.845}
+\end{aligned}
+```
 
 The final score is **0.845 (84.5%)**.
 
