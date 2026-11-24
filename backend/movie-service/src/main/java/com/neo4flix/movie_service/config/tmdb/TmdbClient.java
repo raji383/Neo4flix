@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -20,7 +19,6 @@ import org.springframework.web.client.RestClient;
 public class TmdbClient {
 
     private final RestClient apiClient;
-    private final RestClient imageClient;
 
     @Value("${tmdb.image-base-url}")
     private String imageBaseUrl;
@@ -46,8 +44,6 @@ public class TmdbClient {
                         MediaType.APPLICATION_JSON_VALUE
                 )
                 .build();
-
-        this.imageClient = RestClient.builder().build();
     }
 
     public JsonNode discoverMovies(int page) {
@@ -73,41 +69,13 @@ public class TmdbClient {
                 .body(JsonNode.class);
     }
 
-    public DownloadedPoster downloadPoster(String posterPath, long movieId) {
-
+    public String getPosterUrl(String posterPath) {
         if (posterPath == null || posterPath.isBlank()) {
             throw new IllegalArgumentException("Movie has no poster");
         }
 
-        String url = imageBaseUrl + posterPath;
-
-        ResponseEntity<byte[]> response = imageClient.get()
-                .uri(url)
-                .retrieve()
-                .toEntity(byte[].class);
-
-        byte[] bytes = response.getBody();
-
-        if (bytes == null || bytes.length == 0) {
-            throw new IllegalStateException(
-                    "Could not download poster for TMDB movie " + movieId
-            );
-        }
-
-        MediaType contentType = response.getHeaders().getContentType();
-
-        return new DownloadedPoster(
-                "tmdb-" + movieId + ".jpg",
-                contentType != null
-                        ? contentType.toString()
-                        : MediaType.IMAGE_JPEG_VALUE,
-                bytes
-        );
+        return imageBaseUrl.replaceAll("/+$", "")
+                + "/"
+                + posterPath.replaceAll("^/+", "");
     }
-
-    public record DownloadedPoster(
-            String filename,
-            String contentType,
-            byte[] bytes
-    ) {}
 }

@@ -29,6 +29,7 @@ Administrators can manage the movie catalogue, while users can manage their prof
 - Explore popular movies.
 - Admin-only movie creation, updating, and deletion.
 - Movie poster uploads using Cloudinary.
+- TMDB-imported posters stored as direct TMDB image URLs.
 
 ### ⭐ Rating System
 - Rate movies from 1 to 5.

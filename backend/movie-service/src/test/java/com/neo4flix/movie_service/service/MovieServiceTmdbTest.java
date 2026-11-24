@@ -125,11 +125,16 @@ class MovieServiceTmdbTest {
                 request,
                 "admin-id",
                 42,
-                42.5
+                42.5,
+                "https://image.tmdb.org/t/p/w500/poster.jpg"
         );
 
         assertEquals(42L, existing.getTmdbId());
         assertEquals(42.5, existing.getTmdbPopularity());
+        assertEquals(
+                "https://image.tmdb.org/t/p/w500/poster.jpg",
+                existing.getImageUrl()
+        );
         assertNull(response.averageRating());
         verify(mediaUploadService, never()).uploadFile(any());
         verify(movieRepository)
@@ -140,5 +145,58 @@ class MovieServiceTmdbTest {
                         "admin-id",
                         "movie-id");
         verify(movieRepository).save(existing);
+    }
+
+    @Test
+    void createsSeededMovieWithTmdbPosterUrlWithoutUploading() throws Exception {
+        MovieRepository movieRepository = mock(MovieRepository.class);
+        GenreRepository genreRepository = mock(GenreRepository.class);
+        MediaUploadService mediaUploadService = mock(MediaUploadService.class);
+        MovieService movieService = new MovieService(
+                movieRepository,
+                genreRepository,
+                mediaUploadService
+        );
+        when(movieRepository.findFirstByTmdbId(42L)).thenReturn(Optional.empty());
+        when(movieRepository
+                .findFirstByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedBy(
+                        "Example Film",
+                        2020,
+                        "Example Director",
+                        "admin-id"))
+                .thenReturn(Optional.empty());
+        when(movieRepository.existsByTitleIgnoreCaseAndReleaseYearAndDirectorIgnoreCaseAndCreatedBy(
+                "Example Film",
+                2020,
+                "Example Director",
+                "admin-id"))
+                .thenReturn(false);
+        when(genreRepository.findAllById(Set.of("Drama")))
+                .thenReturn(List.of(new Genre("Drama")));
+        when(movieRepository.save(any(Movie.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        CreateMovieDTO request = new CreateMovieDTO(
+                "Example Film",
+                "Example Director",
+                "An example description.",
+                2020,
+                Set.of("Drama"),
+                null
+        );
+
+        var response = movieService.addOrUpdateTmdbMovie(
+                request,
+                "admin-id",
+                42,
+                42.5,
+                "https://image.tmdb.org/t/p/w500/poster.jpg"
+        );
+
+        assertEquals(
+                "https://image.tmdb.org/t/p/w500/poster.jpg",
+                response.imageUrl()
+        );
+        verify(mediaUploadService, never()).uploadFile(any());
     }
 }

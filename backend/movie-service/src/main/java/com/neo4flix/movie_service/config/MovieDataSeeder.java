@@ -1,7 +1,6 @@
 package com.neo4flix.movie_service.config;
 
 
-import com.neo4flix.movie_service.config.tmdb.ByteArrayMultipartFile;
 import com.neo4flix.movie_service.config.tmdb.TmdbClient;
 import com.neo4flix.movie_service.dto.request.CreateMovieDTO;
 import com.neo4flix.movie_service.service.MovieService;
@@ -18,7 +17,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Year;
 import java.util.HashSet;
@@ -171,16 +169,7 @@ public class MovieDataSeeder implements ApplicationRunner {
         }
 
         String posterPath = details.path("poster_path").asText();
-
-        TmdbClient.DownloadedPoster poster =
-                tmdbClient.downloadPoster(posterPath, tmdbId);
-
-        MultipartFile file = new ByteArrayMultipartFile(
-                "file",
-                poster.filename(),
-                poster.contentType(),
-                poster.bytes()
-        );
+        String posterUrl = tmdbClient.getPosterUrl(posterPath);
 
         CreateMovieDTO dto = new CreateMovieDTO(
                 title,
@@ -188,7 +177,7 @@ public class MovieDataSeeder implements ApplicationRunner {
                 description,
                 releaseYear,
                 genres,
-                file
+                null
         );
 
         // Reuse your existing business logic.
@@ -196,7 +185,8 @@ public class MovieDataSeeder implements ApplicationRunner {
                 dto,
                 owner,
                 tmdbId,
-                movie.path("popularity").asDouble()
+                movie.path("popularity").asDouble(),
+                posterUrl
         );
     }
 

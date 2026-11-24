@@ -66,7 +66,8 @@ public class MovieService {
             CreateMovieDTO request,
             String userId,
             long tmdbId,
-            double tmdbPopularity) {
+            double tmdbPopularity,
+            String posterUrl) {
         Movie movie = movieRepository.findFirstByTmdbId(tmdbId).orElse(null);
         if (movie == null) {
             movie = movieRepository
@@ -96,21 +97,14 @@ public class MovieService {
 
         Set<Genre> genres = resolveGenres(request.genres());
         if (movie == null) {
-            UploadResult uploadResult;
-            try {
-                uploadResult = mediaUploadService.uploadFile(request.file());
-            } catch (Exception e) {
-                throw ApiException.badRequest(
-                        "Invalid file type. Only JPEG, PNG, and WEBP images are allowed.");
-            }
             movie = Movie.builder()
                     .createdBy(userId)
-                    .imageUrl(uploadResult.url())
                     .build();
         }
 
         movie.setTmdbId(tmdbId);
         movie.setTmdbPopularity(tmdbPopularity);
+        movie.setImageUrl(posterUrl);
         movie.setTitle(request.title());
         movie.setDirector(request.director());
         movie.setDescription(request.description());

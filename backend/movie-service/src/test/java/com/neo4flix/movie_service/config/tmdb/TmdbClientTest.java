@@ -1,15 +1,39 @@
 package com.neo4flix.movie_service.config.tmdb;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 import tools.jackson.databind.JsonNode;
 
 class TmdbClientTest {
+
+    @Test
+    void buildsTmdbPosterUrl() {
+        TmdbClient client = new TmdbClient("http://localhost", "test-token");
+        ReflectionTestUtils.setField(
+                client,
+                "imageBaseUrl",
+                "https://image.tmdb.org/t/p/w500/"
+        );
+
+        assertEquals(
+                "https://image.tmdb.org/t/p/w500/poster.jpg",
+                client.getPosterUrl("/poster.jpg")
+        );
+    }
+
+    @Test
+    void rejectsBlankPosterPaths() {
+        TmdbClient client = new TmdbClient("http://localhost", "test-token");
+
+        assertThrows(IllegalArgumentException.class, () -> client.getPosterUrl(" "));
+    }
 
     @Test
     void discoverMoviesDeserializesJsonResponse() throws Exception {

@@ -41,13 +41,8 @@ class MovieDataSeederTest {
                   "credits":{"crew":[{"job":"Director","name":"Example Director"}]}
                 }
                 """));
-        when(tmdbClient.downloadPoster("/poster.jpg", 42)).thenReturn(
-                new TmdbClient.DownloadedPoster(
-                        "tmdb-42.jpg",
-                        "image/jpeg",
-                        new byte[] {1}
-                )
-        );
+        when(tmdbClient.getPosterUrl("/poster.jpg"))
+                .thenReturn("https://image.tmdb.org/t/p/w500/poster.jpg");
 
         MovieDataSeeder seeder = new MovieDataSeeder(tmdbClient, movieService);
         ReflectionTestUtils.setField(seeder, "targetCount", 1);
@@ -61,7 +56,8 @@ class MovieDataSeederTest {
                 movieCaptor.capture(),
                 eq("admin-user-id"),
                 eq(42L),
-                eq(42.5)
+                eq(42.5),
+                eq("https://image.tmdb.org/t/p/w500/poster.jpg")
         );
         assertEquals(Set.of("Sci-Fi", "Drama"), movieCaptor.getValue().genres());
     }

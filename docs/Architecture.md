@@ -60,7 +60,7 @@ aggregator, shared backend library, or shared application configuration module.
 | `backend/api-gateway` | HTTPS public entry point, Eureka discovery, CORS, JWT validation, and trusted user identity header propagation. |
 | `backend/registry` | Eureka server for service registration and discovery. |
 | `backend/user-service` | Registration, login, JWT issuance, profile operations, optional 2FA, email OTP challenges, and email delivery. |
-| `backend/movie-service` | Movie CRUD, search and filtering, popular movies, genre data, TMDB seeding, and Cloudinary poster uploads. |
+| `backend/movie-service` | Movie CRUD, search and filtering, popular movies, genre data, TMDB seeding with direct TMDB poster URLs, and Cloudinary uploads for user-provided posters. |
 | `backend/rating-service` | User ratings, rating history, popularity summaries, and watchlists. |
 | `backend/recommendation-service` | Hybrid genre/collaborative recommendation calculations using Neo4j rating relationships. |
 | `neo4j` | Shared graph database for users, movies, genres, ratings, and watchlist relationships. |
