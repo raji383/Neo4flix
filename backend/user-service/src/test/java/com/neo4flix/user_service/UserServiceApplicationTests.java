@@ -90,7 +90,7 @@ class UserServiceApplicationTests {
 				.andExpect(jsonPath("$.username").value("azraji"))
 				.andExpect(jsonPath("$.email").value("azraji@example.com"))
 				.andExpect(jsonPath("$.role").value("USER"))
-				.andExpect(jsonPath("$.jwtToken").isNotEmpty());
+				.andExpect(jsonPath("$.jwtToken").doesNotExist());
 
 		ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 		verify(userRepository).save(userCaptor.capture());

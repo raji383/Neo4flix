@@ -92,6 +92,7 @@ class MovieServiceTest {
                 .title("Old Film")
                 .director("Old Director")
                 .releaseYear(2010)
+                .createdBy("user-123")
                 .imageUrl("https://example.test/old-poster.png")
                 .build();
         when(movieRepository.findById("movie-123")).thenReturn(Optional.of(existing));
@@ -121,7 +122,10 @@ class MovieServiceTest {
 
     @Test
     void deleteMovieDeletesTheFoundMovie() {
-        Movie existing = Movie.builder().id("movie-123").build();
+        Movie existing = Movie.builder()
+                .id("movie-123")
+                .createdBy("user-123")
+                .build();
         when(movieRepository.findById("movie-123")).thenReturn(Optional.of(existing));
 
         movieService.deleteMovie("movie-123", "user-123");

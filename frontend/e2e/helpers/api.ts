@@ -28,12 +28,21 @@ export async function registerUser(request: APIRequestContext): Promise<TestUser
     );
   }
 
-  const body = (await response.json()) as { jwtToken?: string };
-  if (!body.jwtToken) {
-    throw new Error('E2E user registration returned no JWT token');
+  const loginResponse = await request.post('/api/auth/login', {
+    data: { username, password },
+  });
+  if (loginResponse.status() !== 200) {
+    throw new Error(
+      `E2E user login failed (${loginResponse.status()}): ${await loginResponse.text()}`,
+    );
   }
 
-  return { username, email, password, token: body.jwtToken };
+  const loginBody = (await loginResponse.json()) as { jwtToken?: string };
+  if (!loginBody.jwtToken) {
+    throw new Error('E2E user login returned no JWT token');
+  }
+
+  return { username, email, password, token: loginBody.jwtToken };
 }
 
 export async function getCatalogMovieId(

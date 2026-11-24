@@ -53,7 +53,7 @@ class UserServiceIntegrationTest {
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.username").value("azraji"))
                 .andExpect(jsonPath("$.role").value("USER"))
-                .andExpect(jsonPath("$.jwtToken").isNotEmpty());
+                .andExpect(jsonPath("$.jwtToken").doesNotExist());
     }
 
     @Test
